@@ -175,6 +175,8 @@ class Global {
 public:
     void SetMem(const std::string &key, Mem *mem);
 
+    Mem *GetMem(const std::string &key);
+
 private:
     std::unordered_map<std::string, Mem *> m_mem;
 };

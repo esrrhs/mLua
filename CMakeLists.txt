@@ -19,3 +19,4 @@ ELSE ()
     target_link_libraries(mluacore lua dl)
 ENDIF ()
 
+add_subdirectory(test)
