@@ -34,8 +34,11 @@ extern "C" {
 #include "lauxlib.h"
 }
 
-#define LLOG(...) if (open_log) {llog("[DEBUG] ", __FILE__, __FUNCTION__, __LINE__, __VA_ARGS__);}
-#define LERR(...) if (open_log) {llog("[ERROR] ", __FILE__, __FUNCTION__, __LINE__, __VA_ARGS__);}
+const int open_debug_log = 0;
+const int open_error_log = 1;
+
+#define LLOG(...) if (open_debug_log) {llog("[DEBUG] ", __FILE__, __FUNCTION__, __LINE__, __VA_ARGS__);}
+#define LERR(...) if (open_error_log) {llog("[ERROR] ", __FILE__, __FUNCTION__, __LINE__, __VA_ARGS__);}
 
 void llog(const char *header, const char *file, const char *func, int pos, const char *fmt, ...);
 
@@ -63,13 +66,15 @@ struct Any {
         lua_Number number;
         lua_Integer integer;
         Table *table;
-        uint32_t string_idx;
+        int string_idx;
         bool boolean;
     } value;
 
     std::string Dump(StringHeap *stringHeap, int tab = 0);
 
     static int LuaToAny(lua_State *L, int index, Any *any, StringHeap *stringHeap);
+
+    static int PushLuaValue(lua_State *L, Any *any, StringHeap *stringHeap);
 };
 
 struct AnyHash {
@@ -129,12 +134,15 @@ static inline bool is_integer(double value) {
     return modf(value, &intpart) == 0.0;
 }
 
+class StringHeap;
+
 struct Table {
     ~Table();
 
     bool is_array = true;
     std::vector<std::pair<Any *, Any *>> array;
     std::unordered_map<Any *, Any *, AnyHash, AnyEqual> map;
+    StringHeap *string_heap = nullptr;
 
     Any *Get(Any *key);
 
@@ -143,13 +151,19 @@ struct Table {
 
 class StringHeap {
 public:
-    uint32_t AddString(const std::string &str);
+    int AddString(const std::string &str);
 
-    const std::string &GetString(uint32_t idx);
+    const std::string &GetString(int idx);
+
+    int GetIndex(const std::string &str);
+
+    size_t Size() {
+        return m_strings.size();
+    }
 
 private:
     std::vector<std::string> m_strings;
-    std::unordered_map<std::string, uint32_t> m_string_map;
+    std::unordered_map<std::string, int> m_string_map_cache;
 };
 
 class Mem {

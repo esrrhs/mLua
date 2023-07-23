@@ -1,6 +1,5 @@
 #include "core.h"
 
-const int open_log = 0;
 Global g_global;
 
 void llog(const char *header, const char *file, const char *func, int pos, const char *fmt, ...) {
@@ -195,6 +194,7 @@ int Any::LuaToAny(lua_State *L, int index, Any *any, StringHeap *stringHeap) {
             lua_checkstack(L, 1);
             any->type = Type::TABLE;
             any->value.table = new Table();
+            any->value.table->string_heap = stringHeap;
             lua_pushnil(L);
             while (lua_next(L, index) != 0) {
                 Any *key = new Any();
@@ -222,28 +222,66 @@ int Any::LuaToAny(lua_State *L, int index, Any *any, StringHeap *stringHeap) {
     return 0;
 }
 
-uint32_t StringHeap::AddString(const std::string &str) {
+int Any::PushLuaValue(lua_State *L, Any *any, StringHeap *stringHeap) {
+    switch (any->type) {
+        case Type::NIL:
+            lua_pushnil(L);
+            break;
+        case Type::NUMBER:
+            lua_pushnumber(L, any->value.number);
+            break;
+        case Type::INTEGER:
+            lua_pushinteger(L, any->value.integer);
+            break;
+        case Type::STRING: {
+            const std::string &str = stringHeap->GetString(any->value.string_idx);
+            lua_pushlstring(L, str.c_str(), str.length());
+            break;
+        }
+        case Type::BOOLEAN:
+            lua_pushboolean(L, any->value.boolean);
+            break;
+        case Type::TABLE: {
+            lua_pushlightuserdata(L, any);
+            break;
+        }
+        default:
+            LERR("PushLuaValue: unknown type %d", (int) any->type);
+            return -1;
+    }
+    return 0;
+}
+
+int StringHeap::AddString(const std::string &str) {
     if (str.empty()) {
         return 0;
     }
 
-    auto it = m_string_map.find(str);
-    if (it != m_string_map.end()) {
+    auto it = m_string_map_cache.find(str);
+    if (it != m_string_map_cache.end()) {
         return it->second;
     }
 
-    uint32_t idx = m_strings.size();
+    int idx = m_strings.size();
     m_strings.push_back(str);
-    m_string_map[str] = idx;
+    m_string_map_cache[str] = idx;
     return idx;
 }
 
-const std::string &StringHeap::GetString(uint32_t idx) {
-    if (idx >= m_strings.size()) {
+const std::string &StringHeap::GetString(int idx) {
+    if (idx < 0 || idx >= m_strings.size()) {
         static std::string empty = "ERROR:invalid string idx";
         return empty;
     }
     return m_strings[idx];
+}
+
+int StringHeap::GetIndex(const std::string &str) {
+    auto it = m_string_map_cache.find(str);
+    if (it != m_string_map_cache.end()) {
+        return it->second;
+    }
+    return -1;
 }
 
 Mem::Mem() {
@@ -268,9 +306,9 @@ static int table_to_cpp(lua_State *L) {
     }
 
     g_global.SetMem(table_name, mem);
-    LLOG("table_to_cpp ok: %s", table_name);
+    LLOG("table_to_cpp ok: %s %zu", table_name, mem->GetStringHeap()->Size());
 
-    lua_pushboolean(L, true);
+    Any::PushLuaValue(L, mem->GetValue(), mem->GetStringHeap());
     return 1;
 }
 
@@ -309,11 +347,63 @@ Mem *Global::GetMem(const std::string &key) {
     return nullptr;
 }
 
+static int index_cpp_table(lua_State *L) {
+    auto any = (Any *) lua_touserdata(L, 1);
+    if (!any) {
+        LERR("index_cpp_table: any is nullptr %d", lua_type(L, 1));
+        luaL_error(L, "Cpp Table is nullptr");
+        return 0;
+    }
+
+    if (any->magic != MAGIC_NUMBER) {
+        luaL_error(L, "Cpp Table is invalid");
+        return 0;
+    }
+
+    if (any->type != Type::TABLE) {
+        luaL_error(L, "Cpp Table is not table");
+        return 0;
+    }
+
+    int type = lua_type(L, 2);
+    Any key;
+    if (type == LUA_TNUMBER) {
+        if (!lua_isinteger(L, 2)) {
+            // no such key
+            return 0;
+        }
+        lua_Integer idx = lua_tointeger(L, 2);
+        key.type = Type::INTEGER;
+        key.value.integer = idx;
+    } else if (type == LUA_TSTRING) {
+        size_t size = 0;
+        const char *str = lua_tolstring(L, 2, &size);
+        int string_idx = any->value.table->string_heap->GetIndex(std::string(str, size));
+        if (string_idx < 0) {
+            // no such key
+            return 0;
+        }
+        key.type = Type::STRING;
+        key.value.string_idx = string_idx;
+    }
+
+    auto value = any->value.table->Get(&key);
+    if (value) {
+        if (Any::PushLuaValue(L, value, any->value.table->string_heap) != 0) {
+            luaL_error(L, "Cpp Table PushLuaValue failed");
+            return 0;
+        }
+        return 1;
+    }
+    return 0;
+}
+
 extern "C" int luaopen_libmluacore(lua_State *L) {
     luaL_Reg l[] = {
-            {"table_to_cpp",   table_to_cpp},
-            {"dump_cpp_table", dump_cpp_table},
-            {nullptr,          nullptr}
+            {"table_to_cpp",    table_to_cpp},
+            {"dump_cpp_table",  dump_cpp_table},
+            {"index_cpp_table", index_cpp_table},
+            {nullptr,           nullptr}
     };
     luaL_newlib(L, l);
     return 1;

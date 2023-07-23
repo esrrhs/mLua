@@ -1,6 +1,6 @@
 local core = require "libmluacore"
 
-local index = core.index
+local core_index_cpp_table = core.index_cpp_table
 local len = core.len
 local core_nextkey = core.nextkey
 local core_table_to_cpp = core.table_to_cpp
@@ -10,7 +10,7 @@ local meta = {}
 
 function meta:__index(key)
     local obj = self.__obj
-    local v = index(obj, key)
+    local v = core_index_cpp_table(obj, key)
     if type(v) == "userdata" then
         local holder = { __obj = v }
         setmetatable(holder, meta)
