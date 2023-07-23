@@ -1,7 +1,7 @@
 local core = require "libmluacore"
 
 local core_index_cpp_table = core.index_cpp_table
-local len = core.len
+local core_len_cpp_table = core.len_cpp_table
 local core_nextkey = core.nextkey
 local core_table_to_cpp = core.table_to_cpp
 local core_dump_cpp_table = core.dump_cpp_table
@@ -22,7 +22,7 @@ function meta:__index(key)
 end
 
 function meta:__len()
-    return len(self.__obj)
+    return core_len_cpp_table(self.__obj)
 end
 
 local function mlua_ipairs(self, index)
@@ -32,7 +32,7 @@ local function mlua_ipairs(self, index)
     if value then
         return index, value
     end
-    local sz = len(obj)
+    local sz = core_len_cpp_table(obj)
     if sz < index then
         return
     end

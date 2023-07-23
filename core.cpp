@@ -350,7 +350,6 @@ Mem *Global::GetMem(const std::string &key) {
 static int index_cpp_table(lua_State *L) {
     auto any = (Any *) lua_touserdata(L, 1);
     if (!any) {
-        LERR("index_cpp_table: any is nullptr %d", lua_type(L, 1));
         luaL_error(L, "Cpp Table is nullptr");
         return 0;
     }
@@ -398,11 +397,37 @@ static int index_cpp_table(lua_State *L) {
     return 0;
 }
 
+static int len_cpp_table(lua_State *L) {
+    auto any = (Any *) lua_touserdata(L, 1);
+    if (!any) {
+        luaL_error(L, "Cpp Table is nullptr");
+        return 0;
+    }
+
+    if (any->magic != MAGIC_NUMBER) {
+        luaL_error(L, "Cpp Table is invalid");
+        return 0;
+    }
+
+    if (any->type != Type::TABLE) {
+        luaL_error(L, "Cpp Table is not table");
+        return 0;
+    }
+
+    if (any->value.table->is_array) {
+        lua_pushinteger(L, any->value.table->array.size());
+    } else {
+        lua_pushinteger(L, any->value.table->map.size());
+    }
+    return 1;
+}
+
 extern "C" int luaopen_libmluacore(lua_State *L) {
     luaL_Reg l[] = {
             {"table_to_cpp",    table_to_cpp},
             {"dump_cpp_table",  dump_cpp_table},
             {"index_cpp_table", index_cpp_table},
+            {"len_cpp_table",   len_cpp_table},
             {nullptr,           nullptr}
     };
     luaL_newlib(L, l);

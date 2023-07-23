@@ -25,6 +25,9 @@ for i = 0, 1000 do
     end
     sum = sum + big_config[i].i
 end
+
+print("config[123].a: " .. config[123].a)
+print("#config[123].g: " .. #config[123].g)
 print("big_config test sum:" .. sum)
 
 collectgarbage("collect")
@@ -38,6 +41,7 @@ collectgarbage("collect")
 print("after lua table to cpp, lua memory is " .. collectgarbage("count"))
 
 print("config[123].a: " .. config[123].a)
+print("#config[123].g: " .. #config[123].g)
 sum = 0
 for i = 0, 1000 do
     sum = sum + big_config[i].i
