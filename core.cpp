@@ -1,6 +1,6 @@
 #include "core.h"
 
-const int open_log = 1;
+const int open_log = 0;
 Global g_global;
 
 void llog(const char *header, const char *file, const char *func, int pos, const char *fmt, ...) {
