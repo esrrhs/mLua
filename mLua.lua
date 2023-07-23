@@ -2,7 +2,7 @@ local core = require "libmluacore"
 
 local core_index_cpp_table = core.index_cpp_table
 local core_len_cpp_table = core.len_cpp_table
-local core_nextkey = core.nextkey
+local core_nextkey_cpp_table = core.nextkey_cpp_table
 local core_table_to_cpp = core.table_to_cpp
 local core_dump_cpp_table = core.dump_cpp_table
 
@@ -44,7 +44,7 @@ function meta:__ipairs()
 end
 
 local function mlua_next(obj, key)
-    local nextkey = core_nextkey(obj.__obj, key)
+    local nextkey = core_nextkey_cpp_table(obj.__obj, key)
     if nextkey then
         return nextkey, obj[nextkey]
     end

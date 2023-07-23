@@ -28,6 +28,15 @@ end
 
 print("config[123].a: " .. config[123].a)
 print("#config[123].g: " .. #config[123].g)
+for k, v in pairs(config[123]) do
+    print(string.format("pairs config[123][%s]: %s", k, v))
+end
+for k, v in ipairs(config[123].g) do
+    print("ipairs config[123].g[" .. k .. "]: " .. v)
+end
+for k, v in pairs(config[123].g) do
+    print("pairs config[123].g[" .. k .. "]: " .. v)
+end
 print("big_config test sum:" .. sum)
 
 collectgarbage("collect")
@@ -42,6 +51,15 @@ print("after lua table to cpp, lua memory is " .. collectgarbage("count"))
 
 print("config[123].a: " .. config[123].a)
 print("#config[123].g: " .. #config[123].g)
+for k, v in pairs(config[123]) do
+    print(string.format("pairs config[123][%s]: %s", k, v))
+end
+for k, v in ipairs(config[123].g) do
+    print("ipairs config[123].g[" .. k .. "]: " .. v)
+end
+for k, v in pairs(config[123].g) do
+    print("pairs config[123].g[" .. k .. "]: " .. v)
+end
 sum = 0
 for i = 0, 1000 do
     sum = sum + big_config[i].i

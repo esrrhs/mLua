@@ -276,14 +276,6 @@ const std::string &StringHeap::GetString(int idx) {
     return m_strings[idx];
 }
 
-int StringHeap::GetIndex(const std::string &str) {
-    auto it = m_string_map_cache.find(str);
-    if (it != m_string_map_cache.end()) {
-        return it->second;
-    }
-    return -1;
-}
-
 Mem::Mem() {
     m_value = new Any();
 }
@@ -347,7 +339,7 @@ Mem *Global::GetMem(const std::string &key) {
     return nullptr;
 }
 
-static int index_cpp_table(lua_State *L) {
+static Any *check_cpp_table(lua_State *L, int idx) {
     auto any = (Any *) lua_touserdata(L, 1);
     if (!any) {
         luaL_error(L, "Cpp Table is nullptr");
@@ -364,33 +356,30 @@ static int index_cpp_table(lua_State *L) {
         return 0;
     }
 
-    int type = lua_type(L, 2);
+    return any;
+}
+
+static bool is_base_lua_type(lua_State *L, int idx) {
+    int type = lua_type(L, idx);
+    return type == LUA_TNIL || type == LUA_TNUMBER || type == LUA_TBOOLEAN || type == LUA_TSTRING;
+}
+
+static int index_cpp_table(lua_State *L) {
+    auto any = check_cpp_table(L, 1);
+
+    if (!is_base_lua_type(L, 2)) {
+        return luaL_error(L, "Cpp Table index key is not base lua type");
+    }
+
     Any key;
-    if (type == LUA_TNUMBER) {
-        if (!lua_isinteger(L, 2)) {
-            // no such key
-            return 0;
-        }
-        lua_Integer idx = lua_tointeger(L, 2);
-        key.type = Type::INTEGER;
-        key.value.integer = idx;
-    } else if (type == LUA_TSTRING) {
-        size_t size = 0;
-        const char *str = lua_tolstring(L, 2, &size);
-        int string_idx = any->value.table->string_heap->GetIndex(std::string(str, size));
-        if (string_idx < 0) {
-            // no such key
-            return 0;
-        }
-        key.type = Type::STRING;
-        key.value.string_idx = string_idx;
+    if (Any::LuaToAny(L, 2, &key, any->value.table->string_heap) != 0) {
+        return luaL_error(L, "Cpp Table LuaToAny failed");
     }
 
     auto value = any->value.table->Get(&key);
     if (value) {
         if (Any::PushLuaValue(L, value, any->value.table->string_heap) != 0) {
-            luaL_error(L, "Cpp Table PushLuaValue failed");
-            return 0;
+            return luaL_error(L, "Cpp Table PushLuaValue failed");
         }
         return 1;
     }
@@ -398,22 +387,7 @@ static int index_cpp_table(lua_State *L) {
 }
 
 static int len_cpp_table(lua_State *L) {
-    auto any = (Any *) lua_touserdata(L, 1);
-    if (!any) {
-        luaL_error(L, "Cpp Table is nullptr");
-        return 0;
-    }
-
-    if (any->magic != MAGIC_NUMBER) {
-        luaL_error(L, "Cpp Table is invalid");
-        return 0;
-    }
-
-    if (any->type != Type::TABLE) {
-        luaL_error(L, "Cpp Table is not table");
-        return 0;
-    }
-
+    auto any = check_cpp_table(L, 1);
     if (any->value.table->is_array) {
         lua_pushinteger(L, any->value.table->array.size());
     } else {
@@ -422,13 +396,72 @@ static int len_cpp_table(lua_State *L) {
     return 1;
 }
 
+static int nextkey_cpp_table(lua_State *L) {
+    auto any = check_cpp_table(L, 1);
+
+    Any *next_key = 0;
+    if (any->value.table->is_array) {
+        lua_Integer idx = -1;
+        if (lua_isnil(L, 2)) {
+            idx = 1;
+        } else if (lua_isinteger(L, 2)) {
+            idx = lua_tointeger(L, 2) + 1;
+        } else {
+            // no such key
+            return 0;
+        }
+
+        if (idx >= 1 && idx <= any->value.table->array.size()) {
+            next_key = any->value.table->array[idx - 1].first;
+        } else {
+            // out of range
+            return 0;
+        }
+    } else {
+        if (lua_isnil(L, 2)) {
+            auto it = any->value.table->map.begin();
+            if (it != any->value.table->map.end()) {
+                next_key = it->first;
+            } else {
+                // empty
+                return 0;
+            }
+        } else {
+            Any tmp_key;
+            if (Any::LuaToAny(L, 2, &tmp_key, any->value.table->string_heap) != 0) {
+                luaL_error(L, "Cpp Table LuaToAny failed");
+                return 0;
+            }
+            auto it = any->value.table->map.find(&tmp_key);
+            if (it != any->value.table->map.end()) {
+                it++;
+                if (it != any->value.table->map.end()) {
+                    next_key = it->first;
+                } else {
+                    // no next key
+                    return 0;
+                }
+            } else {
+                // no such key
+                return 0;
+            }
+        }
+    }
+
+    if (Any::PushLuaValue(L, next_key, any->value.table->string_heap) != 0) {
+        return luaL_error(L, "Cpp Table PushLuaValue failed");
+    }
+    return 1;
+}
+
 extern "C" int luaopen_libmluacore(lua_State *L) {
     luaL_Reg l[] = {
-            {"table_to_cpp",    table_to_cpp},
-            {"dump_cpp_table",  dump_cpp_table},
-            {"index_cpp_table", index_cpp_table},
-            {"len_cpp_table",   len_cpp_table},
-            {nullptr,           nullptr}
+            {"table_to_cpp",      table_to_cpp},
+            {"dump_cpp_table",    dump_cpp_table},
+            {"index_cpp_table",   index_cpp_table},
+            {"len_cpp_table",     len_cpp_table},
+            {"nextkey_cpp_table", nextkey_cpp_table},
+            {nullptr,             nullptr}
     };
     luaL_newlib(L, l);
     return 1;

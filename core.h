@@ -155,8 +155,6 @@ public:
 
     const std::string &GetString(int idx);
 
-    int GetIndex(const std::string &str);
-
     size_t Size() {
         return m_strings.size();
     }
