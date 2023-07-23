@@ -29,5 +29,4 @@ jobs:
         cd build
         cmake ..
         make
-        cd bin
-        ./test
+        ./test_bin
