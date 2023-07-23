@@ -6,9 +6,9 @@ include_directories(../)
 
 aux_source_directory(./ TEST_SRC_LIST)
 
-add_executable(test ${TEST_SRC_LIST})
+add_executable(test_bin ${TEST_SRC_LIST})
 IF (WIN32)
-    target_link_libraries(test lua mluacore)
+    target_link_libraries(test_bin lua mluacore)
 ELSE ()
-    target_link_libraries(test lua mluacore dl)
+    target_link_libraries(test_bin lua mluacore dl)
 ENDIF ()
