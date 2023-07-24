@@ -253,10 +253,6 @@ int Any::PushLuaValue(lua_State *L, Any *any, StringHeap *stringHeap) {
 }
 
 int StringHeap::AddString(const std::string &str) {
-    if (str.empty()) {
-        return 0;
-    }
-
     auto it = m_string_map_cache.find(str);
     if (it != m_string_map_cache.end()) {
         return it->second;

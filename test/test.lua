@@ -27,6 +27,7 @@ for i = 0, 1000 do
 end
 
 print("config[123].a: " .. config[123].a)
+print("config[123].c: " .. config[123].c)
 print("#config[123].g: " .. #config[123].g)
 for k, v in pairs(config[123]) do
     print(string.format("pairs config[123][%s]: %s", k, v))
@@ -50,6 +51,7 @@ collectgarbage("collect")
 print("after lua table to cpp, lua memory is " .. collectgarbage("count"))
 
 print("config[123].a: " .. config[123].a)
+print("config[123].c: " .. config[123].c)
 print("#config[123].g: " .. #config[123].g)
 for k, v in pairs(config[123]) do
     print(string.format("pairs config[123][%s]: %s", k, v))
