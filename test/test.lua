@@ -17,14 +17,19 @@ local config = {
 }
 
 local big_config = {}
-local sum = 0
-for i = 0, 1000 do
+for i = 0, 10000 do
     big_config[i] = { i = i }
     for j = 0, 1000 do
         big_config[i][j] = j
     end
+end
+local sum = 0
+local start = get_cur_time_ms()
+for i = 0, 10000 do
     sum = sum + big_config[i].i
 end
+print("big_config test sum:" .. sum)
+print("use time: " .. get_cur_time_ms() - start)
 
 print("config[123].a: " .. config[123].a)
 print("config[123].c: " .. config[123].c)
@@ -38,7 +43,6 @@ end
 for k, v in pairs(config[123].g) do
     print("pairs config[123].g[" .. k .. "]: " .. v)
 end
-print("big_config test sum:" .. sum)
 
 collectgarbage("collect")
 print("before lua table to cpp, lua memory is " .. collectgarbage("count"))
@@ -63,10 +67,12 @@ for k, v in pairs(config[123].g) do
     print("pairs config[123].g[" .. k .. "]: " .. v)
 end
 sum = 0
-for i = 0, 1000 do
+start = get_cur_time_ms()
+for i = 0, 10000 do
     sum = sum + big_config[i].i
 end
 print("big_config test sum:" .. sum)
+print("use time: " .. get_cur_time_ms() - start)
 
 collectgarbage("collect")
 print("after use cpp table, lua memory is " .. collectgarbage("count"))

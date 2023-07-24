@@ -16,14 +16,14 @@ Lua的内存优化管理工具
 ```shell
 # ./test_bin
 ```
-3. 查看测试结果，可以看到Lua的内存占用从16164降到了29，即便在使用C++的table后，Lua的内存占用有所回升，但也停留在124
+3. 查看测试结果，可以看到Lua的内存占用从161479降到了34，即便在使用C++的table后，Lua的内存占用有所回升，但也停留在1150
 ```shell
 ...
-before lua table to cpp, lua memory is 16164.296875
+before lua table to cpp, lua memory is 161479.23925781
 ...
-after lua table to cpp, lua memory is 29.7578125
+after lua table to cpp, lua memory is 34.1533203125
 ...
-after use cpp table, lua memory is 124.46875
+after use cpp table, lua memory is 1150.0283203125
 ```
 
 ## 其他
