@@ -64,7 +64,7 @@ Any *Table::Get(Any *key) {
             idx = key->value.number;
         }
 
-        if (idx >= 1 && idx <= array.size()) {
+        if (idx >= 1 && idx <= (int) array.size()) {
             return array[idx - 1].second;
         }
     } else {
@@ -85,13 +85,13 @@ void Table::Set(Any *key, Any *value) {
             idx = key->value.number;
         }
 
-        if (idx >= 1 && idx <= array.size()) {
+        if (idx >= 1 && idx <= (int) array.size()) {
             auto old = array[idx - 1];
             delete old.first;
             delete old.second;
             array[idx - 1] = std::make_pair(key, value);
             return;
-        } else if (idx == array.size() + 1) {   // 按顺序插入才会保持数组
+        } else if (idx == (int) array.size() + 1) {   // 按顺序插入才会保持数组
             array.push_back(std::make_pair(key, value));
             return;
         }
@@ -269,7 +269,7 @@ int StringHeap::AddString(const std::string &str) {
 }
 
 const std::string &StringHeap::GetString(int idx) {
-    if (idx < 0 || idx >= m_strings.size()) {
+    if (idx < 0 || idx >= (int) m_strings.size()) {
         static std::string empty = "ERROR:invalid string idx";
         return empty;
     }
@@ -411,7 +411,7 @@ static int nextkey_cpp_table(lua_State *L) {
             return 0;
         }
 
-        if (idx >= 1 && idx <= any->value.table->array.size()) {
+        if (idx >= 1 && idx <= (int) any->value.table->array.size()) {
             next_key = any->value.table->array[idx - 1].first;
         } else {
             // out of range
