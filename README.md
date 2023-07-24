@@ -2,7 +2,7 @@
 Lua的内存优化管理工具
 
 ## 特性
-* 将Lua的内存如配置表固化到C++中，并无需修改Lua使用的代码，以减少Lua的内存占用提高Lua的GC效率
+* 将Lua的内存如配置表固化到C++中，并无需修改Lua使用的代码，以减少Lua的内存占用提高Lua的GC效率（参考自云风的[lua-conf](https://github.com/cloudwu/lua-conf)）
 
 ## 使用方法
 1. 编译源码
