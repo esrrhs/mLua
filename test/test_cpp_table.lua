@@ -1,3 +1,6 @@
+package.cpath = "../?.so;" .. package.cpath
+package.path = "../?.lua;" .. package.path
+
 require "mLua"
 
 local config = {
@@ -24,12 +27,12 @@ for i = 0, 10000 do
     end
 end
 local sum = 0
-local start = get_cur_time_ms()
+local start = os.clock()
 for i = 0, 10000 do
     sum = sum + big_config[i].i
 end
 print("big_config test sum:" .. sum)
-print("use time: " .. get_cur_time_ms() - start)
+print("use time: " .. os.clock() - start)
 
 print("config[123].a: " .. config[123].a)
 print("config[123].c: " .. config[123].c)
@@ -67,12 +70,12 @@ for k, v in pairs(config[123].g) do
     print("pairs config[123].g[" .. k .. "]: " .. v)
 end
 sum = 0
-start = get_cur_time_ms()
+start = os.clock()
 for i = 0, 10000 do
     sum = sum + big_config[i].i
 end
 print("big_config test sum:" .. sum)
-print("use time: " .. get_cur_time_ms() - start)
+print("use time: " .. os.clock() - start)
 
 collectgarbage("collect")
 print("after use cpp table, lua memory is " .. collectgarbage("count"))
