@@ -124,8 +124,8 @@ end
 
 local function perf_alloc_id(ctx, name)
     local name_map = ctx.name_map
-    local cur_id = ctx.cur_id
     ctx.cur_id = ctx.cur_id + 1
+    local cur_id = ctx.cur_id
     name_map[cur_id] = perf_key_name(ctx, cur_id, name)
     return cur_id
 end

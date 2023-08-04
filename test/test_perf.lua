@@ -20,12 +20,4 @@ local config = {
     },
 }
 
-local big_config = {}
-for i = 0, 10000 do
-    big_config[i] = { i = i }
-    for j = 0, 1000 do
-        big_config[i][j] = j
-    end
-end
-
 _G.perf_table("mem.pro", config)
