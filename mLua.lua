@@ -82,7 +82,11 @@ local MAX_PERF_FUNC_NAME_SIZE = 127
 local function perf_lua_variant_mem(v, calculate_tb)
     local t = type(v)
     if t == "string" then
-        return 24 + #v -- sizeof(TString)
+        if #v <= 40 then
+            return 24 -- sizeof(TString)
+        else
+            return 24 + #v -- sizeof(TString)
+        end
     elseif t == "number" then
         return 16 -- sizeof(TValue)
     elseif t == "boolean" then
