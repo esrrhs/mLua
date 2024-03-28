@@ -282,7 +282,7 @@ function _G.memory_walker_open(root)
 end
 
 ---停止
-function _G.memory_walker_stop()
+function _G.memory_walker_close()
     _G.memory_walker_root = {}
     _G.memory_walker_root_index = 1
     _G.memory_walker_stack = {}
@@ -290,7 +290,7 @@ function _G.memory_walker_stop()
     _G.memory_walker_start_time = 0
 
     _G.memory_walker_map_is_open = false
-    print("memory walker stop ok")
+    print("memory walker close ok")
 end
 
 function _G.memory_walker_running()
@@ -581,7 +581,7 @@ function _G.memory_walker_step(max_step_count, print_level)
 
                             core_roaring64map_clear()
 
-                            _G.memory_walker_stop()
+                            _G.memory_walker_close()
                         else
                             table.insert(_G.memory_walker_stack, {
                                 state = "init",
