@@ -573,6 +573,7 @@ function _G.memory_walker_step(max_step_count, print_level)
                     -- 如果栈空了，结束
                     if not t then
                         _G.memory_walker_root_index = _G.memory_walker_root_index + 1
+                        _G.memory_walker_total_size = _G.memory_walker_total_size + size
                         if _G.memory_walker_root_index > #_G.memory_walker_root then
                             -- 结束
                             memory_walker_log_info("memory walker all end size %s cardinality %s max %s min %s bytesize %s usetime %s",
@@ -590,7 +591,6 @@ function _G.memory_walker_step(max_step_count, print_level)
                                 cur_size = 0,
                             })
                         end
-                        _G.memory_walker_total_size = _G.memory_walker_total_size + size
                         return
                     end
 
