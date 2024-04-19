@@ -106,8 +106,14 @@ local function perf_lua_variant_mem(v, calculate_tb)
         else
             return 56 -- sizeof(Table)
         end
+    elseif t == "function" then
+        return 48 -- sizeof(Closure)
+    elseif t == "thread" then
+        return 208 -- sizeof(lua_State)
+    elseif t == "userdata" then
+        return 40 -- sizeof(Udata)
     else
-        error("not support type " .. t)
+        return 0
     end
 end
 
