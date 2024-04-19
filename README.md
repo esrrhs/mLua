@@ -35,10 +35,13 @@ after use cpp table, lua memory is 1150.0283203125
 # cd test
 # lua test_perf.lua
 ```
-2. 使用[pLua](https://github.com/esrrhs/pLua)的工具，生成gperftools风格的图片和火焰图
+2. 使用tools的工具，生成gperftools风格的图片和火焰图
 ```shell
-# cd pLua/tools
-# ./show.sh <mLua test path>
+# cd tools
+# go mod tidy
+# go build png.go
+# go build plua.go
+# ./show.sh ../test/
 ```
 3. 查看生成的图片
 ![image](test/mem.png)

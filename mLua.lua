@@ -1,13 +1,20 @@
 local core = require "libmluacore"
 
---------------------------lua2cpp begin-------------------------------------
-
 local core_index_cpp_table = core.index_cpp_table
 local core_len_cpp_table = core.len_cpp_table
 local core_nextkey_cpp_table = core.nextkey_cpp_table
 local core_table_to_cpp = core.table_to_cpp
 local core_dump_cpp_table = core.dump_cpp_table
 
+local core_roaring64map_add = core.roaring64map_add
+local core_roaring64map_addchecked = core.roaring64map_addchecked
+local core_roaring64map_cardinality = core.roaring64map_cardinality
+local core_roaring64map_maximum = core.roaring64map_maximum
+local core_roaring64map_minimum = core.roaring64map_minimum
+local core_roaring64map_bytesize = core.roaring64map_bytesize
+local core_roaring64map_clear = core.roaring64map_clear
+
+--------------------------lua2cpp begin-------------------------------------
 local meta = {}
 
 function meta:__index(key)
@@ -83,24 +90,25 @@ end
 local MAX_PERF_STACK_SIZE = 64
 local MAX_PERF_FUNC_NAME_SIZE = 127
 
-local function perf_lua_variant_mem(v, calculate_tb)
+local function perf_lua_variant_mem(v, calculate_tb, perf_first)
     local t = type(v)
     if t == "string" then
-        if #v <= 40 then
-            return 24 -- sizeof(TString)
-        else
-            return 24 + #v -- sizeof(TString)
-        end
+        return 24 + #v -- sizeof(TString)
     elseif t == "number" then
         return 16 -- sizeof(TValue)
     elseif t == "boolean" then
         return 16 -- sizeof(TValue)
     elseif t == "table" then
+        if not perf_first then
+            return 16 -- sizeof(TValue)
+        end
         if calculate_tb then
             local mem = 56 -- sizeof(Table)
             for k, v in pairs(v) do
-                mem = mem + perf_lua_variant_mem(k, false)
-                mem = mem + perf_lua_variant_mem(v, true)
+                local perf_k_first = (type(k) == "table") and core_roaring64map_addchecked(k) or false
+                local perf_v_first = (type(v) == "table") and core_roaring64map_addchecked(v) or false
+                mem = mem + perf_lua_variant_mem(k, calculate_tb, perf_k_first)
+                mem = mem + perf_lua_variant_mem(v, calculate_tb, perf_v_first)
             end
             return mem
         else
@@ -169,11 +177,13 @@ local function perf_table_kv(ctx, tb)
         end
 
         local cur_id = perf_alloc_id(ctx, k)
-        local ksz = perf_lua_variant_mem(k, calculate_tb)
-        local vsz = perf_lua_variant_mem(v, calculate_tb)
+        local perf_k_first = (type(k) == "table") and core_roaring64map_addchecked(k) or false
+        local perf_v_first = (type(v) == "table") and core_roaring64map_addchecked(v) or false
+        local ksz = perf_lua_variant_mem(k, calculate_tb, perf_k_first)
+        local vsz = perf_lua_variant_mem(v, calculate_tb, perf_v_first)
         perf_record_cur_use(ctx, cur_id, ksz + vsz)
 
-        if type(v) == "table" and #ctx.callstack < MAX_PERF_STACK_SIZE - 1 then
+        if type(v) == "table" and #ctx.callstack < MAX_PERF_STACK_SIZE - 1 and perf_v_first then
             local callstack = ctx.callstack
             table.insert(callstack, cur_id)
             perf_table_kv(ctx, v)
@@ -237,6 +247,7 @@ function _G.perf_table(filename, tb)
         callstack = { 1 },
         profile_data = {},
     }
+    core_roaring64map_clear()
     perf_table_kv(ctx, tb)
     perf_write_bin_file(filename, ctx)
 end
@@ -244,17 +255,6 @@ end
 --------------------------perf-lua-table end-------------------------------------
 
 --------------------------memory-walker begin-------------------------------------
-
-local core_index_cpp_table = core.index_cpp_table
-
-local core_roaring64map_add = core.roaring64map_add
-local core_roaring64map_addchecked = core.roaring64map_addchecked
-local core_roaring64map_cardinality = core.roaring64map_cardinality
-local core_roaring64map_maximum = core.roaring64map_maximum
-local core_roaring64map_minimum = core.roaring64map_minimum
-local core_roaring64map_bytesize = core.roaring64map_bytesize
-local core_roaring64map_clear = core.roaring64map_clear
-
 _G.memory_walker_map_is_open = _G.memory_walker_map_is_open or false
 
 _G.memory_walker_root = _G.memory_walker_root or {} -- 记录根节点，其实就是_G和所有的文件名
