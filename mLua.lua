@@ -172,7 +172,7 @@ end
 local function perf_table_kv(ctx, tb)
     for k, v in pairs(tb) do
         local calculate_tb = false
-        if #ctx.callstack == MAX_PERF_STACK_SIZE - 1 then
+        if #ctx.callstack == ctx.depth - 1 then
             calculate_tb = true
         end
 
@@ -183,7 +183,7 @@ local function perf_table_kv(ctx, tb)
         local vsz = perf_lua_variant_mem(v, calculate_tb, perf_v_first)
         perf_record_cur_use(ctx, cur_id, ksz + vsz)
 
-        if type(v) == "table" and #ctx.callstack < MAX_PERF_STACK_SIZE - 1 and perf_v_first then
+        if type(v) == "table" and #ctx.callstack < ctx.depth - 1 and perf_v_first then
             local callstack = ctx.callstack
             table.insert(callstack, cur_id)
             perf_table_kv(ctx, v)
@@ -232,10 +232,11 @@ local function perf_write_bin_file(filename, ctx)
     file:close()
 end
 
----profile a table, calculate the memory usage of the table. and write the profile data to a file. only support simple table and not recursive table
+---profile a table, calculate the memory usage of the table. and write the profile data to a file. only calculate the first depth table.
 ---@param filename string
 ---@param tb table
-function _G.perf_table(filename, tb)
+---@param depth number
+function _G.perf_table(filename, tb, depth)
     local ctx = {
         name_map = {
             [1] = "root",
@@ -246,6 +247,7 @@ function _G.perf_table(filename, tb)
         cur_id = 1,
         callstack = { 1 },
         profile_data = {},
+        depth = depth or MAX_PERF_STACK_SIZE,
     }
     core_roaring64map_clear()
     perf_table_kv(ctx, tb)
