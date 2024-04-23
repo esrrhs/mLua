@@ -566,31 +566,360 @@ static int roaring64map_bytesize(lua_State *L) {
 
 //////////////////////////////////memory-walker end//////////////////////////////////
 
+//////////////////////////////////quick-archiver begin//////////////////////////////////
+
+static QuickArchiver gQuickArchiver;
+
+QuickArchiver::QuickArchiver() {
+    m_buffer_size = 16 * 1024 * 1024;
+    SetMaxBufferSize(m_buffer_size);
+}
+
+QuickArchiver::~QuickArchiver() {
+    if (m_buffer) {
+        delete[] m_buffer;
+        m_buffer = 0;
+    }
+    if (m_lz_buffer) {
+        delete[] m_lz_buffer;
+        m_lz_buffer = 0;
+    }
+}
+
+void QuickArchiver::SetMaxBufferSize(size_t size) {
+    if (m_buffer) {
+        delete[] m_buffer;
+    }
+    if (m_lz_buffer) {
+        delete[] m_lz_buffer;
+    }
+    m_buffer = new char[size];
+    m_lz_buffer = new char[size];
+    m_buffer_size = size;
+}
+
+int QuickArchiver::Save(lua_State *L) {
+    m_pos = 0;
+    m_buffer[m_pos] = 'N';
+    m_pos += sizeof(char);
+    m_table_depth = 0;
+    if (!SaveValue(L, 1)) {
+        return 0;
+    }
+    if (m_lz_threshold > 0 && m_pos > m_lz_threshold) {
+        // lz compress
+        int lz_size = LZ4_compress_default(m_buffer + 1, m_lz_buffer + 1, m_pos - 1, m_buffer_size - 1);
+        if (lz_size > 0 && lz_size < m_pos - 1) {
+            m_lz_buffer[0] = 'Z';
+            lua_pushlstring(L, m_lz_buffer, lz_size + 1);
+        } else {
+            LERR("Save: lz compress failed");
+            lua_pushlstring(L, m_buffer, m_pos);
+        }
+    } else {
+        lua_pushlstring(L, m_buffer, m_pos);
+    }
+    return 1;
+}
+
+int QuickArchiver::Load(lua_State *L) {
+    size_t size = 0;
+    const char *data = lua_tolstring(L, 1, &size);
+    if (size == 0) {
+        LERR("Load: empty data");
+        return 0;
+    }
+    bool lz = false;
+    if (data[0] == 'Z') {
+        lz = true;
+    } else if (data[0] != 'N') {
+        LERR("Load: unknown data type %c", data[0]);
+        return 0;
+    }
+
+    data++;
+    size--;
+
+    if (lz) {
+        int lz_size = LZ4_decompress_safe(data, m_buffer, size, m_buffer_size);
+        if (lz_size <= 0) {
+            LERR("Load: lz decompress failed");
+            return 0;
+        }
+        size = lz_size;
+    } else {
+        memcpy(m_buffer, data, size);
+    }
+
+    m_pos = 0;
+    if (!LoadValue(L, true)) {
+        return 0;
+    }
+
+    return 1;
+}
+
+bool QuickArchiver::LoadValue(lua_State *L, bool can_be_nil) {
+    if (!lua_checkstack(L, 1)) {
+        LERR("LoadValue: lua_checkstack failed");
+        return false;
+    }
+
+    if (m_pos >= m_buffer_size) {
+        LERR("LoadValue: buffer overflow");
+        return false;
+    }
+
+    Type type = (Type) m_buffer[m_pos];
+    m_pos += sizeof(char);
+
+    switch (type) {
+        case Type::nil:
+            if (!can_be_nil) {
+                LERR("LoadValue: nil not allowed");
+                return false;
+            }
+            lua_pushnil(L);
+            return true;
+        case Type::number: {
+            double v = 0;
+            memcpy(&v, &m_buffer[m_pos], sizeof(double));
+            m_pos += sizeof(double);
+            lua_pushnumber(L, v);
+            return true;
+        }
+        case Type::integer: {
+            int64_t v = 0;
+            memcpy(&v, &m_buffer[m_pos], sizeof(int64_t));
+            m_pos += sizeof(int64_t);
+            lua_pushinteger(L, v);
+            return true;
+        }
+        case Type::bool_true:
+            lua_pushboolean(L, 1);
+            return true;
+        case Type::bool_false:
+            lua_pushboolean(L, 0);
+            return true;
+        case Type::string: {
+            size_t size = 0;
+            memcpy(&size, &m_buffer[m_pos], sizeof(size_t));
+            m_pos += sizeof(size_t);
+            if (m_pos + size > m_buffer_size) {
+                LERR("LoadValue: buffer overflow");
+                return false;
+            }
+            lua_pushlstring(L, &m_buffer[m_pos], size);
+            m_pos += size;
+            return true;
+        }
+        case Type::table_hash: {
+            int kv_count = 0;
+            memcpy(&kv_count, &m_buffer[m_pos], sizeof(int));
+            m_pos += sizeof(int);
+            lua_createtable(L, 0, kv_count);
+            for (int i = 0; i < kv_count; i++) {
+                if (!LoadValue(L, false)) {
+                    return false;
+                }
+                if (!LoadValue(L, true)) {
+                    return false;
+                }
+                lua_rawset(L, -3);
+            }
+            return true;
+        }
+        case Type::table_array: {
+            int kv_count = 0;
+            memcpy(&kv_count, &m_buffer[m_pos], sizeof(int));
+            m_pos += sizeof(int);
+            lua_createtable(L, kv_count, 0);
+            for (int i = 0; i < kv_count; i++) {
+                if (!LoadValue(L, false)) {
+                    return false;
+                }
+                if (!LoadValue(L, true)) {
+                    return false;
+                }
+                lua_rawset(L, -3);
+            }
+            return true;
+        }
+        default: {
+            LERR("LoadValue: unknown type %d", (int) type);
+            return false;
+        }
+    }
+}
+
+bool QuickArchiver::SaveValue(lua_State *L, int idx) {
+    int type = lua_type(L, idx);
+    switch (type) {
+        case LUA_TNIL: {
+            if (m_pos + sizeof(char) > m_buffer_size) {
+                LERR("SaveNil: buffer overflow");
+                return false;
+            }
+            m_buffer[m_pos] = (char) Type::nil;
+            m_pos += sizeof(char);
+            return true;
+        }
+        case LUA_TNUMBER:
+            if (lua_isinteger(L, idx)) {
+                int64_t v = lua_tointeger(L, idx);
+                if (m_pos + sizeof(char) + sizeof(int64_t) > m_buffer_size) {
+                    LERR("SaveInteger: buffer overflow");
+                    return false;
+                }
+                m_buffer[m_pos] = (char) Type::integer;
+                memcpy(&m_buffer[m_pos + sizeof(char)], &v, sizeof(int64_t));
+                m_pos += sizeof(char) + sizeof(int64_t);
+                return true;
+            } else {
+                double v = lua_tonumber(L, idx);
+                if (m_pos + sizeof(char) + sizeof(double) > m_buffer_size) {
+                    LERR("SaveNumber: buffer overflow");
+                    return false;
+                }
+                m_buffer[m_pos] = (char) Type::number;
+                memcpy(&m_buffer[m_pos + sizeof(char)], &v, sizeof(double));
+                m_pos += sizeof(char) + sizeof(double);
+                return true;
+            }
+        case LUA_TBOOLEAN: {
+            bool v = lua_toboolean(L, idx);
+            if (m_pos + sizeof(char) > m_buffer_size) {
+                LERR("SaveBool: buffer overflow");
+                return false;
+            }
+            m_buffer[m_pos] = v ? (char) Type::bool_true : (char) Type::bool_false;
+            m_pos += sizeof(char);
+            return true;
+        }
+        case LUA_TSTRING: {
+            size_t size = 0;
+            const char *str = lua_tolstring(L, idx, &size);
+            if (m_pos + sizeof(char) + sizeof(size_t) + size > m_buffer_size) {
+                LERR("SaveString: buffer overflow");
+                return false;
+            }
+            m_buffer[m_pos] = (char) Type::string;
+            memcpy(&m_buffer[m_pos + sizeof(char)], &size, sizeof(size_t));
+            memcpy(&m_buffer[m_pos + sizeof(char) + sizeof(size_t)], str, size);
+            m_pos += sizeof(char) + sizeof(size_t) + size;
+            return true;
+        }
+        case LUA_TTABLE: {
+            m_table_depth++;
+            if (m_table_depth > MAX_TABLE_DEPTH) {
+                LERR("SaveTable: table depth overflow");
+                return false;
+            }
+
+            idx = NormalIndex(L, idx);
+
+            if (m_pos + sizeof(char) + sizeof(int) > m_buffer_size) {
+                LERR("SaveTable: buffer overflow");
+                return false;
+            }
+            int table_begin = m_pos;
+            m_pos += sizeof(char) + sizeof(int);
+
+            int kv_count = 0;
+            int64_t max_int_key = 0;
+
+            lua_pushnil(L);
+            while (lua_next(L, idx) != 0) {
+                if (lua_isinteger(L, -2)) {
+                    int64_t key = lua_tointeger(L, -2);
+                    if (key > max_int_key) {
+                        max_int_key = key;
+                    }
+                }
+                if (!SaveValue(L, -2)) {
+                    return false;
+                }
+                if (!SaveValue(L, -1)) {
+                    return false;
+                }
+                lua_pop(L, 1);
+                kv_count++;
+            }
+
+            m_buffer[table_begin] = max_int_key == kv_count ? (char) Type::table_array : (char) Type::table_hash;
+            memcpy(&m_buffer[table_begin + sizeof(char)], &kv_count, sizeof(int));
+
+            m_table_depth--;
+
+            return true;
+        }
+        default:
+            LERR("SaveValue: unknown type %d", type);
+            return false;
+    }
+}
+
+int QuickArchiver::NormalIndex(lua_State *L, int idx) {
+    int top = lua_gettop(L);
+    if (idx < 0 && -idx <= top)
+        return idx + top + 1;
+    return idx;
+}
+
+static int quick_archiver_save(lua_State *L) {
+    return gQuickArchiver.Save(L);
+}
+
+static int quick_archiver_load(lua_State *L) {
+    return gQuickArchiver.Load(L);
+}
+
+static int quick_archiver_set_lz_threshold(lua_State *L) {
+    size_t size = lua_tointeger(L, 1);
+    gQuickArchiver.SetLzThreshold(size);
+    return 0;
+}
+
+static int quick_archiver_set_max_buffer_size(lua_State *L) {
+    size_t size = lua_tointeger(L, 1);
+    gQuickArchiver.SetMaxBufferSize(size);
+    return 0;
+}
+
+//////////////////////////////////quick-archiver end//////////////////////////////////
+
 extern "C" int luaopen_libmluacore(lua_State *L) {
     luaL_Reg l[] = {
 //////////////////////////////////lua2cpp begin//////////////////////////////////
-            {"table_to_cpp",               table_to_cpp},
-            {"dump_cpp_table",             dump_cpp_table},
-            {"index_cpp_table",            index_cpp_table},
-            {"len_cpp_table",              len_cpp_table},
-            {"nextkey_cpp_table",          nextkey_cpp_table},
+            {"table_to_cpp",                       table_to_cpp},
+            {"dump_cpp_table",                     dump_cpp_table},
+            {"index_cpp_table",                    index_cpp_table},
+            {"len_cpp_table",                      len_cpp_table},
+            {"nextkey_cpp_table",                  nextkey_cpp_table},
 //////////////////////////////////lua2cpp end//////////////////////////////////
 
 //////////////////////////////////memory-walker begin//////////////////////////////////
-            {"roaring64map_add",           roaring64map_add},
-            {"roaring64map_addchecked",    roaring64map_addchecked},
-            {"roaring64map_remove",        roaring64map_remove},
-            {"roaring64map_removechecked", roaring64map_removechecked},
-            {"roaring64map_contains",      roaring64map_contains},
-            {"roaring64map_clear",         roaring64map_clear},
-            {"roaring64map_maximum",       roaring64map_maximum},
-            {"roaring64map_minimum",       roaring64map_minimum},
-            {"roaring64map_cardinality",   roaring64map_cardinality},
-            {"roaring64map_tostring",      roaring64map_tostring},
-            {"roaring64map_bytesize",      roaring64map_bytesize},
+            {"roaring64map_add",                   roaring64map_add},
+            {"roaring64map_addchecked",            roaring64map_addchecked},
+            {"roaring64map_remove",                roaring64map_remove},
+            {"roaring64map_removechecked",         roaring64map_removechecked},
+            {"roaring64map_contains",              roaring64map_contains},
+            {"roaring64map_clear",                 roaring64map_clear},
+            {"roaring64map_maximum",               roaring64map_maximum},
+            {"roaring64map_minimum",               roaring64map_minimum},
+            {"roaring64map_cardinality",           roaring64map_cardinality},
+            {"roaring64map_tostring",              roaring64map_tostring},
+            {"roaring64map_bytesize",              roaring64map_bytesize},
 //////////////////////////////////memory-walker end//////////////////////////////////
 
-            {nullptr,                      nullptr}
+//////////////////////////////////quick-archiver begin//////////////////////////////////
+            {"quick_archiver_save",                quick_archiver_save},
+            {"quick_archiver_load",                quick_archiver_load},
+            {"quick_archiver_set_lz_threshold",    quick_archiver_set_lz_threshold},
+            {"quick_archiver_set_max_buffer_size", quick_archiver_set_max_buffer_size},
+//////////////////////////////////quick-archiver end//////////////////////////////////
+
+            {nullptr,                              nullptr}
     };
     luaL_newlib(L, l);
     return 1;

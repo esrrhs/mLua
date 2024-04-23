@@ -201,3 +201,51 @@ private:
 #include "roaring.hh"
 
 //////////////////////////////////memory-walker end//////////////////////////////////
+
+//////////////////////////////////quick-archiver begin//////////////////////////////////
+
+#include "lz4.h"
+
+class QuickArchiver {
+public:
+    QuickArchiver();
+
+    ~QuickArchiver();
+
+    int Save(lua_State *L);
+
+    int Load(lua_State *L);
+
+    void SetLzThreshold(size_t size) { m_lz_threshold = size; }
+
+    void SetMaxBufferSize(size_t size);
+
+    static const int MAX_TABLE_DEPTH = 32;
+
+    enum class Type {
+        nil,
+        number,
+        integer,
+        string,
+        bool_true,
+        bool_false,
+        table_hash,
+        table_array,
+    };
+private:
+    bool SaveValue(lua_State *L, int idx);
+
+    int NormalIndex(lua_State *L, int idx);
+
+    bool LoadValue(lua_State *L, bool can_be_nil);
+
+private:
+    char *m_buffer = 0;
+    char *m_lz_buffer = 0;
+    size_t m_buffer_size = 0;
+    size_t m_pos = 0;
+    size_t m_table_depth = 0;
+    size_t m_lz_threshold = 0;
+};
+
+//////////////////////////////////quick-archiver end//////////////////////////////////

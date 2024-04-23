@@ -14,6 +14,11 @@ local core_roaring64map_minimum = core.roaring64map_minimum
 local core_roaring64map_bytesize = core.roaring64map_bytesize
 local core_roaring64map_clear = core.roaring64map_clear
 
+local core_quick_archiver_save = core.quick_archiver_save
+local core_quick_archiver_load = core.quick_archiver_load
+local core_quick_archiver_set_lz_threshold = core.quick_archiver_set_lz_threshold
+local core_quick_archiver_set_max_buffer_size = core.quick_archiver_set_max_buffer_size
+
 --------------------------lua2cpp begin-------------------------------------
 local meta = {}
 
@@ -618,3 +623,23 @@ function _G.memory_walker_step(max_step_count, print_level)
 end
 
 --------------------------memory-walker end-------------------------------------
+
+--------------------------quick-archiver begin-------------------------------------
+
+function _G.quick_archiver_save(t)
+    return core_quick_archiver_save(t)
+end
+
+function _G.quick_archiver_load(bin)
+    return core_quick_archiver_load(bin)
+end
+
+function _G.quick_archiver_set_lz_threshold(sz)
+    return core_quick_archiver_set_lz_threshold(sz)
+end
+
+function _G.quick_archiver_set_max_buffer_size(sz)
+    return core_quick_archiver_set_max_buffer_size(sz)
+end
+
+--------------------------quick-archiver end-------------------------------------
