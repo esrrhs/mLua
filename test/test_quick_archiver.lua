@@ -7,7 +7,11 @@ require "mLua"
 _G.old_data = {
     package = {
         a = { i = 1, s = "123", b = true, array = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 } },
-        b = { i = 2, s = "123", b = true },
+        b = { i = 2, s = "123", b = false },
+        c = 0.1,
+        d = 65536,
+        e = -123456789,
+        f = 12345678901234567890,
     },
     other_data = {
         a = 1,
@@ -44,6 +48,7 @@ function _G.equal(A, B)
 end
 
 print("is equal: " .. tostring(_G.equal(_G.old_data, _G.new_data)))
+
 
 _G.old_data = nil
 _G.new_data = nil

@@ -227,21 +227,22 @@ public:
         number,
         integer,
         string,
+        string_idx,
         bool_true,
         bool_false,
         table_hash,
         table_array,
     };
 private:
-    bool SaveValue(lua_State *L, int idx);
-
-    int NormalIndex(lua_State *L, int idx);
+    bool SaveValue(lua_State *L, int idx, int64_t &int_value);
 
     bool LoadValue(lua_State *L, bool can_be_nil);
 
 private:
     char *m_buffer = 0;
     char *m_lz_buffer = 0;
+    std::unordered_map<const char *, int> m_saved_string;
+    std::vector<std::pair<const char *, size_t>> m_loaded_string;
     size_t m_buffer_size = 0;
     size_t m_pos = 0;
     size_t m_table_depth = 0;

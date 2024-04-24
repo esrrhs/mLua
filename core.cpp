@@ -599,17 +599,19 @@ void QuickArchiver::SetMaxBufferSize(size_t size) {
 }
 
 int QuickArchiver::Save(lua_State *L) {
+    m_saved_string.clear();
     m_pos = 0;
     m_buffer[m_pos] = 'N';
     m_pos += sizeof(char);
     m_table_depth = 0;
-    if (!SaveValue(L, 1)) {
+    int64_t int_value = 0;
+    if (!SaveValue(L, 1, int_value)) {
         return 0;
     }
     if (m_lz_threshold > 0 && m_pos > m_lz_threshold) {
         // lz compress
         int lz_size = LZ4_compress_default(m_buffer + 1, m_lz_buffer + 1, m_pos - 1, m_buffer_size - 1);
-        if (lz_size > 0 && lz_size < m_pos - 1) {
+        if (lz_size > 0 && lz_size < (int) m_pos - 1) {
             m_lz_buffer[0] = 'Z';
             lua_pushlstring(L, m_lz_buffer, lz_size + 1);
         } else {
@@ -651,12 +653,85 @@ int QuickArchiver::Load(lua_State *L) {
         memcpy(m_buffer, data, size);
     }
 
+    m_loaded_string.clear();
     m_pos = 0;
     if (!LoadValue(L, true)) {
         return 0;
     }
 
     return 1;
+}
+
+#define FIND_INT_LEN(v) ((int64_t)v >= INT8_MIN && (int64_t)v <= INT8_MAX) ? sizeof(int8_t) : \
+                      ((int64_t)v >= INT16_MIN && (int64_t)v <= INT16_MAX) ? sizeof(int16_t) : \
+                      ((int64_t)v >= INT32_MIN && (int64_t)v <= INT32_MAX) ? sizeof(int32_t) : sizeof(int64_t)
+
+#define LOAD_INT(v, len) { \
+    switch (len) {         \
+          case sizeof(int8_t): { \
+                int8_t v8 = 0; \
+                memcpy(&v8, &m_buffer[m_pos], sizeof(int8_t)); \
+                v = v8; \
+                m_pos += sizeof(int8_t); \
+                break; \
+          } \
+          case sizeof(int16_t): { \
+                int16_t v16 = 0; \
+                memcpy(&v16, &m_buffer[m_pos], sizeof(int16_t)); \
+                v = v16; \
+                m_pos += sizeof(int16_t); \
+                break; \
+          } \
+          case sizeof(int32_t): { \
+                int32_t v32 = 0; \
+                memcpy(&v32, &m_buffer[m_pos], sizeof(int32_t)); \
+                v = v32; \
+                m_pos += sizeof(int32_t); \
+                break; \
+          } \
+          case sizeof(int64_t): {\
+                int64_t v64 = 0; \
+                memcpy(&v64, &m_buffer[m_pos], sizeof(int64_t)); \
+                v = v64; \
+                m_pos += sizeof(int64_t); \
+                break; \
+          } \
+          default: \
+                LERR("LoadInt: unknown len %d", len); \
+                return false; \
+     } \
+}
+
+#define SAVE_INT(v, len) { \
+    switch (len) {         \
+          case sizeof(int8_t): { \
+                int8_t v8 = (int8_t) v; \
+                memcpy(&m_buffer[m_pos], &v8, sizeof(int8_t)); \
+                m_pos += sizeof(int8_t); \
+                break; \
+          } \
+          case sizeof(int16_t): { \
+                int16_t v16 = (int16_t) v; \
+                memcpy(&m_buffer[m_pos], &v16, sizeof(int16_t)); \
+                m_pos += sizeof(int16_t); \
+                break; \
+          } \
+          case sizeof(int32_t): { \
+                int32_t v32 = (int32_t) v; \
+                memcpy(&m_buffer[m_pos], &v32, sizeof(int32_t)); \
+                m_pos += sizeof(int32_t); \
+                break; \
+          } \
+          case sizeof(int64_t): {\
+                int64_t v64 = (int64_t) v; \
+                memcpy(&m_buffer[m_pos], &v64, sizeof(int64_t)); \
+                m_pos += sizeof(int64_t); \
+                break; \
+          } \
+          default: \
+                LERR("SaveInt: unknown len %d", len); \
+                return false; \
+     } \
 }
 
 bool QuickArchiver::LoadValue(lua_State *L, bool can_be_nil) {
@@ -670,10 +745,12 @@ bool QuickArchiver::LoadValue(lua_State *L, bool can_be_nil) {
         return false;
     }
 
-    Type type = (Type) m_buffer[m_pos];
+    char type = m_buffer[m_pos];
     m_pos += sizeof(char);
 
-    switch (type) {
+    Type low_type = (Type) (type & 0x0F);
+
+    switch (low_type) {
         case Type::nil:
             if (!can_be_nil) {
                 LERR("LoadValue: nil not allowed");
@@ -682,6 +759,10 @@ bool QuickArchiver::LoadValue(lua_State *L, bool can_be_nil) {
             lua_pushnil(L);
             return true;
         case Type::number: {
+            if (m_pos + sizeof(double) > m_buffer_size) {
+                LERR("LoadValue: buffer overflow");
+                return false;
+            }
             double v = 0;
             memcpy(&v, &m_buffer[m_pos], sizeof(double));
             m_pos += sizeof(double);
@@ -689,9 +770,13 @@ bool QuickArchiver::LoadValue(lua_State *L, bool can_be_nil) {
             return true;
         }
         case Type::integer: {
+            int len = (type >> 4) & 0x0F;
+            if (m_pos + len > m_buffer_size) {
+                LERR("LoadValue: buffer overflow");
+                return false;
+            }
             int64_t v = 0;
-            memcpy(&v, &m_buffer[m_pos], sizeof(int64_t));
-            m_pos += sizeof(int64_t);
+            LOAD_INT(v, len);
             lua_pushinteger(L, v);
             return true;
         }
@@ -701,14 +786,26 @@ bool QuickArchiver::LoadValue(lua_State *L, bool can_be_nil) {
         case Type::bool_false:
             lua_pushboolean(L, 0);
             return true;
+        case Type::string_idx: {
+            int len = (type >> 4) & 0x0F;
+            int64_t idx = 0;
+            LOAD_INT(idx, len);
+            if (idx < 0 || idx >= (int) m_loaded_string.size()) {
+                LERR("LoadValue: invalid string idx %d", idx);
+                return false;
+            }
+            lua_pushlstring(L, m_loaded_string[idx].first, m_loaded_string[idx].second);
+            return true;
+        }
         case Type::string: {
-            size_t size = 0;
-            memcpy(&size, &m_buffer[m_pos], sizeof(size_t));
-            m_pos += sizeof(size_t);
+            int len = (type >> 4) & 0x0F;
+            int64_t size = 0;
+            LOAD_INT(size, len);
             if (m_pos + size > m_buffer_size) {
                 LERR("LoadValue: buffer overflow");
                 return false;
             }
+            m_loaded_string.push_back(std::make_pair(&m_buffer[m_pos], size));
             lua_pushlstring(L, &m_buffer[m_pos], size);
             m_pos += size;
             return true;
@@ -752,7 +849,7 @@ bool QuickArchiver::LoadValue(lua_State *L, bool can_be_nil) {
     }
 }
 
-bool QuickArchiver::SaveValue(lua_State *L, int idx) {
+bool QuickArchiver::SaveValue(lua_State *L, int idx, int64_t &int_value) {
     int type = lua_type(L, idx);
     switch (type) {
         case LUA_TNIL: {
@@ -767,13 +864,15 @@ bool QuickArchiver::SaveValue(lua_State *L, int idx) {
         case LUA_TNUMBER:
             if (lua_isinteger(L, idx)) {
                 int64_t v = lua_tointeger(L, idx);
-                if (m_pos + sizeof(char) + sizeof(int64_t) > m_buffer_size) {
+                int_value = v;
+                int len = FIND_INT_LEN(v);
+                if (m_pos + sizeof(char) + len > m_buffer_size) {
                     LERR("SaveInteger: buffer overflow");
                     return false;
                 }
-                m_buffer[m_pos] = (char) Type::integer;
-                memcpy(&m_buffer[m_pos + sizeof(char)], &v, sizeof(int64_t));
-                m_pos += sizeof(char) + sizeof(int64_t);
+                m_buffer[m_pos] = ((char) Type::integer) | ((char) len << 4);
+                m_pos += sizeof(char);
+                SAVE_INT(v, len);
                 return true;
             } else {
                 double v = lua_tonumber(L, idx);
@@ -799,15 +898,33 @@ bool QuickArchiver::SaveValue(lua_State *L, int idx) {
         case LUA_TSTRING: {
             size_t size = 0;
             const char *str = lua_tolstring(L, idx, &size);
-            if (m_pos + sizeof(char) + sizeof(size_t) + size > m_buffer_size) {
-                LERR("SaveString: buffer overflow");
-                return false;
+            auto it = m_saved_string.find(str);
+            if (it != m_saved_string.end()) {
+                int idx = it->second;
+                int idx_len = FIND_INT_LEN(idx);
+                if (m_pos + sizeof(char) + idx_len > m_buffer_size) {
+                    LERR("SaveSharedString: buffer overflow");
+                    return false;
+                }
+                m_buffer[m_pos] = (char) Type::string_idx | ((char) idx_len << 4);
+                m_pos += sizeof(char);
+                SAVE_INT(idx, idx_len);
+                return true;
+            } else {
+                int size_len = FIND_INT_LEN(size);
+                if (m_pos + sizeof(char) + size_len + size > m_buffer_size) {
+                    LERR("SaveString: buffer overflow");
+                    return false;
+                }
+                m_buffer[m_pos] = (char) Type::string | ((char) size_len << 4);
+                m_pos += sizeof(char);
+                SAVE_INT(size, size_len);
+                memcpy(&m_buffer[m_pos], str, size);
+                m_pos += size;
+                int str_idx = m_saved_string.size();
+                m_saved_string[str] = str_idx;
+                return true;
             }
-            m_buffer[m_pos] = (char) Type::string;
-            memcpy(&m_buffer[m_pos + sizeof(char)], &size, sizeof(size_t));
-            memcpy(&m_buffer[m_pos + sizeof(char) + sizeof(size_t)], str, size);
-            m_pos += sizeof(char) + sizeof(size_t) + size;
-            return true;
         }
         case LUA_TTABLE: {
             m_table_depth++;
@@ -816,7 +933,10 @@ bool QuickArchiver::SaveValue(lua_State *L, int idx) {
                 return false;
             }
 
-            idx = NormalIndex(L, idx);
+            int top = lua_gettop(L);
+            if (idx < 0 && -idx <= top) {
+                idx = idx + top + 1;
+            }
 
             if (m_pos + sizeof(char) + sizeof(int) > m_buffer_size) {
                 LERR("SaveTable: buffer overflow");
@@ -830,16 +950,15 @@ bool QuickArchiver::SaveValue(lua_State *L, int idx) {
 
             lua_pushnil(L);
             while (lua_next(L, idx) != 0) {
-                if (lua_isinteger(L, -2)) {
-                    int64_t key = lua_tointeger(L, -2);
-                    if (key > max_int_key) {
-                        max_int_key = key;
-                    }
-                }
-                if (!SaveValue(L, -2)) {
+                int64_t key_int = 0;
+                if (!SaveValue(L, -2, key_int)) {
                     return false;
                 }
-                if (!SaveValue(L, -1)) {
+                if (key_int > max_int_key) {
+                    max_int_key = key_int;
+                }
+                int64_t value_int = 0;
+                if (!SaveValue(L, -1, value_int)) {
                     return false;
                 }
                 lua_pop(L, 1);
@@ -857,13 +976,6 @@ bool QuickArchiver::SaveValue(lua_State *L, int idx) {
             LERR("SaveValue: unknown type %d", type);
             return false;
     }
-}
-
-int QuickArchiver::NormalIndex(lua_State *L, int idx) {
-    int top = lua_gettop(L);
-    if (idx < 0 && -idx <= top)
-        return idx + top + 1;
-    return idx;
 }
 
 static int quick_archiver_save(lua_State *L) {
