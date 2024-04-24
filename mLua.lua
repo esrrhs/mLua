@@ -18,6 +18,7 @@ local core_quick_archiver_save = core.quick_archiver_save
 local core_quick_archiver_load = core.quick_archiver_load
 local core_quick_archiver_set_lz_threshold = core.quick_archiver_set_lz_threshold
 local core_quick_archiver_set_max_buffer_size = core.quick_archiver_set_max_buffer_size
+local core_quick_archiver_set_lz_acceleration = core.quick_archiver_set_lz_acceleration
 
 --------------------------lua2cpp begin-------------------------------------
 local meta = {}
@@ -640,6 +641,10 @@ end
 
 function _G.quick_archiver_set_max_buffer_size(sz)
     return core_quick_archiver_set_max_buffer_size(sz)
+end
+
+function _G.quick_archiver_set_lz_acceleration(sz)
+    return core_quick_archiver_set_lz_acceleration(sz)
 end
 
 --------------------------quick-archiver end-------------------------------------

@@ -593,9 +593,10 @@ void QuickArchiver::SetMaxBufferSize(size_t size) {
     if (m_lz_buffer) {
         delete[] m_lz_buffer;
     }
-    m_buffer = new char[size];
-    m_lz_buffer = new char[size];
     m_buffer_size = size;
+    m_buffer = new char[m_buffer_size];
+    m_lz_buffer_size = 1 + LZ4_COMPRESSBOUND(size - 1);
+    m_lz_buffer = new char[m_lz_buffer_size];
 }
 
 int QuickArchiver::Save(lua_State *L) {
@@ -610,7 +611,8 @@ int QuickArchiver::Save(lua_State *L) {
     }
     if (m_lz_threshold > 0 && m_pos > m_lz_threshold) {
         // lz compress
-        int lz_size = LZ4_compress_default(m_buffer + 1, m_lz_buffer + 1, m_pos - 1, m_buffer_size - 1);
+        int lz_size = LZ4_compress_fast(m_buffer + 1, m_lz_buffer + 1, m_pos - 1, m_lz_buffer_size - 1,
+                                        m_lz_acceleration);
         if (lz_size > 0 && lz_size < (int) m_pos - 1) {
             m_lz_buffer[0] = 'Z';
             lua_pushlstring(L, m_lz_buffer, lz_size + 1);
@@ -998,6 +1000,12 @@ static int quick_archiver_set_max_buffer_size(lua_State *L) {
     return 0;
 }
 
+static int quick_archiver_set_lz_acceleration(lua_State *L) {
+    int acceleration = lua_tointeger(L, 1);
+    gQuickArchiver.SetLzAcceleration(acceleration);
+    return 0;
+}
+
 //////////////////////////////////quick-archiver end//////////////////////////////////
 
 extern "C" int luaopen_libmluacore(lua_State *L) {
@@ -1029,6 +1037,7 @@ extern "C" int luaopen_libmluacore(lua_State *L) {
             {"quick_archiver_load",                quick_archiver_load},
             {"quick_archiver_set_lz_threshold",    quick_archiver_set_lz_threshold},
             {"quick_archiver_set_max_buffer_size", quick_archiver_set_max_buffer_size},
+            {"quick_archiver_set_lz_acceleration", quick_archiver_set_lz_acceleration},
 //////////////////////////////////quick-archiver end//////////////////////////////////
 
             {nullptr,                              nullptr}

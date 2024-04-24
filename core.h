@@ -218,6 +218,8 @@ public:
 
     void SetLzThreshold(size_t size) { m_lz_threshold = size; }
 
+    void SetLzAcceleration(int acceleration) { m_lz_acceleration = acceleration; }
+
     void SetMaxBufferSize(size_t size);
 
     static const int MAX_TABLE_DEPTH = 32;
@@ -244,9 +246,11 @@ private:
     std::unordered_map<const char *, int> m_saved_string;
     std::vector<std::pair<const char *, size_t>> m_loaded_string;
     size_t m_buffer_size = 0;
+    size_t m_lz_buffer_size = 0;
     size_t m_pos = 0;
     size_t m_table_depth = 0;
     size_t m_lz_threshold = 0;
+    int m_lz_acceleration = 1;
 };
 
 //////////////////////////////////quick-archiver end//////////////////////////////////
