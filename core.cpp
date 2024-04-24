@@ -595,7 +595,7 @@ void QuickArchiver::SetMaxBufferSize(size_t size) {
     }
     m_buffer_size = size;
     m_buffer = new char[m_buffer_size];
-    m_lz_buffer_size = 1 + LZ4_COMPRESSBOUND(size - 1);
+    m_lz_buffer_size = 1 + LZ4_compressBound(size - 1);
     m_lz_buffer = new char[m_lz_buffer_size];
 }
 
