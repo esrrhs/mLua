@@ -1,10 +1,30 @@
 local core = require "libmluacore"
 
-local core_index_cpp_table = core.index_cpp_table
-local core_len_cpp_table = core.len_cpp_table
-local core_nextkey_cpp_table = core.nextkey_cpp_table
-local core_table_to_cpp = core.table_to_cpp
-local core_dump_cpp_table = core.dump_cpp_table
+local core_cpp_table_create_container = core.cpp_table_create_container
+local core_cpp_table_container_get_int32 = core.cpp_table_container_get_int32
+local core_cpp_table_container_set_int32 = core.cpp_table_container_set_int32
+local core_cpp_table_container_get_uint32 = core.cpp_table_container_get_uint32
+local core_cpp_table_container_set_uint32 = core.cpp_table_container_set_uint32
+local core_cpp_table_container_get_int64 = core.cpp_table_container_get_int64
+local core_cpp_table_container_set_int64 = core.cpp_table_container_set_int64
+local core_cpp_table_container_get_uint64 = core.cpp_table_container_get_uint64
+local core_cpp_table_container_set_uint64 = core.cpp_table_container_set_uint64
+local core_cpp_table_container_get_float = core.cpp_table_container_get_float
+local core_cpp_table_container_set_float = core.cpp_table_container_set_float
+local core_cpp_table_container_get_double = core.cpp_table_container_get_double
+local core_cpp_table_container_set_double = core.cpp_table_container_set_double
+local core_cpp_table_container_get_bool = core.cpp_table_container_get_bool
+local core_cpp_table_container_set_bool = core.cpp_table_container_set_bool
+local core_cpp_table_container_get_string = core.cpp_table_container_get_string
+local core_cpp_table_container_set_string = core.cpp_table_container_set_string
+local core_cpp_table_container_get_obj = core.cpp_table_container_get_obj
+local core_cpp_table_container_set_obj = core.cpp_table_container_set_obj
+local core_cpp_table_container_get_array = core.cpp_table_container_get_array
+local core_cpp_table_container_set_array = core.cpp_table_container_set_array
+local core_cpp_table_container_get_map = core.cpp_table_container_get_map
+local core_cpp_table_container_set_map = core.cpp_table_container_set_map
+local core_cpp_table_gc = core.cpp_table_gc
+local core_cpp_table_dump = core.cpp_table_dump
 
 local core_roaring64map_add = core.roaring64map_add
 local core_roaring64map_addchecked = core.roaring64map_addchecked
@@ -20,76 +40,309 @@ local core_quick_archiver_set_lz_threshold = core.quick_archiver_set_lz_threshol
 local core_quick_archiver_set_max_buffer_size = core.quick_archiver_set_max_buffer_size
 local core_quick_archiver_set_lz_acceleration = core.quick_archiver_set_lz_acceleration
 
---------------------------lua2cpp begin-------------------------------------
-local meta = {}
+--------------------------cpp-table begin-------------------------------------
 
-function meta:__index(key)
-    local obj = self.__obj
-    local v = core_index_cpp_table(obj, key)
-    if type(v) == "userdata" then
-        local holder = { __obj = v }
-        setmetatable(holder, meta)
-        self[key] = holder
-        return holder
+local lua_to_cpp = {}
+
+function lua_to_cpp.create_layout_meta_func(layout)
+    for k, v in pairs(layout.members) do
+        local pos = v.pos
+        local type = v.type
+        local key = v.key
+        if type == "normal" then
+            if key == "int32" then
+                v.index_func = function(t)
+                    return core_cpp_table_container_get_int32(t, pos)
+                end
+                v.newindex_func = function(t, value)
+                    core_cpp_table_container_set_int32(t, pos, value)
+                end
+            elseif key == "uint32" then
+                v.index_func = function(t)
+                    return core_cpp_table_container_get_uint32(t, pos)
+                end
+                v.newindex_func = function(t, value)
+                    core_cpp_table_container_set_uint32(t, pos, value)
+                end
+            elseif key == "int64" then
+                v.index_func = function(t)
+                    return core_cpp_table_container_get_int64(t, pos)
+                end
+                v.newindex_func = function(t, value)
+                    core_cpp_table_container_set_int64(t, pos, value)
+                end
+            elseif key == "uint64" then
+                v.index_func = function(t)
+                    return core_cpp_table_container_get_uint64(t, pos)
+                end
+                v.newindex_func = function(t, value)
+                    core_cpp_table_container_set_uint64(t, pos, value)
+                end
+            elseif key == "float" then
+                v.index_func = function(t)
+                    return core_cpp_table_container_get_float(t, pos)
+                end
+                v.newindex_func = function(t, value)
+                    core_cpp_table_container_set_float(t, pos, value)
+                end
+            elseif key == "double" then
+                v.index_func = function(t)
+                    return core_cpp_table_container_get_double(t, pos)
+                end
+                v.newindex_func = function(t, value)
+                    core_cpp_table_container_set_double(t, pos, value)
+                end
+            elseif key == "bool" then
+                v.index_func = function(t)
+                    return core_cpp_table_container_get_bool(t, pos)
+                end
+                v.newindex_func = function(t, value)
+                    core_cpp_table_container_set_bool(t, pos, value)
+                end
+            elseif key == "string" then
+                v.index_func = function(t)
+                    return core_cpp_table_container_get_string(t, pos)
+                end
+                v.newindex_func = function(t, value)
+                    core_cpp_table_container_set_string(t, pos, value)
+                end
+            else
+                v.index_func = function(t)
+                    return core_cpp_table_container_get_obj(t, pos)
+                end
+                v.newindex_func = function(t, value)
+                    core_cpp_table_container_set_obj(t, pos, value)
+                end
+            end
+        elseif type == "array" then
+            v.index_func = function(t, index)
+                return core_cpp_table_container_get_array(t, pos, index)
+            end
+            v.newindex_func = function(t, index, value)
+                core_cpp_table_container_set_array(t, pos, index, value)
+            end
+        elseif type == "map" then
+            v.index_func = function(t, key)
+                return core_cpp_table_container_get_map(t, pos, key)
+            end
+            v.newindex_func = function(t, key, value)
+                core_cpp_table_container_set_map(t, pos, key, value)
+            end
+        else
+            error("create layout meta func error, unknown type " .. type)
+        end
+    end
+end
+
+function lua_to_cpp.create_layout(message_name, message)
+    _G.CPP_TABLE_LAYOUT = _G.CPP_TABLE_LAYOUT or {}
+    local old_proto = _G.CPP_TABLE_LAYOUT[message_name]
+    if old_proto then
+        error("create layout error, message " .. message_name .. " already exist")
+    end
+
+    local layout = {
+        members = {},
+        total_size = 0
+    }
+    local pos = 0
+    for k, v in pairs(message) do
+        layout.members[k] = {
+            type = v.type,
+            key = v.key,
+            value = v.value,
+            pos = pos,
+            size = v.size,
+            tag = v.tag,
+        }
+        pos = pos + v.size
+    end
+    layout.total_size = pos
+
+    lua_to_cpp.create_layout_meta_func(layout)
+
+    _G.CPP_TABLE_LAYOUT[message_name] = layout
+end
+
+---merge layout members by tag
+function lua_to_cpp.merge_layout(message_name, message, delete_members, new_members)
+    local layout = _G.CPP_TABLE_LAYOUT[message_name]
+    if not layout then
+        error("merge layout error, message " .. message_name .. " not exist")
+    end
+
+    for _, k in ipairs(new_members) do
+        local v = message[k]
+        local tag = v.tag
+
+        local old_layout_k
+        local old_layout_v
+        for ok, ov in pairs(layout.members) do
+            if ov.tag == tag then
+                old_layout_k = ok
+                old_layout_v = ov
+                break
+            end
+        end
+
+        if old_layout_v then
+            -- eg: "int32 a = 1;" ==> "uint32 d = 1;"
+            layout.members[k] = {
+                type = v.type,
+                key = v.key,
+                value = v.value,
+                pos = old_layout_v.pos,
+                size = v.size,
+                tag = v.tag,
+            }
+        else
+            layout.members[k] = {
+                type = v.type,
+                key = v.key,
+                value = v.value,
+                pos = layout.total_size,
+                size = v.size,
+                tag = v.tag,
+            }
+            layout.total_size = layout.total_size + v.size
+        end
+    end
+
+    for _, k in ipairs(delete_members) do
+        layout.members[k] = nil
+    end
+
+    lua_to_cpp.create_layout_meta_func(layout)
+end
+
+---merge proto members by tag
+---eg: "int32 a = 1; int32 b = 2;" merge "uint32 d = 1; int32 c = 3;" will became "uint32 d = 1; int32 b = 2; int32 c = 3;"
+function lua_to_cpp.merge_proto(old_proto, new_proto)
+    local delete_members = {}
+    local new_members = {}
+    for k, v in pairs(new_proto) do
+        local tag = v.tag
+        local old_k
+        local old_v
+        for ok, ov in pairs(old_proto) do
+            if ov.tag == tag then
+                old_k = ok
+                old_v = ov
+                break
+            end
+        end
+
+        if old_v then
+            if old_v.type ~= v.type then
+                error("merge proto error, member " .. k .. " type not match")
+            end
+            if old_v.size ~= v.size then
+                error("merge proto error, member " .. k .. " size not match")
+            end
+            if old_k ~= k then
+                old_proto[old_k] = nil
+                old_proto[k] = v
+                table.insert(delete_members, old_k)
+                table.insert(new_members, k)
+            end
+        else
+            old_proto[k] = v
+            table.insert(new_members, k)
+        end
+    end
+
+    return delete_members, new_members
+end
+
+function lua_to_cpp.load_proto(message_name, message)
+    _G.OLD_CPP_TABLE_PROTO = _G.OLD_CPP_TABLE_PROTO or {}
+    local old_proto = _G.OLD_CPP_TABLE_PROTO[message_name]
+    if old_proto then
+        local delete_members, new_members = lua_to_cpp.merge_proto(old_proto, message)
+        lua_to_cpp.merge_layout(message_name, old_proto, delete_members, new_members)
     else
-        return v
+        _G.OLD_CPP_TABLE_PROTO[message_name] = message
+        lua_to_cpp.create_layout(message_name, message)
     end
 end
 
-function meta:__len()
-    return core_len_cpp_table(self.__obj)
-end
-
-local function mlua_ipairs(self, index)
-    local obj = self.__obj
-    index = index + 1
-    local value = rawget(self, index)
-    if value then
-        return index, value
-    end
-    local sz = core_len_cpp_table(obj)
-    if sz < index then
-        return
-    end
-    return index, self[index]
-end
-
-function meta:__ipairs()
-    return mlua_ipairs, self, 0
-end
-
-local function mlua_next(obj, key)
-    local nextkey = core_nextkey_cpp_table(obj.__obj, key)
-    if nextkey then
-        return nextkey, obj[nextkey]
-    end
-end
-
-function meta:__pairs()
-    return mlua_next, self, nil
-end
-
----transform a lua table to a cpp table
----@param name string
----@param t table
-function _G.table_to_cpp(name, t)
-    local light_userdata = core_table_to_cpp(name, t)
-    if not light_userdata then
-        return nil
+function lua_to_cpp.create_metatable(message_name)
+    _G.CPP_TABLE_LAYOUT_META_TABLE = _G.CPP_TABLE_LAYOUT_META_TABLE or {}
+    local layout = _G.CPP_TABLE_LAYOUT[message_name]
+    if not layout then
+        error("create template error, message " .. message_name .. " not exist")
     end
 
-    local holder = { __obj = light_userdata }
-    setmetatable(holder, meta)
-    return holder
+    local index_func = function(t, k)
+        local layout_v = layout.members[k]
+        if not layout_v then
+            return nil
+        end
+        layout_v.index_func(t)
+    end
+
+    local newindex_func = function(t, k, value)
+        local layout_v = layout.members[k]
+        if not layout_v then
+            return
+        end
+        layout_v.newindex_func(t, value)
+    end
+
+    local gc_func = function(t)
+        core_cpp_table_gc(t)
+    end
+
+    local metatable = {
+        __index = index_func,
+        __newindex = newindex_func,
+        __gc = gc_func,
+    }
+
+    _G.CPP_TABLE_LAYOUT_META_TABLE[message_name] = metatable
+end
+
+---load cpp table proto, if old message exist, will merge the old message
+---@param protos table contains the proto message
+function _G.cpp_table_load_proto(protos)
+    _G.cpp_table_proto = _G.cpp_table_proto or {}
+    for message_name, message in pairs(protos) do
+        lua_to_cpp.load_proto(message_name, message)
+        lua_to_cpp.create_metatable(message_name)
+    end
+end
+
+---sink lua table to cpp table
+---@param name string the proto name
+---@param table table the src lua table
+function _G.cpp_table_sink(name, table)
+    local layout = _G.CPP_TABLE_LAYOUT[name]
+    if not layout then
+        error("cpp table sink error, message " .. name .. " not exist")
+    end
+
+    local metatable = _G.CPP_TABLE_LAYOUT_META_TABLE[name]
+    if not metatable then
+        error("cpp table sink error, metatable " .. name .. " not exist")
+    end
+
+    local container = core_cpp_table_create_container(layout.total_size)
+    setmetatable(table, metatable)
+
+    for k, v in pairs(table) do
+        container[k] = v
+    end
+
+    return container
 end
 
 ---dump a cpp table to string
 ---@param name string
-function _G.dump_cpp_table(name)
-    return core_dump_cpp_table(name)
+function _G.cpp_table_dump(name)
+    return core_cpp_table_dump(name)
 end
 
---------------------------lua2cpp end-------------------------------------
+--------------------------cpp-table end-------------------------------------
 
 --------------------------static-perf-lua begin-------------------------------------
 

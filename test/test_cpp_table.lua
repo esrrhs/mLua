@@ -1,81 +1,26 @@
 package.cpath = "../?.so;" .. package.cpath
-package.path = "../?.lua;" .. package.path
+package.path = "./?.lua;./test/?.lua;../?.lua;" .. package.path
 
 require "mLua"
+require "cpp_table_proto"
+local serpent = require "serpent"
 
-local config = {
-    [123] = {
-        a = 1.1,
-        b = 123123123123,
-        c = "abcd",
-        e = true,
-        f = false,
-        g = { 1, 2, 3, 4, 5, 6 },
-        h = {
-            { a = 1, b = 2, c = 3 },
-            { a = 11, b = 22, c = 33 },
-            { a = 111, b = 222, c = 333 },
-        }
+local player = {
+    name = "jack",
+    score = 100,
+    is_vip = true,
+    experience = 100.2,
+    items = {
+        { id = 100000000001, name = "item1", price = 100 },
+        { id = 100000000002, name = "item2", price = 200 },
     },
+    labels = { 1, -2, 3, -4, 5 },
+    pet = { name = "dog", age = 2, breed = "poodle", weight = 10.5 },
+    friends = {
+        jack = { name = "jack", age = 20, email = "jack@email.com" },
+        tom = { name = "tom", age = 22, email = "tom@email.com" },
+    },
+    params = { [101] = 100, [102] = 200, [103] = 300 },
 }
 
-local big_config = {}
-for i = 0, 10000 do
-    big_config[i] = { i = i }
-    for j = 0, 1000 do
-        big_config[i][j] = j
-    end
-end
-local sum = 0
-local start = os.clock()
-for i = 0, 10000 do
-    sum = sum + big_config[i].i
-end
-print("big_config test sum:" .. sum)
-print("use time: " .. os.clock() - start)
-
-print("config[123].a: " .. config[123].a)
-print("config[123].c: " .. config[123].c)
-print("#config[123].g: " .. #config[123].g)
-for k, v in pairs(config[123]) do
-    print(string.format("pairs config[123][%s]: %s", k, v))
-end
-for k, v in ipairs(config[123].g) do
-    print("ipairs config[123].g[" .. k .. "]: " .. v)
-end
-for k, v in pairs(config[123].g) do
-    print("pairs config[123].g[" .. k .. "]: " .. v)
-end
-
-collectgarbage("collect")
-print("before lua table to cpp, lua memory is " .. collectgarbage("count"))
-
-config = _G.table_to_cpp("config", config)
-big_config = _G.table_to_cpp("big_config", big_config)
-print("dump config: " .. _G.dump_cpp_table("config"))
-
-collectgarbage("collect")
-print("after lua table to cpp, lua memory is " .. collectgarbage("count"))
-
-print("config[123].a: " .. config[123].a)
-print("config[123].c: " .. config[123].c)
-print("#config[123].g: " .. #config[123].g)
-for k, v in pairs(config[123]) do
-    print(string.format("pairs config[123][%s]: %s", k, v))
-end
-for k, v in ipairs(config[123].g) do
-    print("ipairs config[123].g[" .. k .. "]: " .. v)
-end
-for k, v in pairs(config[123].g) do
-    print("pairs config[123].g[" .. k .. "]: " .. v)
-end
-sum = 0
-start = os.clock()
-for i = 0, 10000 do
-    sum = sum + big_config[i].i
-end
-print("big_config test sum:" .. sum)
-print("use time: " .. os.clock() - start)
-
-collectgarbage("collect")
-print("after use cpp table, lua memory is " .. collectgarbage("count"))
+_G.cpp_table_load_proto(_G.CPP_TABLE_PROTO)

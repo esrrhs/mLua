@@ -1,0 +1,36 @@
+syntax = "proto3";
+
+package cpp_table;
+
+// This is a simple example of a protocol buffer message definition.
+
+message Player {
+  string name = 1;
+  int32 score = 2;
+  bool is_vip = 3;
+  float experience = 4;
+  repeated Item items = 5;
+  repeated int32 labels = 6;
+  Pet pet = 7;
+  map<string, Friend> friends = 8;
+  map<int32, int32> params = 9;
+}
+
+message Item {
+  int64 id = 1;
+  string name = 2;
+  int32 price = 3;
+}
+
+message Pet {
+  string name = 1;
+  int32 age = 2;
+  string breed = 3;
+  double weight = 4;
+}
+
+message Friend {
+  string name = 1;
+  int32 age = 2;
+  string email = 3;
+}
