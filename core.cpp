@@ -36,7 +36,7 @@ void llog(int level, const char *file, const char *func, int pos, const char *fm
 }
 
 extern "C" int luaopen_libmluacore(lua_State *L) {
-    LLOG("luaopen_libmluacore");
+    LLOG("luaopen_libmluacore start");
     std::vector<luaL_Reg> l;
     auto cpp_table_funcs = GetCppTableFuncs();
     l.insert(l.end(), cpp_table_funcs.begin(), cpp_table_funcs.end());
@@ -47,5 +47,6 @@ extern "C" int luaopen_libmluacore(lua_State *L) {
     l.push_back({nullptr, nullptr});
     lua_createtable(L, 0, l.size() - 1);
     luaL_setfuncs(L, l.data(), 0);
+    LLOG("luaopen_libmluacore success function count %d", l.size() - 1);
     return 1;
 }
