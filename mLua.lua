@@ -1,6 +1,7 @@
 local core = require "libmluacore"
 
 local core_cpp_table_create_container = core.cpp_table_create_container
+local core_cpp_table_set_meta_table = core.cpp_table_set_meta_table
 local core_cpp_table_container_get_int32 = core.cpp_table_container_get_int32
 local core_cpp_table_container_set_int32 = core.cpp_table_container_set_int32
 local core_cpp_table_container_get_uint32 = core.cpp_table_container_get_uint32
@@ -23,7 +24,7 @@ local core_cpp_table_container_get_array = core.cpp_table_container_get_array
 local core_cpp_table_container_set_array = core.cpp_table_container_set_array
 local core_cpp_table_container_get_map = core.cpp_table_container_get_map
 local core_cpp_table_container_set_map = core.cpp_table_container_set_map
-local core_cpp_table_gc = core.cpp_table_gc
+local core_cpp_table_delete_container = core.cpp_table_delete_container
 local core_cpp_table_dump = core.cpp_table_dump
 
 local core_roaring64map_add = core.roaring64map_add
@@ -278,7 +279,7 @@ function lua_to_cpp.create_metatable(message_name)
         if not layout_v then
             return nil
         end
-        layout_v.index_func(t)
+        return layout_v.index_func(t)
     end
 
     local newindex_func = function(t, k, value)
@@ -290,7 +291,7 @@ function lua_to_cpp.create_metatable(message_name)
     end
 
     local gc_func = function(t)
-        core_cpp_table_gc(t)
+        core_cpp_table_delete_container(t)
     end
 
     local metatable = {
@@ -326,8 +327,8 @@ function _G.cpp_table_sink(name, table)
         error("cpp table sink error, metatable " .. name .. " not exist")
     end
 
-    local container = core_cpp_table_create_container(layout.total_size)
-    setmetatable(table, metatable)
+    local container = core_cpp_table_create_container(name, layout.total_size)
+    core_cpp_table_set_meta_table(container, metatable)
 
     for k, v in pairs(table) do
         container[k] = v
