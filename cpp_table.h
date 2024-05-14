@@ -278,6 +278,7 @@ public:
     }
 
     void Remove(HashStringView str) {
+        LLOG("StringHeap remove string %s", str.data());
         m_string_map.erase(str);
     }
 
@@ -292,7 +293,7 @@ public:
 
     ~Layout() {}
 
-    struct Member {
+    struct Member : public RefCntObj {
         std::string name;
         std::string type;
         std::string key;
@@ -300,14 +301,25 @@ public:
         int pos;
         int size;
         int tag;
+        int shared;
     };
 
-    void SetMember(const std::vector<Member> &member) {
+    typedef SharedPtr<Member> MemberPtr;
+
+    void SetMember(const std::vector<MemberPtr> &member) {
         m_member = member;
     }
 
-    std::vector<Member> &GetMember() {
+    std::vector<MemberPtr> &GetMember() {
         return m_member;
+    }
+
+    void SetSharedMember(const std::vector<MemberPtr> &member) {
+        m_shared_member = member;
+    }
+
+    std::vector<MemberPtr> &GetSharedMember() {
+        return m_shared_member;
     }
 
     void SetName(const std::string &name) {
@@ -328,7 +340,8 @@ public:
 
 private:
     std::string m_name;
-    std::vector<Member> m_member;
+    std::vector<MemberPtr> m_member;
+    std::vector<MemberPtr> m_shared_member;
     int m_total_size;
 };
 
@@ -423,6 +436,9 @@ public:
             return Set<T *>(idx, in.get(), false);
         }
     }
+
+private:
+    void ReleaseAllSharedObj();
 
 private:
     LayoutPtr m_layout;

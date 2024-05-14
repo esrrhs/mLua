@@ -16,6 +16,25 @@ Container::Container(LayoutPtr layout) {
 }
 
 Container::~Container() {
+    LLOG("Container::~Container: %s %p", m_layout->GetName().data(), this);
+    ReleaseAllSharedObj();
+}
+
+void Container::ReleaseAllSharedObj() {
+    auto &shared_member = m_layout->GetSharedMember();
+    for (auto &mem: shared_member) {
+        int pos = mem->pos;
+        SharedPtr<RefCntObj> out;
+        bool is_nil = false;
+        auto ret = GetSharedObj<RefCntObj>(pos, out, is_nil);
+        if (!ret) {
+            LERR("Container::ReleaseAllSharedObj: %s invalid pos %d", m_layout->GetName().data(), pos);
+            return;
+        }
+        if (!is_nil) {
+            out->Release();
+        }
+    }
 }
 
 static int cpp_table_update_layout(lua_State *L) {
@@ -38,7 +57,8 @@ static int cpp_table_update_layout(lua_State *L) {
         gLayoutMap[layout_key] = layout;
     }
 
-    std::vector<Layout::Member> member;
+    std::vector<Layout::MemberPtr> member;
+    std::vector<Layout::MemberPtr> shared_member;
     // iterator table {
     //     {
     //         type = v.type,
@@ -47,12 +67,13 @@ static int cpp_table_update_layout(lua_State *L) {
     //         pos = pos,
     //         size = v.size,
     //         tag = v.tag,
+    //         shared = v.shared,
     //     }
     // }
     lua_pushnil(L);
     int total_size = 0;
     while (lua_next(L, 2) != 0) {
-        Layout::Member mem;
+        auto mem = MakeShared<Layout::Member>();
         // name
         if (lua_type(L, -2) != LUA_TSTRING) {
             luaL_error(L, "cpp_table_update_layout: invalid key type %d", lua_type(L, -2));
@@ -64,7 +85,7 @@ static int cpp_table_update_layout(lua_State *L) {
             luaL_error(L, "cpp_table_update_layout: invalid key %s", name);
             return 0;
         }
-        mem.name.assign(name, name_size);
+        mem->name.assign(name, name_size);
 
         if (lua_type(L, -1) != LUA_TTABLE) {
             luaL_error(L, "cpp_table_update_layout: invalid table type %d", lua_type(L, -1));
@@ -84,7 +105,7 @@ static int cpp_table_update_layout(lua_State *L) {
             luaL_error(L, "cpp_table_update_layout: invalid type %s", type);
             return 0;
         }
-        mem.type.assign(type, type_size);
+        mem->type.assign(type, type_size);
         lua_pop(L, 1);
 
         // key
@@ -100,7 +121,7 @@ static int cpp_table_update_layout(lua_State *L) {
             luaL_error(L, "cpp_table_update_layout: invalid key %s", key);
             return 0;
         }
-        mem.key.assign(key, key_size);
+        mem->key.assign(key, key_size);
         lua_pop(L, 1);
 
         // value
@@ -112,7 +133,7 @@ static int cpp_table_update_layout(lua_State *L) {
         }
         size_t value_size = 0;
         const char *value = lua_tolstring(L, -1, &value_size);
-        mem.value.assign(value, value_size);
+        mem->value.assign(value, value_size);
         lua_pop(L, 1);
 
         // pos
@@ -122,7 +143,7 @@ static int cpp_table_update_layout(lua_State *L) {
             luaL_error(L, "cpp_table_update_layout: invalid pos type %d", lua_type(L, -1));
             return 0;
         }
-        mem.pos = lua_tointeger(L, -1);
+        mem->pos = lua_tointeger(L, -1);
         lua_pop(L, 1);
 
         // size
@@ -132,7 +153,7 @@ static int cpp_table_update_layout(lua_State *L) {
             luaL_error(L, "cpp_table_update_layout: invalid size type %d", lua_type(L, -1));
             return 0;
         }
-        mem.size = lua_tointeger(L, -1);
+        mem->size = lua_tointeger(L, -1);
         lua_pop(L, 1);
 
         // tag
@@ -142,16 +163,30 @@ static int cpp_table_update_layout(lua_State *L) {
             luaL_error(L, "cpp_table_update_layout: invalid tag type %d", lua_type(L, -1));
             return 0;
         }
-        mem.tag = lua_tointeger(L, -1);
+        mem->tag = lua_tointeger(L, -1);
+        lua_pop(L, 1);
+
+        // shared
+        lua_pushstring(L, "shared");
+        lua_gettable(L, -2);
+        if (lua_type(L, -1) != LUA_TNUMBER) {
+            luaL_error(L, "cpp_table_update_layout: invalid tag type %d", lua_type(L, -1));
+            return 0;
+        }
+        mem->shared = lua_tointeger(L, -1);
         lua_pop(L, 1);
 
         member.push_back(mem);
+        if (mem->shared) {
+            shared_member.push_back(mem);
+        }
         lua_pop(L, 1);
 
-        total_size += mem.size;
+        total_size += mem->size;
     }
 
     layout->SetMember(member);
+    layout->SetSharedMember(shared_member);
     layout->SetTotalSize(total_size);
     LLOG("cpp_table_update_layout: %s total size %d", name, total_size);
 

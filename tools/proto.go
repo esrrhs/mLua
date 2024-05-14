@@ -132,6 +132,47 @@ func filed_kind_size(field protoreflect.FieldDescriptor) int {
 	}
 }
 
+func is_shared_obj(field protoreflect.FieldDescriptor) int {
+	kind := field.Kind()
+	switch kind {
+	case protoreflect.BoolKind:
+		return 0
+	case protoreflect.Int32Kind:
+		return 0
+	case protoreflect.Sint32Kind:
+		return 0
+	case protoreflect.Sfixed32Kind:
+		return 0
+	case protoreflect.Int64Kind:
+		return 0
+	case protoreflect.Sint64Kind:
+		return 0
+	case protoreflect.Sfixed64Kind:
+		return 0
+	case protoreflect.Uint32Kind:
+		return 0
+	case protoreflect.Fixed32Kind:
+		return 0
+	case protoreflect.Uint64Kind:
+		return 0
+	case protoreflect.Fixed64Kind:
+		return 0
+	case protoreflect.FloatKind:
+		return 0
+	case protoreflect.DoubleKind:
+		return 0
+	case protoreflect.StringKind:
+		return 1
+	case protoreflect.BytesKind:
+		return 1
+	case protoreflect.MessageKind:
+		return 1
+	case protoreflect.EnumKind:
+		return 0
+	}
+	panic("unknown kind " + kind.String())
+}
+
 func main() {
 	input := flag.String("i", "input.proto", "input file")
 	output := flag.String("o", "output.lua", "output file")
@@ -173,12 +214,12 @@ func main() {
 			if field.Cardinality() == protoreflect.Repeated {
 				// check is map<>
 				if field.IsMap() {
-					output_str += fmt.Sprintf("    %s = { type = \"map\", key = \"%s\", value = \"%s\", tag = %d, size = %d },\n", field.Name(), field_kind_name(field.MapKey()), field_kind_name(field.MapValue()), field.Number(), 8)
+					output_str += fmt.Sprintf("    %s = { type = \"map\", key = \"%s\", value = \"%s\", tag = %d, size = %d, shared = 1 },\n", field.Name(), field_kind_name(field.MapKey()), field_kind_name(field.MapValue()), field.Number(), 8)
 				} else {
-					output_str += fmt.Sprintf("    %s = { type = \"array\", key = \"%s\", tag = %d, size = %d },\n", field.Name(), field_kind_name(field), field.Number(), 8)
+					output_str += fmt.Sprintf("    %s = { type = \"array\", key = \"%s\", tag = %d, size = %d, shared = 1 },\n", field.Name(), field_kind_name(field), field.Number(), 8)
 				}
 			} else {
-				output_str += fmt.Sprintf("    %s = { type = \"normal\", key = \"%s\", tag = %d, size = %d },\n", field.Name(), field_kind_name(field), field.Number(), filed_kind_size(field))
+				output_str += fmt.Sprintf("    %s = { type = \"normal\", key = \"%s\", tag = %d, size = %d, shared = %d },\n", field.Name(), field_kind_name(field), field.Number(), filed_kind_size(field), is_shared_obj(field))
 			}
 		}
 		output_str += "}\n"
