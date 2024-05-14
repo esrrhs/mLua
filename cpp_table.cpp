@@ -195,6 +195,7 @@ static int cpp_table_update_layout(lua_State *L) {
 }
 
 static void cpp_table_reg_container_userdata(lua_State *L, Container *container) {
+    // create weak table _G.CPP_TABLE_CONTAINER, and set container pointer -> userdata pointer mapping
     lua_getglobal(L, "CPP_TABLE_CONTAINER");// stack: 1: userdata, 2: weak table
     if (lua_type(L, -1) != LUA_TTABLE) { // stack: 1: userdata, 2: nil
         lua_pop(L, 1); // stack: 1: userdata
@@ -210,6 +211,23 @@ static void cpp_table_reg_container_userdata(lua_State *L, Container *container)
     lua_pushlightuserdata(L, container); // stack: 1: userdata, 2: weak table, 3: pointer
     lua_pushvalue(L, -3); // stack: 1: userdata, 2: weak table, 3: pointer, 4: userdata
     lua_settable(L, -3); // stack: 1: userdata, 2: weak table
+    lua_pop(L, 1); // stack: 1: userdata
+    // set meta table from _G.CPP_TABLE_LAYOUT_META_TABLE
+    lua_getglobal(L, "CPP_TABLE_LAYOUT_META_TABLE");// stack: 1: userdata, 2: global meta
+    if (lua_type(L, -1) != LUA_TTABLE) { // stack: 1: userdata, 2: nil
+        lua_pop(L, 1); // stack: 1: userdata
+        luaL_error(L, "cpp_table_reg_container_userdata: no _G.CPP_TABLE_LAYOUT_META_TABLE found");
+        return;
+    }
+    lua_pushlstring(L, container->GetName().data(),
+                    container->GetName().size()); // stack: 1: userdata, 2: global meta, 3: name
+    lua_gettable(L, -2); // stack: 1: userdata, 2: global meta, 3: meta
+    if (lua_type(L, -1) != LUA_TTABLE) {
+        lua_pop(L, 1); // stack: 1: userdata, 2: global meta
+        luaL_error(L, "cpp_table_reg_container_userdata: no meta table found %s", container->GetName().data());
+        return;
+    }
+    lua_setmetatable(L, -3); // stack: 1: userdata, 2: global meta
     lua_pop(L, 1); // stack: 1: userdata
 }
 
@@ -256,29 +274,12 @@ static int cpp_table_create_container(lua_State *L) {
     }
     auto layout = layout_it->second;
     auto container = MakeShared<Container>(layout);
-    auto pointer = lua_newuserdata(L, 0);
+    auto pointer = (void **) lua_newuserdata(L, sizeof(void *));
+    *pointer = container.get();
     gLuaContainerHolder.Set(pointer, container);
     // create container pointer -> userdata pointer mapping in lua _G.CPP_TABLE_CONTAINER which is a weak table
     cpp_table_reg_container_userdata(L, container.get());
     return 1;
-}
-
-static int cpp_table_set_meta_table(lua_State *L) {
-    // lua stack: 1: container, 2: meta table
-    auto pointer = lua_touserdata(L, 1);
-    if (!pointer) {
-        luaL_error(L, "cpp_table_set_meta_table: invalid pointer");
-        return 0;
-    }
-    auto container = gLuaContainerHolder.Get(pointer);
-    if (!container) {
-        luaL_error(L, "cpp_table_set_meta_table: no container found %p", pointer);
-        return 0;
-    }
-    luaL_checktype(L, 2, LUA_TTABLE);
-    lua_pushvalue(L, 2);
-    lua_setmetatable(L, 1);
-    return 0;
 }
 
 static int cpp_table_delete_container(lua_State *L) {
@@ -759,7 +760,8 @@ static int cpp_table_container_get_obj(lua_State *L) {
     auto container_pointer = obj.get();
     auto find = cpp_table_get_container_userdata(L, container_pointer);
     if (!find) {
-        auto userdata_pointer = lua_newuserdata(L, 0);
+        auto userdata_pointer = (void **) lua_newuserdata(L, sizeof(void *));
+        *userdata_pointer = obj.get();
         gLuaContainerHolder.Set(userdata_pointer, obj);
         cpp_table_reg_container_userdata(L, container_pointer);
         LLOG("cpp_table_container_get_obj: %s new %p", obj->GetName().data(), container_pointer);
@@ -810,7 +812,6 @@ std::vector<luaL_Reg> GetCppTableFuncs() {
     return {
             {"cpp_table_update_layout",        cpp_table::cpp_table_update_layout},
             {"cpp_table_create_container",     cpp_table::cpp_table_create_container},
-            {"cpp_table_set_meta_table",       cpp_table::cpp_table_set_meta_table},
             {"cpp_table_delete_container",     cpp_table::cpp_table_delete_container},
             {"cpp_table_container_get_int32",  cpp_table::cpp_table_container_get_int32},
             {"cpp_table_container_set_int32",  cpp_table::cpp_table_container_set_int32},

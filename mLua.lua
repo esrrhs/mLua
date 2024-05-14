@@ -2,7 +2,6 @@ local core = require "libmluacore"
 
 local core_cpp_table_update_layout = core.cpp_table_update_layout
 local core_cpp_table_create_container = core.cpp_table_create_container
-local core_cpp_table_set_meta_table = core.cpp_table_set_meta_table
 local core_cpp_table_container_get_int32 = core.cpp_table_container_get_int32
 local core_cpp_table_container_set_int32 = core.cpp_table_container_set_int32
 local core_cpp_table_container_get_uint32 = core.cpp_table_container_get_uint32
@@ -337,8 +336,6 @@ function _G.cpp_table_sink(name, table)
     end
 
     local container = core_cpp_table_create_container(name)
-    core_cpp_table_set_meta_table(container, metatable)
-
     for k, v in pairs(table) do
         container[k] = v
     end

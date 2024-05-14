@@ -41,6 +41,9 @@ print(cpptable1.upgrade.level)
 collectgarbage("collect")
 print("---------done1---------")
 
+print(cpptable1.upgrade.cost)
+print(cpptable1.upgrade.level)
+
 cpptable1 = nil
 collectgarbage("collect")
 print("---------done2---------")
