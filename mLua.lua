@@ -1,5 +1,6 @@
 local core = require "libmluacore"
 
+local core_cpp_table_update_layout = core.cpp_table_update_layout
 local core_cpp_table_create_container = core.cpp_table_create_container
 local core_cpp_table_set_meta_table = core.cpp_table_set_meta_table
 local core_cpp_table_container_get_int32 = core.cpp_table_container_get_int32
@@ -151,7 +152,7 @@ function lua_to_cpp.create_layout(message_name, message)
         layout.members[k] = {
             type = v.type,
             key = v.key,
-            value = v.value,
+            value = v.value or "",
             pos = pos,
             size = v.size,
             tag = v.tag,
@@ -161,6 +162,7 @@ function lua_to_cpp.create_layout(message_name, message)
     layout.total_size = pos
 
     lua_to_cpp.create_layout_meta_func(layout)
+    core_cpp_table_update_layout(message_name, layout.members)
 
     _G.CPP_TABLE_LAYOUT[message_name] = layout
 end
@@ -191,7 +193,7 @@ function lua_to_cpp.merge_layout(message_name, message, delete_members, new_memb
             layout.members[k] = {
                 type = v.type,
                 key = v.key,
-                value = v.value,
+                value = v.value or "",
                 pos = old_layout_v.pos,
                 size = v.size,
                 tag = v.tag,
@@ -200,7 +202,7 @@ function lua_to_cpp.merge_layout(message_name, message, delete_members, new_memb
             layout.members[k] = {
                 type = v.type,
                 key = v.key,
-                value = v.value,
+                value = v.value or "",
                 pos = layout.total_size,
                 size = v.size,
                 tag = v.tag,
@@ -214,6 +216,7 @@ function lua_to_cpp.merge_layout(message_name, message, delete_members, new_memb
     end
 
     lua_to_cpp.create_layout_meta_func(layout)
+    core_cpp_table_update_layout(message_name, layout.members)
 end
 
 ---merge proto members by tag
@@ -327,7 +330,7 @@ function _G.cpp_table_sink(name, table)
         error("cpp table sink error, metatable " .. name .. " not exist")
     end
 
-    local container = core_cpp_table_create_container(name, layout.total_size)
+    local container = core_cpp_table_create_container(name)
     core_cpp_table_set_meta_table(container, metatable)
 
     for k, v in pairs(table) do

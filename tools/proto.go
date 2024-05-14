@@ -112,23 +112,23 @@ func filed_kind_size(field protoreflect.FieldDescriptor) int {
 	ctype := field_kind_name(field)
 	switch ctype {
 	case "bool":
-		return 1
+		return 2
 	case "int32":
-		return 4
+		return 5
 	case "int64":
-		return 8
+		return 9
 	case "uint32":
-		return 4
+		return 5
 	case "uint64":
-		return 8
+		return 9
 	case "float":
-		return 4
+		return 5
 	case "double":
-		return 8
+		return 9
 	case "string":
-		return 8 // void*
+		return 9
 	default:
-		return 8 // void*
+		return 9 // void*
 	}
 }
 

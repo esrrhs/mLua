@@ -13,8 +13,12 @@ public:
 
     void Release() {
         if (--m_ref == 0) {
-            delete this;
+            Delete();
         }
+    }
+
+    virtual void Delete() {
+        delete this;
     }
 
     int Ref() const { return m_ref; }
@@ -83,12 +87,60 @@ SharedPtr<T> MakeShared(Args &&... args) {
     return SharedPtr<T>(new T(std::forward<Args>(args)...));
 }
 
+// T must be a class derived from RefCntObj, use to manage the life cycle of T
+template<typename T>
+class WeakPtr {
+public:
+    WeakPtr() : m_ptr(0) {}
+
+    WeakPtr(const SharedPtr<T> &ptr) : m_ptr(ptr.get()) {}
+
+    WeakPtr(const WeakPtr &rhs) : m_ptr(rhs.m_ptr) {}
+
+    ~WeakPtr() {}
+
+    WeakPtr &operator=(const WeakPtr &rhs) {
+        m_ptr = rhs.m_ptr;
+        return *this;
+    }
+
+    SharedPtr<T> lock() const {
+        if (!m_ptr || m_ptr->Ref() == 0) {
+            return SharedPtr<T>();
+        }
+        return SharedPtr<T>(m_ptr);
+    }
+
+    void reset() {
+        m_ptr = 0;
+    }
+
+    bool expired() const {
+        return m_ptr && m_ptr->Ref() == 0;
+    }
+
+    bool operator==(const WeakPtr &rhs) const {
+        return m_ptr == rhs.m_ptr;
+    }
+
+    bool operator!=(const WeakPtr &rhs) const {
+        return m_ptr != rhs.m_ptr;
+    }
+
+private:
+    T *m_ptr;
+};
+
 // a simple string class, use to store string data
 class String : public RefCntObj {
 public:
     String(const char *str, size_t len) : m_str(str, len) {}
 
     String(const std::string &str) : m_str(str) {}
+
+    virtual ~String() {}
+
+    virtual void Delete();
 
     const char *c_str() const { return m_str.c_str(); }
 
@@ -101,17 +153,18 @@ private:
 };
 
 typedef SharedPtr<String> StringPtr;
+typedef WeakPtr<String> WeakStringPtr;
 
 // a simple string view class, std::string_view is not available in c++11
 class StringView {
 public:
     StringView() : m_str(0), m_len(0) {}
 
-    StringView(const char *str, size_t len) : m_str(str), m_len(len) { m_hash = Hash(str, m_len); }
+    StringView(const char *str, size_t len) : m_str(str), m_len(len) {}
 
-    StringView(const std::string &str) : m_str(str.c_str()), m_len(str.size()) { m_hash = Hash(m_str, m_len); }
+    StringView(const std::string &str) : m_str(str.c_str()), m_len(str.size()) {}
 
-    StringView(const StringPtr &str) : m_str(str->c_str()), m_len(str->size()) { m_hash = Hash(m_str, m_len); }
+    StringView(const StringPtr &str) : m_str(str->c_str()), m_len(str->size()) {}
 
     const char *data() const { return m_str; }
 
@@ -119,16 +172,47 @@ public:
 
     bool empty() const { return m_len == 0; }
 
-    size_t hash() const { return m_hash; }
-
     bool operator==(const StringView &rhs) const {
-        if (m_hash != rhs.m_hash || m_len != rhs.m_len) {
+        if (m_len != rhs.m_len) {
             return false;
         }
         return memcmp(m_str, rhs.m_str, m_len) == 0;
     }
 
     bool operator!=(const StringView &rhs) const {
+        if (m_len != rhs.m_len) {
+            return true;
+        }
+        return memcmp(m_str, rhs.m_str, m_len) != 0;
+    }
+
+protected:
+    const char *m_str;
+    size_t m_len;
+};
+
+class HashStringView : public StringView {
+public:
+    HashStringView(const char *str, size_t len) : StringView(str, len) { m_hash = Hash(str, m_len); }
+
+    HashStringView(const std::string &str) : StringView(str.c_str(), str.size()) { m_hash = Hash(m_str, m_len); }
+
+    HashStringView(const StringView &str) : StringView(str.data(), str.size()) { m_hash = Hash(m_str, m_len); }
+
+    HashStringView(const StringPtr &str) : StringView(str->c_str(), str->size()) { m_hash = Hash(m_str, m_len); }
+
+    HashStringView(const StringPtr &str, size_t hash) : StringView(str->c_str(), str->size()), m_hash(hash) {}
+
+    size_t hash() const { return m_hash; }
+
+    bool operator==(const HashStringView &rhs) const {
+        if (m_hash != rhs.m_hash || m_len != rhs.m_len) {
+            return false;
+        }
+        return memcmp(m_str, rhs.m_str, m_len) == 0;
+    }
+
+    bool operator!=(const HashStringView &rhs) const {
         if (m_hash != rhs.m_hash || m_len != rhs.m_len) {
             return true;
         }
@@ -160,19 +244,17 @@ private:
     }
 
 private:
-    const char *m_str;
-    size_t m_len;
     size_t m_hash;
 };
 
-struct StringViewHash {
-    size_t operator()(const StringView &str) const {
+struct HashStringViewHash {
+    size_t operator()(const HashStringView &str) const {
         return str.hash();
     }
 };
 
-struct StringViewEqual {
-    bool operator()(const StringView &str1, const StringView &str2) const {
+struct HashStringViewEqual {
+    bool operator()(const HashStringView &str1, const HashStringView &str2) const {
         return str1 == str2;
     }
 };
@@ -184,52 +266,166 @@ public:
 
     ~StringHeap() {}
 
-    StringPtr Add(StringView str) {
-        auto it = m_string.find(str);
-        if (it != m_string.end()) {
-            return it->second;
+    StringPtr Add(HashStringView str) {
+        auto it = m_string_map.find(str);
+        if (it != m_string_map.end()) {
+            return it->second.lock();
         }
-        auto ret = MakeShared<String>(str.data(), str.size());
-        m_string[StringView(ret)] = ret;
-        return ret;
+        auto value = MakeShared<String>(str.data(), str.size());
+        auto key = HashStringView(value, str.hash());
+        m_string_map[key] = value;
+        return value;
     }
 
-    void Remove(StringView str) {
-        m_string.erase(str);
+    void Remove(HashStringView str) {
+        m_string_map.erase(str);
     }
 
 private:
-    std::unordered_map<StringView, StringPtr, StringViewHash, StringViewEqual> m_string;
+    std::unordered_map<HashStringView, WeakStringPtr, HashStringViewHash, HashStringViewEqual> m_string_map;
 };
+
+// same as lua table, use to store key-value schema data
+class Layout : public RefCntObj {
+public:
+    Layout() {}
+
+    ~Layout() {}
+
+    struct Member {
+        std::string name;
+        std::string type;
+        std::string key;
+        std::string value;
+        int pos;
+        int size;
+        int tag;
+    };
+
+    void SetMember(const std::vector<Member> &member) {
+        m_member = member;
+    }
+
+    std::vector<Member> &GetMember() {
+        return m_member;
+    }
+
+    void SetName(const std::string &name) {
+        m_name = name;
+    }
+
+    const std::string &GetName() const {
+        return m_name;
+    }
+
+    int GetTotalSize() const {
+        return m_total_size;
+    }
+
+    void SetTotalSize(int size) {
+        m_total_size = size;
+    }
+
+private:
+    std::string m_name;
+    std::vector<Member> m_member;
+    int m_total_size;
+};
+
+typedef SharedPtr<Layout> LayoutPtr;
 
 // use to store lua struct data
 class Container : public RefCntObj {
 public:
-    Container(StringView name, int initial_size);
+    Container(LayoutPtr layout);
 
     ~Container();
 
-    StringView GetName() const { return m_name; }
-
-    template<typename T>
-    T *Get(int idx) {
-        if (idx < 0 || idx + sizeof(T) > m_buffer.size()) {
-            return 0;
-        }
-        return (T *) (m_buffer.data() + idx);
+    StringView GetName() const {
+        return m_layout->GetName();
     }
 
     template<typename T>
-    bool Set(int idx, const T &value) {
-        if (idx < 0 || idx + sizeof(T) > m_buffer.size()) {
+    bool Get(int idx, T &value, bool &is_nil) {
+        int max = idx + 1 + sizeof(T);
+        if (idx < 0 || max > m_layout->GetTotalSize()) {
             return false;
         }
-        *(T *) (m_buffer.data() + idx) = value;
+        if (max > (int) m_buffer.size()) {
+            // hot fix, new member added, just return nil
+            is_nil = true;
+            return true;
+        }
+        char flag = m_buffer[idx] & 0x01;
+        if (flag) {
+            is_nil = false;
+            value = *(T *) (m_buffer.data() + idx + 1);
+        } else {
+            is_nil = true;
+        }
         return true;
     }
 
+    template<typename T>
+    bool Set(int idx, const T &value, bool is_nil) {
+        int max = idx + 1 + sizeof(T);
+        if (idx < 0 || max > m_layout->GetTotalSize()) {
+            return false;
+        }
+        if (max > (int) m_buffer.size()) {
+            // hot fix, new member added, need to resize buffer
+            m_buffer.resize(m_layout->GetTotalSize());
+        }
+        if (is_nil) {
+            m_buffer[idx] &= 0xfe;
+        } else {
+            m_buffer[idx] |= 0x01;
+            *(T *) (m_buffer.data() + idx + 1) = value;
+        }
+        return true;
+    }
+
+    template<typename T>
+    bool GetSharedObj(int idx, SharedPtr<T> &out, bool &is_nil) {
+        T *old = 0;
+        bool is_old_nil = false;
+        auto ret = Get<T *>(idx, old, is_old_nil);
+        if (!ret) {
+            return false;
+        }
+        if (is_old_nil) {
+            is_nil = true;
+        } else {
+            out = SharedPtr<T>(old);
+            is_nil = false;
+        }
+        return true;
+    }
+
+    template<typename T>
+    bool SetSharedObj(int idx, SharedPtr<T> in, bool is_nil) {
+        T *old = 0;
+        bool is_old_nil = false;
+        auto ret = Get<T *>(idx, old, is_old_nil);
+        if (!ret) {
+            return false;
+        }
+        if (is_nil) {
+            if (!is_old_nil) {
+                old->Release();
+            }
+            return Set<T *>(idx, 0, true);
+        } else {
+            in.get()->AddRef();
+            if (!is_old_nil) {
+                old->Release();
+            }
+            return Set<T *>(idx, in.get(), false);
+        }
+    }
+
 private:
-    StringPtr m_name;
+    LayoutPtr m_layout;
     std::vector<char> m_buffer;
 };
 
