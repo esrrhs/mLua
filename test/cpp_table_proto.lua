@@ -15,6 +15,11 @@ _G.CPP_TABLE_PROTO.Item = {
     id = { type = "normal", key = "int64", tag = 1, size = 9, shared = 0 },
     name = { type = "normal", key = "string", tag = 2, size = 9, shared = 1 },
     price = { type = "normal", key = "int32", tag = 3, size = 5, shared = 0 },
+    upgrade = { type = "normal", key = "ItemUpgrade", tag = 4, size = 9, shared = 1 },
+}
+_G.CPP_TABLE_PROTO.ItemUpgrade = {
+    cost = { type = "normal", key = "int32", tag = 3, size = 5, shared = 0 },
+    level = { type = "normal", key = "int32", tag = 4, size = 5, shared = 0 },
 }
 _G.CPP_TABLE_PROTO.Pet = {
     name = { type = "normal", key = "string", tag = 1, size = 9, shared = 1 },

@@ -185,12 +185,61 @@ static int cpp_table_update_layout(lua_State *L) {
         total_size += mem->size;
     }
 
+    layout->SetName(layout_key);
     layout->SetMember(member);
     layout->SetSharedMember(shared_member);
     layout->SetTotalSize(total_size);
     LLOG("cpp_table_update_layout: %s total size %d", name, total_size);
 
     return 0;
+}
+
+static void cpp_table_reg_container_userdata(lua_State *L, Container *container) {
+    lua_getglobal(L, "CPP_TABLE_CONTAINER");// stack: 1: userdata, 2: weak table
+    if (lua_type(L, -1) != LUA_TTABLE) { // stack: 1: userdata, 2: nil
+        lua_pop(L, 1); // stack: 1: userdata
+        // create weak table
+        lua_newtable(L); // stack: 1: userdata, 2: table
+        lua_newtable(L); // stack: 1: userdata, 2: table, 3: table
+        lua_pushstring(L, "v"); // stack: 1: userdata, 2: table, 3: table, 4: "v"
+        lua_setfield(L, -2, "__mode"); // stack: 1: userdata, 2: table, 3: table(__mode = "v")
+        lua_setmetatable(L, -2); // stack: 1: userdata, 2: table
+        lua_setglobal(L, "CPP_TABLE_CONTAINER"); // stack: 1: userdata
+        lua_getglobal(L, "CPP_TABLE_CONTAINER"); // stack: 1: userdata, 2: weak table
+    }
+    lua_pushlightuserdata(L, container); // stack: 1: userdata, 2: weak table, 3: pointer
+    lua_pushvalue(L, -3); // stack: 1: userdata, 2: weak table, 3: pointer, 4: userdata
+    lua_settable(L, -3); // stack: 1: userdata, 2: weak table
+    lua_pop(L, 1); // stack: 1: userdata
+}
+
+static bool cpp_table_get_container_userdata(lua_State *L, Container *container) {
+    lua_getglobal(L, "CPP_TABLE_CONTAINER");// stack: 1: weak table
+    if (lua_type(L, -1) != LUA_TTABLE) { // stack: 1: nil
+        lua_pop(L, 1); // stack:
+        return false;
+    }
+    lua_pushlightuserdata(L, container); // stack: 1: weak table, 2: pointer
+    lua_gettable(L, -2); // stack: 1: weak table, 2: userdata
+    lua_remove(L, -2); // stack: 1: userdata
+    if (lua_type(L, -1) != LUA_TUSERDATA) {
+        lua_pop(L, 1); // stack:
+        return false;
+    }
+    // stack: 1: userdata
+    return true;
+}
+
+static void cpp_table_remove_container_userdata(lua_State *L, Container *container) {
+    lua_getglobal(L, "CPP_TABLE_CONTAINER");// stack: 1: weak table
+    if (lua_type(L, -1) != LUA_TTABLE) { // stack: 1: nil
+        lua_pop(L, 1); // stack:
+        return;
+    }
+    lua_pushlightuserdata(L, container); // stack: 1: weak table, 2: pointer
+    lua_pushnil(L); // stack: 1: weak table, 2: pointer, 3: nil
+    lua_settable(L, -3); // stack: 1: weak table
+    lua_pop(L, 1); // stack:
 }
 
 static int cpp_table_create_container(lua_State *L) {
@@ -209,6 +258,8 @@ static int cpp_table_create_container(lua_State *L) {
     auto container = MakeShared<Container>(layout);
     auto pointer = lua_newuserdata(L, 0);
     gLuaContainerHolder.Set(pointer, container);
+    // create container pointer -> userdata pointer mapping in lua _G.CPP_TABLE_CONTAINER which is a weak table
+    cpp_table_reg_container_userdata(L, container.get());
     return 1;
 }
 
@@ -241,6 +292,7 @@ static int cpp_table_delete_container(lua_State *L) {
         luaL_error(L, "cpp_table_delete_container: no container found %p", pointer);
         return 0;
     }
+    cpp_table_remove_container_userdata(L, container.get());
     gLuaContainerHolder.Remove(pointer);
     return 0;
 }
@@ -681,6 +733,77 @@ static int cpp_table_container_set_string(lua_State *L) {
     return 0;
 }
 
+static int cpp_table_container_get_obj(lua_State *L) {
+    auto pointer = lua_touserdata(L, 1);
+    int idx = lua_tointeger(L, 2);
+    if (!pointer) {
+        luaL_error(L, "cpp_table_container_get_obj: invalid container");
+        return 0;
+    }
+    auto container = gLuaContainerHolder.Get(pointer);
+    if (!container) {
+        luaL_error(L, "cpp_table_container_get_obj: no container found %p", pointer);
+        return 0;
+    }
+    ContainerPtr obj;
+    bool is_nil = false;
+    auto ret = container->GetSharedObj<Container>(idx, obj, is_nil);
+    if (!ret) {
+        luaL_error(L, "cpp_table_container_get_obj: %s invalid idx %d", container->GetName().data(), idx);
+        return 0;
+    }
+    if (is_nil) {
+        lua_pushnil(L);
+        return 1;
+    }
+    auto container_pointer = obj.get();
+    auto find = cpp_table_get_container_userdata(L, container_pointer);
+    if (!find) {
+        auto userdata_pointer = lua_newuserdata(L, 0);
+        gLuaContainerHolder.Set(userdata_pointer, obj);
+        cpp_table_reg_container_userdata(L, container_pointer);
+        LLOG("cpp_table_container_get_obj: %s new %p", obj->GetName().data(), container_pointer);
+    } else {
+        LLOG("cpp_table_container_get_obj: %s already exist %p", obj->GetName().data(), container_pointer);
+    }
+    return 1;
+}
+
+static int cpp_table_container_set_obj(lua_State *L) {
+    auto pointer = lua_touserdata(L, 1);
+    int idx = lua_tointeger(L, 2);
+    if (lua_type(L, 3) != LUA_TUSERDATA && lua_type(L, 3) != LUA_TNIL) {
+        luaL_error(L, "cpp_table_container_set_obj: invalid value type %d", lua_type(L, 3));
+        return 0;
+    }
+    void *obj_pointer = lua_touserdata(L, 3);
+    bool is_nil = lua_isnil(L, 3);
+    if (!pointer) {
+        luaL_error(L, "cpp_table_container_get_obj: invalid container");
+        return 0;
+    }
+    auto container = gLuaContainerHolder.Get(pointer);
+    if (!container) {
+        luaL_error(L, "cpp_table_container_get_obj: no container found %p", pointer);
+        return 0;
+    }
+    if (!obj_pointer) {
+        luaL_error(L, "cpp_table_container_set_obj: invalid obj");
+        return 0;
+    }
+    auto obj = gLuaContainerHolder.Get(obj_pointer);
+    if (!obj) {
+        luaL_error(L, "cpp_table_container_set_obj: no obj found %p", obj_pointer);
+        return 0;
+    }
+    auto ret = container->SetSharedObj<Container>(idx, obj, is_nil);
+    if (!ret) {
+        luaL_error(L, "cpp_table_container_set_obj: %s invalid idx %d", container->GetName().data(), idx);
+        return 0;
+    }
+    return 0;
+}
+
 }
 
 std::vector<luaL_Reg> GetCppTableFuncs() {
@@ -705,5 +828,7 @@ std::vector<luaL_Reg> GetCppTableFuncs() {
             {"cpp_table_container_set_bool",   cpp_table::cpp_table_container_set_bool},
             {"cpp_table_container_get_string", cpp_table::cpp_table_container_get_string},
             {"cpp_table_container_set_string", cpp_table::cpp_table_container_set_string},
+            {"cpp_table_container_get_obj",    cpp_table::cpp_table_container_get_obj},
+            {"cpp_table_container_set_obj",    cpp_table::cpp_table_container_set_obj},
     };
 }

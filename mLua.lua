@@ -49,9 +49,9 @@ local lua_to_cpp = {}
 function lua_to_cpp.create_layout_meta_func(layout)
     for k, v in pairs(layout.members) do
         local pos = v.pos
-        local type = v.type
+        local t = v.type
         local key = v.key
-        if type == "normal" then
+        if t == "normal" then
             if key == "int32" then
                 v.index_func = function(t)
                     return core_cpp_table_container_get_int32(t, pos)
@@ -113,17 +113,20 @@ function lua_to_cpp.create_layout_meta_func(layout)
                     return core_cpp_table_container_get_obj(t, pos)
                 end
                 v.newindex_func = function(t, value)
+                    if type(value) == "table" then
+                        value = _G.cpp_table_sink(key, value)
+                    end
                     core_cpp_table_container_set_obj(t, pos, value)
                 end
             end
-        elseif type == "array" then
+        elseif t == "array" then
             v.index_func = function(t, index)
                 return core_cpp_table_container_get_array(t, pos, index)
             end
             v.newindex_func = function(t, index, value)
                 core_cpp_table_container_set_array(t, pos, index, value)
             end
-        elseif type == "map" then
+        elseif t == "map" then
             v.index_func = function(t, key)
                 return core_cpp_table_container_get_map(t, pos, key)
             end

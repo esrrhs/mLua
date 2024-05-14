@@ -20,6 +20,12 @@ message Item {
   int64 id = 1;
   string name = 2;
   int32 price = 3;
+  ItemUpgrade upgrade = 4;
+}
+
+message ItemUpgrade {
+  int32 cost = 3;
+  int32 level = 4;
 }
 
 message Pet {
