@@ -455,6 +455,7 @@ public:
     ~LuaContainerHolder() {}
 
     ContainerPtr Get(void *ptr) {
+        // TODO: use void** to get raw pointer
         auto it = m_container.find(ptr);
         if (it != m_container.end()) {
             return it->second;

@@ -159,6 +159,8 @@ function lua_to_cpp.create_layout(message_name, message)
             size = v.size,
             tag = v.tag,
             shared = v.shared,
+            key_size = v.key_size,
+            key_shared = v.key_shared,
         }
         pos = pos + v.size
     end
@@ -201,6 +203,8 @@ function lua_to_cpp.merge_layout(message_name, message, delete_members, new_memb
                 size = v.size,
                 tag = v.tag,
                 shared = v.shared,
+                key_size = v.key_size,
+                key_shared = v.key_shared,
             }
         else
             layout.members[k] = {
@@ -211,6 +215,8 @@ function lua_to_cpp.merge_layout(message_name, message, delete_members, new_memb
                 size = v.size,
                 tag = v.tag,
                 shared = v.shared,
+                key_size = v.key_size,
+                key_shared = v.key_shared,
             }
             layout.total_size = layout.total_size + v.size
         end
