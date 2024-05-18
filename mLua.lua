@@ -1,5 +1,6 @@
 local core = require "libmluacore"
 
+local core_cpp_table_set_message_id = core.cpp_table_set_message_id
 local core_cpp_table_update_layout = core.cpp_table_update_layout
 local core_cpp_table_create_container = core.cpp_table_create_container
 local core_cpp_table_container_get_int32 = core.cpp_table_container_get_int32
@@ -65,6 +66,7 @@ function lua_to_cpp.create_layout_meta_func(layout)
         local key = v.key
         local key_size = v.key_size
         local key_shared = v.key_shared
+        local message_id = v.message_id
         if t == "normal" then
             if key == "int32" then
                 v.index_func = function(t)
@@ -130,7 +132,7 @@ function lua_to_cpp.create_layout_meta_func(layout)
                     if type(value) == "table" then
                         value = _G.cpp_table_sink(key, value)
                     end
-                    core_cpp_table_container_set_obj(t, pos, value)
+                    core_cpp_table_container_set_obj(t, pos, value, message_id)
                 end
             end
         elseif t == "array" then
@@ -152,6 +154,29 @@ function lua_to_cpp.create_layout_meta_func(layout)
             end
         else
             error("create layout meta func error, unknown type " .. type)
+        end
+    end
+end
+
+function lua_to_cpp.is_normal_type(key)
+    if key == "int32" or key == "uint32" or key == "int64" or key == "uint64"
+            or key == "float" or key == "double" or key == "bool" or key == "string" then
+        return true
+    end
+    return false
+end
+
+function lua_to_cpp.update_message_layout_id(message_name, layout)
+    for k, v in pairs(layout.members) do
+        local key = v.key
+        if not lua_to_cpp.is_normal_type(key) then
+            local message_id = _G.cpp_table_message_id[key]
+            if not message_id then
+                error("update message layout id error, message " .. key .. " not exist")
+            end
+            v.message_id = message_id
+        else
+            v.message_id = -1
         end
     end
 end
@@ -185,6 +210,7 @@ function lua_to_cpp.create_layout(message_name, message)
     end
     layout.total_size = pos
 
+    lua_to_cpp.update_message_layout_id(message_name, layout)
     lua_to_cpp.create_layout_meta_func(layout)
     core_cpp_table_update_layout(message_name, layout.members)
 
@@ -245,6 +271,7 @@ function lua_to_cpp.merge_layout(message_name, message, delete_members, new_memb
         layout.members[k] = nil
     end
 
+    lua_to_cpp.update_message_layout_id(message_name, layout)
     lua_to_cpp.create_layout_meta_func(layout)
     core_cpp_table_update_layout(message_name, layout.members)
 end
@@ -336,9 +363,23 @@ function lua_to_cpp.create_metatable(message_name)
     _G.CPP_TABLE_LAYOUT_META_TABLE[message_name] = metatable
 end
 
+--- alloc uniq id for every message
+function lua_to_cpp.alloc_message_id(protos)
+    _G.cpp_table_message_id = _G.cpp_table_message_id or {}
+    _G.cpp_table_message_global_id = _G.cpp_table_message_global_id or 0
+    for message_name, message in pairs(protos) do
+        if not _G.cpp_table_message_id[message_name] then
+            _G.cpp_table_message_global_id = _G.cpp_table_message_global_id + 1
+            _G.cpp_table_message_id[message_name] = _G.cpp_table_message_global_id
+            core_cpp_table_set_message_id(message_name, _G.cpp_table_message_global_id)
+        end
+    end
+end
+
 ---load cpp table proto, if old message exist, will merge the old message
 ---@param protos table contains the proto message
 function _G.cpp_table_load_proto(protos)
+    lua_to_cpp.alloc_message_id(protos)
     _G.cpp_table_proto = _G.cpp_table_proto or {}
     for message_name, message in pairs(protos) do
         lua_to_cpp.load_proto(message_name, message)

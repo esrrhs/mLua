@@ -302,6 +302,7 @@ public:
         int size;
         int tag;
         int shared;
+        int message_id;
     };
 
     typedef SharedPtr<Member> MemberPtr;
@@ -338,7 +339,16 @@ public:
         m_total_size = size;
     }
 
+    void SetMessageId(int message_id) {
+        m_message_id = message_id;
+    }
+
+    int GetMessageId() const {
+        return m_message_id;
+    }
+
 private:
+    int m_message_id;
     std::string m_name;
     std::vector<MemberPtr> m_member;
     std::vector<MemberPtr> m_shared_member;
@@ -356,6 +366,10 @@ public:
 
     StringView GetName() const {
         return m_layout->GetName();
+    }
+
+    int GetMessageId() const {
+        return m_layout->GetMessageId();
     }
 
     template<typename T>
@@ -455,7 +469,7 @@ public:
     ~LuaContainerHolder() {}
 
     ContainerPtr Get(void *ptr) {
-        // TODO: use void** to get raw pointer
+        // TODO: use void** to get raw pointer for speed
         auto it = m_container.find(ptr);
         if (it != m_container.end()) {
             return it->second;
@@ -473,6 +487,100 @@ public:
 
 private:
     std::unordered_map<void *, ContainerPtr> m_container;
+};
+
+// use to store lua array data
+class Array : public RefCntObj {
+    Array(LayoutPtr layout, int key_size);
+
+    ~Array();
+
+    StringView GetName() const {
+        return m_layout ? m_layout->GetName() : "";
+    }
+
+    template<typename T>
+    bool Get(int idx, T &value, bool &is_nil) {
+        int max = idx + 1 + sizeof(T);
+        if (max > (int) m_buffer.size()) {
+            // out of range, just return nil
+            is_nil = true;
+            return true;
+        }
+        char flag = m_buffer[idx] & 0x01;
+        if (flag) {
+            is_nil = false;
+            value = *(T *) (m_buffer.data() + idx + 1);
+        } else {
+            is_nil = true;
+        }
+        return true;
+    }
+
+    template<typename T>
+    bool Set(int idx, const T &value, bool is_nil) {
+        int max = idx + 1 + sizeof(T);
+        if (idx < 0 || max > m_layout->GetTotalSize()) {
+            return false;
+        }
+        if (max > (int) m_buffer.size()) {
+            // hot fix, new member added, need to resize buffer
+            m_buffer.resize(m_layout->GetTotalSize());
+        }
+        if (is_nil) {
+            m_buffer[idx] &= 0xfe;
+        } else {
+            m_buffer[idx] |= 0x01;
+            *(T *) (m_buffer.data() + idx + 1) = value;
+        }
+        return true;
+    }
+
+    template<typename T>
+    bool GetSharedObj(int idx, SharedPtr<T> &out, bool &is_nil) {
+        T *old = 0;
+        bool is_old_nil = false;
+        auto ret = Get<T *>(idx, old, is_old_nil);
+        if (!ret) {
+            return false;
+        }
+        if (is_old_nil) {
+            is_nil = true;
+        } else {
+            out = SharedPtr<T>(old);
+            is_nil = false;
+        }
+        return true;
+    }
+
+    template<typename T>
+    bool SetSharedObj(int idx, SharedPtr<T> in, bool is_nil) {
+        T *old = 0;
+        bool is_old_nil = false;
+        auto ret = Get<T *>(idx, old, is_old_nil);
+        if (!ret) {
+            return false;
+        }
+        if (is_nil) {
+            if (!is_old_nil) {
+                old->Release();
+            }
+            return Set<T *>(idx, 0, true);
+        } else {
+            in.get()->AddRef();
+            if (!is_old_nil) {
+                old->Release();
+            }
+            return Set<T *>(idx, in.get(), false);
+        }
+    }
+
+private:
+    void ReleaseAllSharedObj();
+
+private:
+    LayoutPtr m_layout;
+    std::vector<char> m_buffer;
 };
 
 }

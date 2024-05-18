@@ -5,6 +5,7 @@ namespace cpp_table {
 StringHeap gStringHeap;
 LuaContainerHolder gLuaContainerHolder;
 std::unordered_map<std::string, LayoutPtr> gLayoutMap;
+std::unordered_map<std::string, int> gMessageIdMap;
 
 void String::Delete() {
     gStringHeap.Remove(m_str);
@@ -35,6 +36,18 @@ void Container::ReleaseAllSharedObj() {
             out->Release();
         }
     }
+}
+
+static int cpp_table_set_message_id(lua_State *L) {
+    size_t name_size = 0;
+    const char *name = lua_tolstring(L, 1, &name_size);
+    if (name_size == 0) {
+        luaL_error(L, "cpp_table_update_layout: invalid name %s", name);
+        return 0;
+    }
+    int message_id = lua_tointeger(L, 2);
+    gMessageIdMap[std::string(name, name_size)] = message_id;
+    return 0;
 }
 
 static int cpp_table_update_layout(lua_State *L) {
@@ -176,6 +189,16 @@ static int cpp_table_update_layout(lua_State *L) {
         mem->shared = lua_tointeger(L, -1);
         lua_pop(L, 1);
 
+        // message_id
+        lua_pushstring(L, "message_id");
+        lua_gettable(L, -2);
+        if (lua_type(L, -1) != LUA_TNUMBER) {
+            luaL_error(L, "cpp_table_update_layout: invalid message_id type %d", lua_type(L, -1));
+            return 0;
+        }
+        mem->message_id = lua_tointeger(L, -1);
+        lua_pop(L, 1);
+
         member.push_back(mem);
         if (mem->shared) {
             shared_member.push_back(mem);
@@ -185,6 +208,12 @@ static int cpp_table_update_layout(lua_State *L) {
         total_size += mem->size;
     }
 
+    if (gMessageIdMap.find(layout_key) == gMessageIdMap.end()) {
+        luaL_error(L, "cpp_table_update_layout: no message_id found %s", layout_key.data());
+        return 0;
+    }
+
+    layout->SetMessageId(gMessageIdMap[layout_key]);
     layout->SetName(layout_key);
     layout->SetMember(member);
     layout->SetSharedMember(shared_member);
@@ -784,6 +813,7 @@ static int cpp_table_container_set_obj(lua_State *L) {
         luaL_error(L, "cpp_table_container_get_obj: invalid container");
         return 0;
     }
+    int message_id = lua_tointeger(L, 4);
     auto container = gLuaContainerHolder.Get(pointer);
     if (!container) {
         luaL_error(L, "cpp_table_container_get_obj: no container found %p", pointer);
@@ -798,6 +828,10 @@ static int cpp_table_container_set_obj(lua_State *L) {
         luaL_error(L, "cpp_table_container_set_obj: no obj found %p", obj_pointer);
         return 0;
     }
+    if (obj->GetMessageId() != message_id) {
+        luaL_error(L, "cpp_table_container_set_obj: %s invalid message_id %d", obj->GetName().data(), message_id);
+        return 0;
+    }
     auto ret = container->SetSharedObj<Container>(idx, obj, is_nil);
     if (!ret) {
         luaL_error(L, "cpp_table_container_set_obj: %s invalid idx %d", container->GetName().data(), idx);
@@ -807,33 +841,53 @@ static int cpp_table_container_set_obj(lua_State *L) {
 }
 
 static int cpp_table_create_array_container(lua_State *L) {
+    size_t name_size = 0;
+    const char *name = lua_tolstring(L, 1, &name_size);
+    if (name_size == 0) {
+        luaL_error(L, "cpp_table_create_array_container: invalid name %s", name);
+        return 0;
+    }
+    int key_size = lua_tointeger(L, 2);
+    if (key_size <= 0) {
+        luaL_error(L, "cpp_table_create_array_container: invalid key size %d", key_size);
+        return 0;
+    }
+    int key_shared = lua_tointeger(L, 3);
+    auto layout_it = gLayoutMap.find(std::string(name, name_size));
+    LayoutPtr layout;
+    if (layout_it != gLayoutMap.end()) {
+        layout = layout_it->second;
+    }
+
+
 }
 
 }
 
 std::vector<luaL_Reg> GetCppTableFuncs() {
     return {
-            {"cpp_table_update_layout",        cpp_table::cpp_table_update_layout},
-            {"cpp_table_create_container",     cpp_table::cpp_table_create_container},
-            {"cpp_table_delete_container",     cpp_table::cpp_table_delete_container},
-            {"cpp_table_container_get_int32",  cpp_table::cpp_table_container_get_int32},
-            {"cpp_table_container_set_int32",  cpp_table::cpp_table_container_set_int32},
-            {"cpp_table_container_get_uint32", cpp_table::cpp_table_container_get_uint32},
-            {"cpp_table_container_set_uint32", cpp_table::cpp_table_container_set_uint32},
-            {"cpp_table_container_get_int64",  cpp_table::cpp_table_container_get_int64},
-            {"cpp_table_container_set_int64",  cpp_table::cpp_table_container_set_int64},
-            {"cpp_table_container_get_uint64", cpp_table::cpp_table_container_get_uint64},
-            {"cpp_table_container_set_uint64", cpp_table::cpp_table_container_set_uint64},
-            {"cpp_table_container_get_float",  cpp_table::cpp_table_container_get_float},
-            {"cpp_table_container_set_float",  cpp_table::cpp_table_container_set_float},
-            {"cpp_table_container_get_double", cpp_table::cpp_table_container_get_double},
-            {"cpp_table_container_set_double", cpp_table::cpp_table_container_set_double},
-            {"cpp_table_container_get_bool",   cpp_table::cpp_table_container_get_bool},
-            {"cpp_table_container_set_bool",   cpp_table::cpp_table_container_set_bool},
-            {"cpp_table_container_get_string", cpp_table::cpp_table_container_get_string},
-            {"cpp_table_container_set_string", cpp_table::cpp_table_container_set_string},
-            {"cpp_table_container_get_obj",    cpp_table::cpp_table_container_get_obj},
-            {"cpp_table_container_set_obj",    cpp_table::cpp_table_container_set_obj},
+            {"cpp_table_set_message_id",         cpp_table::cpp_table_set_message_id},
+            {"cpp_table_update_layout",          cpp_table::cpp_table_update_layout},
+            {"cpp_table_create_container",       cpp_table::cpp_table_create_container},
+            {"cpp_table_delete_container",       cpp_table::cpp_table_delete_container},
+            {"cpp_table_container_get_int32",    cpp_table::cpp_table_container_get_int32},
+            {"cpp_table_container_set_int32",    cpp_table::cpp_table_container_set_int32},
+            {"cpp_table_container_get_uint32",   cpp_table::cpp_table_container_get_uint32},
+            {"cpp_table_container_set_uint32",   cpp_table::cpp_table_container_set_uint32},
+            {"cpp_table_container_get_int64",    cpp_table::cpp_table_container_get_int64},
+            {"cpp_table_container_set_int64",    cpp_table::cpp_table_container_set_int64},
+            {"cpp_table_container_get_uint64",   cpp_table::cpp_table_container_get_uint64},
+            {"cpp_table_container_set_uint64",   cpp_table::cpp_table_container_set_uint64},
+            {"cpp_table_container_get_float",    cpp_table::cpp_table_container_get_float},
+            {"cpp_table_container_set_float",    cpp_table::cpp_table_container_set_float},
+            {"cpp_table_container_get_double",   cpp_table::cpp_table_container_get_double},
+            {"cpp_table_container_set_double",   cpp_table::cpp_table_container_set_double},
+            {"cpp_table_container_get_bool",     cpp_table::cpp_table_container_get_bool},
+            {"cpp_table_container_set_bool",     cpp_table::cpp_table_container_set_bool},
+            {"cpp_table_container_get_string",   cpp_table::cpp_table_container_get_string},
+            {"cpp_table_container_set_string",   cpp_table::cpp_table_container_set_string},
+            {"cpp_table_container_get_obj",      cpp_table::cpp_table_container_get_obj},
+            {"cpp_table_container_set_obj",      cpp_table::cpp_table_container_set_obj},
             {"cpp_table_create_array_container", cpp_table::cpp_table_create_array_container}
     };
 }
