@@ -14,6 +14,8 @@ int main(int argc, char *argv[]) {
     lua_pushcfunction(L, get_cur_time_ms);
     lua_setglobal(L, "get_cur_time_ms");
 
+    printf("test luaL_dofile %s\n", argv[1]);
+
     if (luaL_dofile(L, argv[1]) != 0) {
         printf("test luaL_dofile failed %s\n", lua_tostring(L, -1));
         return -1;

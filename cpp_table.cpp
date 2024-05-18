@@ -806,6 +806,9 @@ static int cpp_table_container_set_obj(lua_State *L) {
     return 0;
 }
 
+static int cpp_table_create_array_container(lua_State *L) {
+}
+
 }
 
 std::vector<luaL_Reg> GetCppTableFuncs() {
@@ -831,5 +834,6 @@ std::vector<luaL_Reg> GetCppTableFuncs() {
             {"cpp_table_container_set_string", cpp_table::cpp_table_container_set_string},
             {"cpp_table_container_get_obj",    cpp_table::cpp_table_container_get_obj},
             {"cpp_table_container_set_obj",    cpp_table::cpp_table_container_set_obj},
+            {"cpp_table_create_array_container", cpp_table::cpp_table_create_array_container}
     };
 }

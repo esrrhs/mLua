@@ -25,6 +25,7 @@ local core_cpp_table_container_set_array = core.cpp_table_container_set_array
 local core_cpp_table_container_get_map = core.cpp_table_container_get_map
 local core_cpp_table_container_set_map = core.cpp_table_container_set_map
 local core_cpp_table_delete_container = core.cpp_table_delete_container
+local core_cpp_table_create_array_container = core.cpp_table_create_array_container
 local core_cpp_table_dump = core.cpp_table_dump
 
 local core_roaring64map_add = core.roaring64map_add
@@ -45,11 +46,25 @@ local core_quick_archiver_set_lz_acceleration = core.quick_archiver_set_lz_accel
 
 local lua_to_cpp = {}
 
+function lua_to_cpp.sink_array(key, key_size, key_shared, array)
+    local container = core_cpp_table_create_array_container(key, key_size, key_shared)
+    for i, v in ipairs(array) do
+        if key_shared then
+            v = _G.cpp_table_sink(key, v)
+        end
+        container[i] = v
+    end
+    return container
+end
+
+---create layout meta function
 function lua_to_cpp.create_layout_meta_func(layout)
     for k, v in pairs(layout.members) do
         local pos = v.pos
         local t = v.type
         local key = v.key
+        local key_size = v.key_size
+        local key_shared = v.key_shared
         if t == "normal" then
             if key == "int32" then
                 v.index_func = function(t)
@@ -119,11 +134,14 @@ function lua_to_cpp.create_layout_meta_func(layout)
                 end
             end
         elseif t == "array" then
-            v.index_func = function(t, index)
-                return core_cpp_table_container_get_array(t, pos, index)
+            v.index_func = function(t)
+                return core_cpp_table_container_get_array(t, pos)
             end
-            v.newindex_func = function(t, index, value)
-                core_cpp_table_container_set_array(t, pos, index, value)
+            v.newindex_func = function(t, value)
+                if type(value) == "table" then
+                    value = lua_to_cpp.sink_array(key, key_size, key_shared, value)
+                end
+                core_cpp_table_container_set_array(t, pos, value)
             end
         elseif t == "map" then
             v.index_func = function(t, key)
@@ -138,6 +156,7 @@ function lua_to_cpp.create_layout_meta_func(layout)
     end
 end
 
+---create a cpp table layout
 function lua_to_cpp.create_layout(message_name, message)
     _G.CPP_TABLE_LAYOUT = _G.CPP_TABLE_LAYOUT or {}
     local old_proto = _G.CPP_TABLE_LAYOUT[message_name]
