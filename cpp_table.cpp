@@ -38,6 +38,24 @@ void Container::ReleaseAllSharedObj() {
     }
 }
 
+Array::Array(LayoutPtr layout, int key_size, bool key_shared) {
+    m_layout = layout;
+    m_key_size = key_size;
+    m_key_shared = key_shared;
+}
+
+Array::~Array() {
+    LLOG("Array::~Array: %s %p", m_layout->GetName().data(), this);
+    ReleaseAllSharedObj();
+}
+
+void Array::ReleaseAllSharedObj() {
+    if (!m_key_shared) {
+        return;
+    }
+    int element_size = m_buffer.size() / m_key_size;
+}
+
 static int cpp_table_set_message_id(lua_State *L) {
     size_t name_size = 0;
     const char *name = lua_tolstring(L, 1, &name_size);
@@ -828,6 +846,7 @@ static int cpp_table_container_set_obj(lua_State *L) {
         luaL_error(L, "cpp_table_container_set_obj: no obj found %p", obj_pointer);
         return 0;
     }
+    // check message_id avoid set wrong obj
     if (obj->GetMessageId() != message_id) {
         luaL_error(L, "cpp_table_container_set_obj: %s invalid message_id %d", obj->GetName().data(), message_id);
         return 0;
@@ -852,42 +871,144 @@ static int cpp_table_create_array_container(lua_State *L) {
         luaL_error(L, "cpp_table_create_array_container: invalid key size %d", key_size);
         return 0;
     }
-    int key_shared = lua_tointeger(L, 3);
+    int key_shared = lua_toboolean(L, 3);
     auto layout_it = gLayoutMap.find(std::string(name, name_size));
     LayoutPtr layout;
     if (layout_it != gLayoutMap.end()) {
         layout = layout_it->second;
     }
+    auto container = MakeShared<Array>(layout, key_size, key_shared > 0);
+    auto pointer = (void **) lua_newuserdata(L, sizeof(void *));
+    *pointer = container.get();
+    gLuaContainerHolder.SetArray(pointer, container);
+    // create container pointer -> userdata pointer mapping in lua _G.CPP_TABLE_CONTAINER which is a weak table
+//    cpp_table_reg_container_userdata(L, container.get());
+    return 1;
+}
 
+static int cpp_table_delete_array_container(lua_State *L) {
+    return 0;
+}
 
+static int cpp_table_array_container_get_int32(lua_State *L) {
+    return 0;
+}
+
+static int cpp_table_array_container_set_int32(lua_State *L) {
+    return 0;
+}
+
+static int cpp_table_array_container_get_uint32(lua_State *L) {
+    return 0;
+}
+
+static int cpp_table_array_container_set_uint32(lua_State *L) {
+    return 0;
+}
+
+static int cpp_table_array_container_get_int64(lua_State *L) {
+    return 0;
+}
+
+static int cpp_table_array_container_set_int64(lua_State *L) {
+    return 0;
+}
+
+static int cpp_table_array_container_get_uint64(lua_State *L) {
+    return 0;
+}
+
+static int cpp_table_array_container_set_uint64(lua_State *L) {
+    return 0;
+}
+
+static int cpp_table_array_container_get_float(lua_State *L) {
+    return 0;
+}
+
+static int cpp_table_array_container_set_float(lua_State *L) {
+    return 0;
+}
+
+static int cpp_table_array_container_get_double(lua_State *L) {
+    return 0;
+}
+
+static int cpp_table_array_container_set_double(lua_State *L) {
+    return 0;
+}
+
+static int cpp_table_array_container_get_bool(lua_State *L) {
+    return 0;
+}
+
+static int cpp_table_array_container_set_bool(lua_State *L) {
+    return 0;
+}
+
+static int cpp_table_array_container_get_string(lua_State *L) {
+    return 0;
+}
+
+static int cpp_table_array_container_set_string(lua_State *L) {
+    return 0;
+}
+
+static int cpp_table_array_container_get_obj(lua_State *L) {
+    return 0;
+}
+
+static int cpp_table_array_container_set_obj(lua_State *L) {
+    return 0;
 }
 
 }
 
 std::vector<luaL_Reg> GetCppTableFuncs() {
     return {
-            {"cpp_table_set_message_id",         cpp_table::cpp_table_set_message_id},
-            {"cpp_table_update_layout",          cpp_table::cpp_table_update_layout},
-            {"cpp_table_create_container",       cpp_table::cpp_table_create_container},
-            {"cpp_table_delete_container",       cpp_table::cpp_table_delete_container},
-            {"cpp_table_container_get_int32",    cpp_table::cpp_table_container_get_int32},
-            {"cpp_table_container_set_int32",    cpp_table::cpp_table_container_set_int32},
-            {"cpp_table_container_get_uint32",   cpp_table::cpp_table_container_get_uint32},
-            {"cpp_table_container_set_uint32",   cpp_table::cpp_table_container_set_uint32},
-            {"cpp_table_container_get_int64",    cpp_table::cpp_table_container_get_int64},
-            {"cpp_table_container_set_int64",    cpp_table::cpp_table_container_set_int64},
-            {"cpp_table_container_get_uint64",   cpp_table::cpp_table_container_get_uint64},
-            {"cpp_table_container_set_uint64",   cpp_table::cpp_table_container_set_uint64},
-            {"cpp_table_container_get_float",    cpp_table::cpp_table_container_get_float},
-            {"cpp_table_container_set_float",    cpp_table::cpp_table_container_set_float},
-            {"cpp_table_container_get_double",   cpp_table::cpp_table_container_get_double},
-            {"cpp_table_container_set_double",   cpp_table::cpp_table_container_set_double},
-            {"cpp_table_container_get_bool",     cpp_table::cpp_table_container_get_bool},
-            {"cpp_table_container_set_bool",     cpp_table::cpp_table_container_set_bool},
-            {"cpp_table_container_get_string",   cpp_table::cpp_table_container_get_string},
-            {"cpp_table_container_set_string",   cpp_table::cpp_table_container_set_string},
-            {"cpp_table_container_get_obj",      cpp_table::cpp_table_container_get_obj},
-            {"cpp_table_container_set_obj",      cpp_table::cpp_table_container_set_obj},
-            {"cpp_table_create_array_container", cpp_table::cpp_table_create_array_container}
+            {"cpp_table_set_message_id",             cpp_table::cpp_table_set_message_id},
+            {"cpp_table_update_layout",              cpp_table::cpp_table_update_layout},
+
+            {"cpp_table_create_container",           cpp_table::cpp_table_create_container},
+            {"cpp_table_delete_container",           cpp_table::cpp_table_delete_container},
+            {"cpp_table_container_get_int32",        cpp_table::cpp_table_container_get_int32},
+            {"cpp_table_container_set_int32",        cpp_table::cpp_table_container_set_int32},
+            {"cpp_table_container_get_uint32",       cpp_table::cpp_table_container_get_uint32},
+            {"cpp_table_container_set_uint32",       cpp_table::cpp_table_container_set_uint32},
+            {"cpp_table_container_get_int64",        cpp_table::cpp_table_container_get_int64},
+            {"cpp_table_container_set_int64",        cpp_table::cpp_table_container_set_int64},
+            {"cpp_table_container_get_uint64",       cpp_table::cpp_table_container_get_uint64},
+            {"cpp_table_container_set_uint64",       cpp_table::cpp_table_container_set_uint64},
+            {"cpp_table_container_get_float",        cpp_table::cpp_table_container_get_float},
+            {"cpp_table_container_set_float",        cpp_table::cpp_table_container_set_float},
+            {"cpp_table_container_get_double",       cpp_table::cpp_table_container_get_double},
+            {"cpp_table_container_set_double",       cpp_table::cpp_table_container_set_double},
+            {"cpp_table_container_get_bool",         cpp_table::cpp_table_container_get_bool},
+            {"cpp_table_container_set_bool",         cpp_table::cpp_table_container_set_bool},
+            {"cpp_table_container_get_string",       cpp_table::cpp_table_container_get_string},
+            {"cpp_table_container_set_string",       cpp_table::cpp_table_container_set_string},
+            {"cpp_table_container_get_obj",          cpp_table::cpp_table_container_get_obj},
+            {"cpp_table_container_set_obj",          cpp_table::cpp_table_container_set_obj},
+
+            {"cpp_table_create_array_container",     cpp_table::cpp_table_create_array_container},
+            {"cpp_table_delete_array_container",     cpp_table::cpp_table_delete_array_container},
+            {"cpp_table_array_container_get_int32",  cpp_table::cpp_table_array_container_get_int32},
+            {"cpp_table_array_container_set_int32",  cpp_table::cpp_table_array_container_set_int32},
+            {"cpp_table_array_container_get_uint32", cpp_table::cpp_table_array_container_get_uint32},
+            {"cpp_table_array_container_set_uint32", cpp_table::cpp_table_array_container_set_uint32},
+            {"cpp_table_array_container_get_int64",  cpp_table::cpp_table_array_container_get_int64},
+            {"cpp_table_array_container_set_int64",  cpp_table::cpp_table_array_container_set_int64},
+            {"cpp_table_array_container_get_uint64", cpp_table::cpp_table_array_container_get_uint64},
+            {"cpp_table_array_container_set_uint64", cpp_table::cpp_table_array_container_set_uint64},
+            {"cpp_table_array_container_get_float",  cpp_table::cpp_table_array_container_get_float},
+            {"cpp_table_array_container_set_float",  cpp_table::cpp_table_array_container_set_float},
+            {"cpp_table_array_container_get_double", cpp_table::cpp_table_array_container_get_double},
+            {"cpp_table_array_container_set_double", cpp_table::cpp_table_array_container_set_double},
+            {"cpp_table_array_container_get_bool",   cpp_table::cpp_table_array_container_get_bool},
+            {"cpp_table_array_container_set_bool",   cpp_table::cpp_table_array_container_set_bool},
+            {"cpp_table_array_container_get_string", cpp_table::cpp_table_array_container_get_string},
+            {"cpp_table_array_container_set_string", cpp_table::cpp_table_array_container_set_string},
+            {"cpp_table_array_container_get_obj",    cpp_table::cpp_table_array_container_get_obj},
+            {"cpp_table_array_container_set_obj",    cpp_table::cpp_table_array_container_set_obj},
     };
 }

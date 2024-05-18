@@ -27,7 +27,25 @@ local core_cpp_table_container_get_map = core.cpp_table_container_get_map
 local core_cpp_table_container_set_map = core.cpp_table_container_set_map
 local core_cpp_table_delete_container = core.cpp_table_delete_container
 local core_cpp_table_create_array_container = core.cpp_table_create_array_container
-local core_cpp_table_dump = core.cpp_table_dump
+local core_cpp_table_array_container_get_int32 = core.cpp_table_array_container_get_int32
+local core_cpp_table_array_container_set_int32 = core.cpp_table_array_container_set_int32
+local core_cpp_table_array_container_get_uint32 = core.cpp_table_array_container_get_uint32
+local core_cpp_table_array_container_set_uint32 = core.cpp_table_array_container_set_uint32
+local core_cpp_table_array_container_get_int64 = core.cpp_table_array_container_get_int64
+local core_cpp_table_array_container_set_int64 = core.cpp_table_array_container_set_int64
+local core_cpp_table_array_container_get_uint64 = core.cpp_table_array_container_get_uint64
+local core_cpp_table_array_container_set_uint64 = core.cpp_table_array_container_set_uint64
+local core_cpp_table_array_container_get_float = core.cpp_table_array_container_get_float
+local core_cpp_table_array_container_set_float = core.cpp_table_array_container_set_float
+local core_cpp_table_array_container_get_double = core.cpp_table_array_container_get_double
+local core_cpp_table_array_container_set_double = core.cpp_table_array_container_set_double
+local core_cpp_table_array_container_get_bool = core.cpp_table_array_container_get_bool
+local core_cpp_table_array_container_set_bool = core.cpp_table_array_container_set_bool
+local core_cpp_table_array_container_get_string = core.cpp_table_array_container_get_string
+local core_cpp_table_array_container_set_string = core.cpp_table_array_container_set_string
+local core_cpp_table_array_container_get_obj = core.cpp_table_array_container_get_obj
+local core_cpp_table_array_container_set_obj = core.cpp_table_array_container_set_obj
+local core_cpp_table_delete_array_container = core.cpp_table_delete_array_container
 
 local core_roaring64map_add = core.roaring64map_add
 local core_roaring64map_addchecked = core.roaring64map_addchecked
@@ -56,6 +74,100 @@ function lua_to_cpp.sink_array(key, key_size, key_shared, array)
         container[i] = v
     end
     return container
+end
+
+function lua_to_cpp.create_layout_array_meta_func(layout_member)
+    _G.CPP_TABLE_LAYOUT_ARRAY_META_TABLE = _G.CPP_TABLE_LAYOUT_ARRAY_META_TABLE or {}
+
+    local key = layout_member.key
+    local message_id = layout_member.message_id
+
+    if _G.CPP_TABLE_LAYOUT_ARRAY_META_TABLE[key] then
+        return
+    end
+
+    local index_func
+    local newindex_func
+
+    if key == "int32" then
+        index_func = function(t, pos)
+            return core_cpp_table_array_container_get_int32(t, pos)
+        end
+        newindex_func = function(t, pos, value)
+            core_cpp_table_array_container_set_int32(t, pos, value)
+        end
+    elseif key == "uint32" then
+        index_func = function(t, pos)
+            return core_cpp_table_array_container_get_uint32(t, pos)
+        end
+        newindex_func = function(t, pos, value)
+            core_cpp_table_array_container_set_uint32(t, pos, value)
+        end
+    elseif key == "int64" then
+        index_func = function(t, pos)
+            return core_cpp_table_array_container_get_int64(t, pos)
+        end
+        newindex_func = function(t, pos, value)
+            core_cpp_table_array_container_set_int64(t, pos, value)
+        end
+    elseif key == "uint64" then
+        index_func = function(t, pos)
+            return core_cpp_table_array_container_get_uint64(t, pos)
+        end
+        newindex_func = function(t, pos, value)
+            core_cpp_table_array_container_set_uint64(t, pos, value)
+        end
+    elseif key == "float" then
+        newindex_func = function(t, pos, value)
+            return core_cpp_table_array_container_get_float(t, pos)
+        end
+        newindex_func = function(t, pos, value)
+            core_cpp_table_array_container_set_float(t, pos, value)
+        end
+    elseif key == "double" then
+        index_func = function(t, pos)
+            return core_cpp_table_array_container_get_double(t, pos)
+        end
+        newindex_func = function(t, pos, value)
+            core_cpp_table_array_container_set_double(t, pos, value)
+        end
+    elseif key == "bool" then
+        index_func = function(t, pos)
+            return core_cpp_table_array_container_get_bool(t, pos)
+        end
+        newindex_func = function(t, pos, value)
+            core_cpp_table_array_container_set_bool(t, pos, value)
+        end
+    elseif key == "string" then
+        index_func = function(t, pos)
+            return core_cpp_table_array_container_get_string(t, pos)
+        end
+        newindex_func = function(t, pos, value)
+            core_cpp_table_array_container_set_string(t, pos, value)
+        end
+    else
+        index_func = function(t, pos)
+            return core_cpp_table_array_container_get_obj(t, pos)
+        end
+        newindex_func = function(t, pos, value)
+            if type(value) == "table" then
+                value = _G.cpp_table_sink(key, value)
+            end
+            core_cpp_table_array_container_set_obj(t, pos, value, message_id)
+        end
+    end
+
+    local gc_func = function(t)
+        core_cpp_table_delete_array_container(t)
+    end
+
+    local metatable = {
+        __index = index_func,
+        __newindex = newindex_func,
+        __gc = gc_func,
+    }
+
+    _G.CPP_TABLE_LAYOUT_ARRAY_META_TABLE[key] = metatable
 end
 
 ---create layout meta function
@@ -136,6 +248,7 @@ function lua_to_cpp.create_layout_meta_func(layout)
                 end
             end
         elseif t == "array" then
+            lua_to_cpp.create_layout_array_meta_func(v)
             v.index_func = function(t)
                 return core_cpp_table_container_get_array(t, pos)
             end
@@ -407,12 +520,6 @@ function _G.cpp_table_sink(name, table)
     end
 
     return container
-end
-
----dump a cpp table to string
----@param name string
-function _G.cpp_table_dump(name)
-    return core_cpp_table_dump(name)
 end
 
 --------------------------cpp-table end-------------------------------------

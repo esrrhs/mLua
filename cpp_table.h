@@ -400,8 +400,9 @@ public:
             return false;
         }
         if (max > (int) m_buffer.size()) {
-            // hot fix, new member added, need to resize buffer
-            m_buffer.resize(m_layout->GetTotalSize());
+            // hot fix, new member added, need to resize buffer, use double size
+            m_buffer.reserve(std::min(m_layout->GetTotalSize(), (int) (2 * m_buffer.capacity())));
+            m_buffer.resize(max);
         }
         if (is_nil) {
             m_buffer[idx] &= 0xfe;
@@ -461,37 +462,10 @@ private:
 
 typedef SharedPtr<Container> ContainerPtr;
 
-// use to store Container which passed to lua
-class LuaContainerHolder {
-public:
-    LuaContainerHolder() {}
-
-    ~LuaContainerHolder() {}
-
-    ContainerPtr Get(void *ptr) {
-        // TODO: use void** to get raw pointer for speed
-        auto it = m_container.find(ptr);
-        if (it != m_container.end()) {
-            return it->second;
-        }
-        return 0;
-    }
-
-    void Set(void *ptr, ContainerPtr container) {
-        m_container[ptr] = container;
-    }
-
-    void Remove(void *ptr) {
-        m_container.erase(ptr);
-    }
-
-private:
-    std::unordered_map<void *, ContainerPtr> m_container;
-};
-
 // use to store lua array data
 class Array : public RefCntObj {
-    Array(LayoutPtr layout, int key_size);
+public:
+    Array(LayoutPtr layout, int key_size, bool key_shared);
 
     ~Array();
 
@@ -501,7 +475,11 @@ class Array : public RefCntObj {
 
     template<typename T>
     bool Get(int idx, T &value, bool &is_nil) {
-        int max = idx + 1 + sizeof(T);
+        idx = idx * m_key_size;
+        int max = idx + sizeof(T);
+        if (idx < 0) {
+            return false;
+        }
         if (max > (int) m_buffer.size()) {
             // out of range, just return nil
             is_nil = true;
@@ -519,13 +497,15 @@ class Array : public RefCntObj {
 
     template<typename T>
     bool Set(int idx, const T &value, bool is_nil) {
+        idx = idx * m_key_size;
         int max = idx + 1 + sizeof(T);
-        if (idx < 0 || max > m_layout->GetTotalSize()) {
+        if (idx < 0) {
             return false;
         }
         if (max > (int) m_buffer.size()) {
-            // hot fix, new member added, need to resize buffer
-            m_buffer.resize(m_layout->GetTotalSize());
+            // out of range, need to resize buffer, use double size
+            m_buffer.reserve(2 * m_buffer.capacity());
+            m_buffer.resize(max);
         }
         if (is_nil) {
             m_buffer[idx] &= 0xfe;
@@ -580,7 +560,55 @@ private:
 
 private:
     LayoutPtr m_layout;
+    int m_key_size;
+    bool m_key_shared;
     std::vector<char> m_buffer;
+};
+
+typedef SharedPtr<Array> ArrayPtr;
+
+// use to store Container which passed to lua
+class LuaContainerHolder {
+public:
+    LuaContainerHolder() {}
+
+    ~LuaContainerHolder() {}
+
+    ContainerPtr Get(void *ptr) {
+        auto it = m_container.find(ptr);
+        if (it != m_container.end()) {
+            return it->second;
+        }
+        return 0;
+    }
+
+    void Set(void *ptr, ContainerPtr container) {
+        m_container[ptr] = container;
+    }
+
+    void Remove(void *ptr) {
+        m_container.erase(ptr);
+    }
+
+    ArrayPtr GetArray(void *ptr) {
+        auto it = m_array.find(ptr);
+        if (it != m_array.end()) {
+            return it->second;
+        }
+        return 0;
+    }
+
+    void SetArray(void *ptr, ArrayPtr array) {
+        m_array[ptr] = array;
+    }
+
+    void RemoveArray(void *ptr) {
+        m_array.erase(ptr);
+    }
+
+private:
+    std::unordered_map<void *, ContainerPtr> m_container;
+    std::unordered_map<void *, ArrayPtr> m_array;
 };
 
 }
