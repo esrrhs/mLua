@@ -214,9 +214,9 @@ func main() {
 			if field.Cardinality() == protoreflect.Repeated {
 				// check is map<>
 				if field.IsMap() {
-					output_str += fmt.Sprintf("    %s = { type = \"map\", key = \"%s\", value = \"%s\", tag = %d, size = %d, shared = 1 },\n", field.Name(), field_kind_name(field.MapKey()), field_kind_name(field.MapValue()), field.Number(), 8)
+					output_str += fmt.Sprintf("    %s = { type = \"map\", key = \"%s\", value = \"%s\", tag = %d, size = %d, shared = 1 },\n", field.Name(), field_kind_name(field.MapKey()), field_kind_name(field.MapValue()), field.Number(), 9)
 				} else {
-					output_str += fmt.Sprintf("    %s = { type = \"array\", key = \"%s\", tag = %d, size = %d, shared = 1, key_size = %d, key_shared = %d },\n", field.Name(), field_kind_name(field), field.Number(), 8, filed_kind_size(field), is_shared_obj(field))
+					output_str += fmt.Sprintf("    %s = { type = \"array\", key = \"%s\", tag = %d, size = %d, shared = 1, key_size = %d, key_shared = %d },\n", field.Name(), field_kind_name(field), field.Number(), 9, filed_kind_size(field), is_shared_obj(field))
 				}
 			} else {
 				output_str += fmt.Sprintf("    %s = { type = \"normal\", key = \"%s\", tag = %d, size = %d, shared = %d },\n", field.Name(), field_kind_name(field), field.Number(), filed_kind_size(field), is_shared_obj(field))

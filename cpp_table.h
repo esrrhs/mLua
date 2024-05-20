@@ -303,24 +303,22 @@ public:
         int tag;
         int shared;
         int message_id;
+        int key_size;
+        int key_shared;
     };
 
     typedef SharedPtr<Member> MemberPtr;
 
-    void SetMember(const std::vector<MemberPtr> &member) {
-        m_member = member;
+    void SetMember(int tag, MemberPtr member) {
+        m_member[tag] = member;
     }
 
-    std::vector<MemberPtr> &GetMember() {
+    MemberPtr GetMember(int tag) {
+        return m_member[tag];
+    }
+
+    std::unordered_map<int, MemberPtr> &GetMember() {
         return m_member;
-    }
-
-    void SetSharedMember(const std::vector<MemberPtr> &member) {
-        m_shared_member = member;
-    }
-
-    std::vector<MemberPtr> &GetSharedMember() {
-        return m_shared_member;
     }
 
     void SetName(const std::string &name) {
@@ -350,12 +348,46 @@ public:
 private:
     int m_message_id;
     std::string m_name;
-    std::vector<MemberPtr> m_member;
-    std::vector<MemberPtr> m_shared_member;
+    std::unordered_map<int, MemberPtr> m_member;
     int m_total_size;
 };
 
 typedef SharedPtr<Layout> LayoutPtr;
+
+class LayoutMgr {
+public:
+    LayoutMgr() {}
+
+    ~LayoutMgr() {}
+
+    LayoutPtr GetLayout(const std::string &name) {
+        auto it = m_layout.find(name);
+        if (it != m_layout.end()) {
+            return it->second;
+        }
+        return 0;
+    }
+
+    void SetLayout(const std::string &name, LayoutPtr layout) {
+        m_layout[name] = layout;
+    }
+
+    int GetMessageId(const std::string &name) {
+        auto it = m_message_id.find(name);
+        if (it != m_message_id.end()) {
+            return it->second;
+        }
+        return -1;
+    }
+
+    void SetMessageId(const std::string &name, int message_id) {
+        m_message_id[name] = message_id;
+    }
+
+private:
+    std::unordered_map<std::string, LayoutPtr> m_layout;
+    std::unordered_map<std::string, int> m_message_id;
+};
 
 // use to store lua struct data
 class Container : public RefCntObj {
@@ -465,17 +497,25 @@ typedef SharedPtr<Container> ContainerPtr;
 // use to store lua array data
 class Array : public RefCntObj {
 public:
-    Array(LayoutPtr layout, int key_size, bool key_shared);
+    Array(Layout::MemberPtr layout_member);
 
     ~Array();
 
     StringView GetName() const {
-        return m_layout ? m_layout->GetName() : "";
+        return m_layout_member->name;
+    }
+
+    Layout::MemberPtr GetLayoutMember() const {
+        return m_layout_member;
+    }
+
+    int GetMessageId() const {
+        return m_layout_member->message_id;
     }
 
     template<typename T>
     bool Get(int idx, T &value, bool &is_nil) {
-        idx = idx * m_key_size;
+        idx = idx * m_layout_member->key_size;
         int max = idx + sizeof(T);
         if (idx < 0) {
             return false;
@@ -497,7 +537,7 @@ public:
 
     template<typename T>
     bool Set(int idx, const T &value, bool is_nil) {
-        idx = idx * m_key_size;
+        idx = idx * m_layout_member->key_size;
         int max = idx + 1 + sizeof(T);
         if (idx < 0) {
             return false;
@@ -559,9 +599,7 @@ private:
     void ReleaseAllSharedObj();
 
 private:
-    LayoutPtr m_layout;
-    int m_key_size;
-    bool m_key_shared;
+    Layout::MemberPtr m_layout_member;
     std::vector<char> m_buffer;
 };
 

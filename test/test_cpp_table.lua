@@ -25,25 +25,13 @@ local player = {
 
 _G.cpp_table_load_proto(_G.CPP_TABLE_PROTO)
 
-local item1 = {
-    id = 100000000001,
-    name = "item1",
-    price = 100,
-    upgrade = {
-        cost = 100,
-        level = 1,
-    },
+local pet = {
+    name = "dog",
+    age = 2,
+    breed = "poodle",
+    weight = 10.5,
+    is_vaccinated = { true, false },
 }
 
-local cpptable1 = _G.cpp_table_sink("Item", item1)
-print(cpptable1.upgrade.cost)
-print(cpptable1.upgrade.level)
-collectgarbage("collect")
-print("---------done1---------")
-
-print(cpptable1.upgrade.cost)
-print(cpptable1.upgrade.level)
-
-cpptable1 = nil
-collectgarbage("collect")
-print("---------done2---------")
+local cpptable = _G.cpp_table_sink("Pet", pet)
+print(cpptable.name)

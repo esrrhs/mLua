@@ -65,13 +65,14 @@ local core_quick_archiver_set_lz_acceleration = core.quick_archiver_set_lz_accel
 
 local lua_to_cpp = {}
 
-function lua_to_cpp.sink_array(key, key_size, key_shared, array)
-    local container = core_cpp_table_create_array_container(key, key_size, key_shared)
+function lua_to_cpp.sink_array(message_name, layout_member, array)
+    local key = layout_member.key
+    local container = core_cpp_table_create_array_container(message_name, layout_member.tag)
     for i, v in ipairs(array) do
-        if key_shared then
+        if not lua_to_cpp.is_normal_type(key) then
             v = _G.cpp_table_sink(key, v)
+            container[i] = v
         end
-        container[i] = v
     end
     return container
 end
@@ -171,7 +172,7 @@ function lua_to_cpp.create_layout_array_meta_func(layout_member)
 end
 
 ---create layout meta function
-function lua_to_cpp.create_layout_meta_func(layout)
+function lua_to_cpp.create_layout_meta_func(message_name, layout)
     for k, v in pairs(layout.members) do
         local pos = v.pos
         local t = v.type
@@ -254,9 +255,9 @@ function lua_to_cpp.create_layout_meta_func(layout)
             end
             v.newindex_func = function(t, value)
                 if type(value) == "table" then
-                    value = lua_to_cpp.sink_array(key, key_size, key_shared, value)
+                    value = lua_to_cpp.sink_array(message_name, v, value)
                 end
-                core_cpp_table_container_set_array(t, pos, value)
+                core_cpp_table_container_set_array(t, pos, value, message_id)
             end
         elseif t == "map" then
             v.index_func = function(t, key)
@@ -282,15 +283,11 @@ end
 function lua_to_cpp.update_message_layout_id(message_name, layout)
     for k, v in pairs(layout.members) do
         local key = v.key
-        if not lua_to_cpp.is_normal_type(key) then
-            local message_id = _G.cpp_table_message_id[key]
-            if not message_id then
-                error("update message layout id error, message " .. key .. " not exist")
-            end
-            v.message_id = message_id
-        else
-            v.message_id = -1
+        local message_id = _G.cpp_table_message_id[key]
+        if not message_id then
+            error("update message layout id error, message " .. key .. " not exist")
         end
+        v.message_id = message_id
     end
 end
 
@@ -316,15 +313,15 @@ function lua_to_cpp.create_layout(message_name, message)
             size = v.size,
             tag = v.tag,
             shared = v.shared,
-            key_size = v.key_size,
-            key_shared = v.key_shared,
+            key_size = v.key_size or 0,
+            key_shared = v.key_shared or 0,
         }
         pos = pos + v.size
     end
     layout.total_size = pos
 
     lua_to_cpp.update_message_layout_id(message_name, layout)
-    lua_to_cpp.create_layout_meta_func(layout)
+    lua_to_cpp.create_layout_meta_func(message_name, layout)
     core_cpp_table_update_layout(message_name, layout.members)
 
     _G.CPP_TABLE_LAYOUT[message_name] = layout
@@ -361,8 +358,8 @@ function lua_to_cpp.merge_layout(message_name, message, delete_members, new_memb
                 size = v.size,
                 tag = v.tag,
                 shared = v.shared,
-                key_size = v.key_size,
-                key_shared = v.key_shared,
+                key_size = v.key_size or 0,
+                key_shared = v.key_shared or 0,
             }
         else
             layout.members[k] = {
@@ -373,8 +370,8 @@ function lua_to_cpp.merge_layout(message_name, message, delete_members, new_memb
                 size = v.size,
                 tag = v.tag,
                 shared = v.shared,
-                key_size = v.key_size,
-                key_shared = v.key_shared,
+                key_size = v.key_size or 0,
+                key_shared = v.key_shared or 0,
             }
             layout.total_size = layout.total_size + v.size
         end
@@ -385,7 +382,7 @@ function lua_to_cpp.merge_layout(message_name, message, delete_members, new_memb
     end
 
     lua_to_cpp.update_message_layout_id(message_name, layout)
-    lua_to_cpp.create_layout_meta_func(layout)
+    lua_to_cpp.create_layout_meta_func(message_name, layout)
     core_cpp_table_update_layout(message_name, layout.members)
 end
 
@@ -478,8 +475,19 @@ end
 
 --- alloc uniq id for every message
 function lua_to_cpp.alloc_message_id(protos)
-    _G.cpp_table_message_id = _G.cpp_table_message_id or {}
-    _G.cpp_table_message_global_id = _G.cpp_table_message_global_id or 0
+    if not _G.cpp_table_message_id then
+        _G.cpp_table_message_id = {
+            int32 = 1,
+            uint32 = 2,
+            int64 = 3,
+            uint64 = 4,
+            float = 5,
+            double = 6,
+            bool = 7,
+            string = 8,
+        }
+        _G.cpp_table_message_global_id = 8
+    end
     for message_name, message in pairs(protos) do
         if not _G.cpp_table_message_id[message_name] then
             _G.cpp_table_message_global_id = _G.cpp_table_message_global_id + 1

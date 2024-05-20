@@ -4,8 +4,7 @@ namespace cpp_table {
 
 StringHeap gStringHeap;
 LuaContainerHolder gLuaContainerHolder;
-std::unordered_map<std::string, LayoutPtr> gLayoutMap;
-std::unordered_map<std::string, int> gMessageIdMap;
+LayoutMgr gLayoutMgr;
 
 void String::Delete() {
     gStringHeap.Remove(m_str);
@@ -17,13 +16,17 @@ Container::Container(LayoutPtr layout) {
 }
 
 Container::~Container() {
-    LLOG("Container::~Container: %s %p", m_layout->GetName().data(), this);
+    LLOG("Container::~Container: %s %p", GetName().data(), this);
     ReleaseAllSharedObj();
 }
 
 void Container::ReleaseAllSharedObj() {
-    auto &shared_member = m_layout->GetSharedMember();
-    for (auto &mem: shared_member) {
+    auto &members = m_layout->GetMember();
+    for (auto &it: members) {
+        auto mem = it.second;
+        if (!mem->shared) {
+            continue;
+        }
         int pos = mem->pos;
         SharedPtr<RefCntObj> out;
         bool is_nil = false;
@@ -38,22 +41,32 @@ void Container::ReleaseAllSharedObj() {
     }
 }
 
-Array::Array(LayoutPtr layout, int key_size, bool key_shared) {
-    m_layout = layout;
-    m_key_size = key_size;
-    m_key_shared = key_shared;
+Array::Array(Layout::MemberPtr layout_member) {
+    m_layout_member = layout_member;
 }
 
 Array::~Array() {
-    LLOG("Array::~Array: %s %p", m_layout->GetName().data(), this);
+    LLOG("Array::~Array: %s %p", GetName().data(), this);
     ReleaseAllSharedObj();
 }
 
 void Array::ReleaseAllSharedObj() {
-    if (!m_key_shared) {
+    if (!m_layout_member->key_shared) {
         return;
     }
-    int element_size = m_buffer.size() / m_key_size;
+    int element_size = m_buffer.size() / m_layout_member->key_size;
+    for (int i = 0; i < element_size; ++i) {
+        SharedPtr<RefCntObj> out;
+        bool is_nil = false;
+        auto ret = GetSharedObj<RefCntObj>(i, out, is_nil);
+        if (!ret) {
+            LERR("Array::ReleaseAllSharedObj: %s invalid pos %d", m_layout_member->name.data(), i);
+            return;
+        }
+        if (!is_nil) {
+            out->Release();
+        }
+    }
 }
 
 static int cpp_table_set_message_id(lua_State *L) {
@@ -64,7 +77,7 @@ static int cpp_table_set_message_id(lua_State *L) {
         return 0;
     }
     int message_id = lua_tointeger(L, 2);
-    gMessageIdMap[std::string(name, name_size)] = message_id;
+    gLayoutMgr.SetMessageId(std::string(name, name_size), message_id);
     return 0;
 }
 
@@ -77,19 +90,13 @@ static int cpp_table_update_layout(lua_State *L) {
     }
     luaL_checktype(L, 2, LUA_TTABLE);
 
-    LayoutPtr layout;
-
     auto layout_key = std::string(name, name_size);
-    auto it = gLayoutMap.find(layout_key);
-    if (it != gLayoutMap.end()) {
-        layout = it->second;
-    } else {
+    auto layout = gLayoutMgr.GetLayout(layout_key);
+    if (!layout) {
         layout = MakeShared<Layout>();
-        gLayoutMap[layout_key] = layout;
+        gLayoutMgr.SetLayout(layout_key, layout);
     }
 
-    std::vector<Layout::MemberPtr> member;
-    std::vector<Layout::MemberPtr> shared_member;
     // iterator table {
     //     {
     //         type = v.type,
@@ -217,26 +224,47 @@ static int cpp_table_update_layout(lua_State *L) {
         mem->message_id = lua_tointeger(L, -1);
         lua_pop(L, 1);
 
-        member.push_back(mem);
-        if (mem->shared) {
-            shared_member.push_back(mem);
+        // key_size
+        lua_pushstring(L, "key_size");
+        lua_gettable(L, -2);
+        if (lua_type(L, -1) != LUA_TNUMBER) {
+            luaL_error(L, "cpp_table_update_layout: invalid key_size type %d", lua_type(L, -1));
+            return 0;
+        }
+        mem->key_size = lua_tointeger(L, -1);
+        lua_pop(L, 1);
+
+        // key_shared
+        lua_pushstring(L, "key_shared");
+        lua_gettable(L, -2);
+        if (lua_type(L, -1) != LUA_TNUMBER) {
+            luaL_error(L, "cpp_table_update_layout: invalid key_shared type %d", lua_type(L, -1));
+            return 0;
+        }
+        mem->key_shared = lua_tointeger(L, -1);
+        lua_pop(L, 1);
+
+        auto old = layout->GetMember(mem->tag);
+        if (old) {
+            *old = *mem;
+        } else {
+            layout->SetMember(mem->tag, mem);
         }
         lua_pop(L, 1);
 
         total_size += mem->size;
     }
 
-    if (gMessageIdMap.find(layout_key) == gMessageIdMap.end()) {
+    auto message_id = gLayoutMgr.GetMessageId(layout_key);
+    if (message_id < 0) {
         luaL_error(L, "cpp_table_update_layout: no message_id found %s", layout_key.data());
         return 0;
     }
 
-    layout->SetMessageId(gMessageIdMap[layout_key]);
+    layout->SetMessageId(message_id);
     layout->SetName(layout_key);
-    layout->SetMember(member);
-    layout->SetSharedMember(shared_member);
     layout->SetTotalSize(total_size);
-    LLOG("cpp_table_update_layout: %s total size %d", name, total_size);
+    LLOG("cpp_table_update_layout: %s total size %d message_id %d", name, total_size, message_id);
 
     return 0;
 }
@@ -307,6 +335,71 @@ static void cpp_table_remove_container_userdata(lua_State *L, Container *contain
     lua_pop(L, 1); // stack:
 }
 
+static void cpp_table_reg_array_container_userdata(lua_State *L, Array *array, const std::string &key) {
+    // create weak table _G.CPP_TABLE_ARRAY_CONTAINER, and set array pointer -> userdata pointer mapping
+    lua_getglobal(L, "CPP_TABLE_ARRAY_CONTAINER");// stack: 1: userdata, 2: weak table
+    if (lua_type(L, -1) != LUA_TTABLE) { // stack: 1: userdata, 2: nil
+        lua_pop(L, 1); // stack: 1: userdata
+        // create weak table
+        lua_newtable(L); // stack: 1: userdata, 2: table
+        lua_newtable(L); // stack: 1: userdata, 2: table, 3: table
+        lua_pushstring(L, "v"); // stack: 1: userdata, 2: table, 3: table, 4: "v"
+        lua_setfield(L, -2, "__mode"); // stack: 1: userdata, 2: table, 3: table(__mode = "v")
+        lua_setmetatable(L, -2); // stack: 1: userdata, 2: table
+        lua_setglobal(L, "CPP_TABLE_ARRAY_CONTAINER"); // stack: 1: userdata
+        lua_getglobal(L, "CPP_TABLE_ARRAY_CONTAINER"); // stack: 1: userdata, 2: weak table
+    }
+    lua_pushlightuserdata(L, array); // stack: 1: userdata, 2: weak table, 3: pointer
+    lua_pushvalue(L, -3); // stack: 1: userdata, 2: weak table, 3: pointer, 4: userdata
+    lua_settable(L, -3); // stack: 1: userdata, 2: weak table
+    lua_pop(L, 1); // stack: 1: userdata
+    // set meta table from _G.CPP_TABLE_LAYOUT_META_TABLE
+    lua_getglobal(L, "CPP_TABLE_LAYOUT_ARRAY_META_TABLE");// stack: 1: userdata, 2: global meta
+    if (lua_type(L, -1) != LUA_TTABLE) { // stack: 1: userdata, 2: nil
+        lua_pop(L, 1); // stack: 1: userdata
+        luaL_error(L, "cpp_table_reg_container_userdata: no _G.CPP_TABLE_LAYOUT_ARRAY_META_TABLE found");
+        return;
+    }
+    lua_pushlstring(L, key.c_str(), key.size()); // stack: 1: userdata, 2: global meta, 3: name
+    lua_gettable(L, -2); // stack: 1: userdata, 2: global meta, 3: meta
+    if (lua_type(L, -1) != LUA_TTABLE) {
+        lua_pop(L, 1); // stack: 1: userdata, 2: global meta
+        luaL_error(L, "cpp_table_reg_container_userdata: no meta table found %s", key.c_str());
+        return;
+    }
+    lua_setmetatable(L, -3); // stack: 1: userdata, 2: global meta
+    lua_pop(L, 1); // stack: 1: userdata
+}
+
+static bool cpp_table_get_array_container_userdata(lua_State *L, Array *array) {
+    lua_getglobal(L, "CPP_TABLE_ARRAY_CONTAINER");// stack: 1: weak table
+    if (lua_type(L, -1) != LUA_TTABLE) { // stack: 1: nil
+        lua_pop(L, 1); // stack:
+        return false;
+    }
+    lua_pushlightuserdata(L, array); // stack: 1: weak table, 2: pointer
+    lua_gettable(L, -2); // stack: 1: weak table, 2: userdata
+    lua_remove(L, -2); // stack: 1: userdata
+    if (lua_type(L, -1) != LUA_TUSERDATA) {
+        lua_pop(L, 1); // stack:
+        return false;
+    }
+    // stack: 1: userdata
+    return true;
+}
+
+static void cpp_table_remove_array_container_userdata(lua_State *L, Array *array) {
+    lua_getglobal(L, "CPP_TABLE_ARRAY_CONTAINER");// stack: 1: weak table
+    if (lua_type(L, -1) != LUA_TTABLE) { // stack: 1: nil
+        lua_pop(L, 1); // stack:
+        return;
+    }
+    lua_pushlightuserdata(L, array); // stack: 1: weak table, 2: pointer
+    lua_pushnil(L); // stack: 1: weak table, 2: pointer, 3: nil
+    lua_settable(L, -3); // stack: 1: weak table
+    lua_pop(L, 1); // stack:
+}
+
 static int cpp_table_create_container(lua_State *L) {
     size_t name_size = 0;
     const char *name = lua_tolstring(L, 1, &name_size);
@@ -314,12 +407,11 @@ static int cpp_table_create_container(lua_State *L) {
         luaL_error(L, "cpp_table_create_container: invalid name %s", name);
         return 0;
     }
-    auto layout_it = gLayoutMap.find(std::string(name, name_size));
-    if (layout_it == gLayoutMap.end()) {
+    auto layout = gLayoutMgr.GetLayout(std::string(name, name_size));
+    if (!layout) {
         luaL_error(L, "cpp_table_create_container: no layout found %s", name);
         return 0;
     }
-    auto layout = layout_it->second;
     auto container = MakeShared<Container>(layout);
     auto pointer = (void **) lua_newuserdata(L, sizeof(void *));
     *pointer = container.get();
@@ -827,11 +919,11 @@ static int cpp_table_container_set_obj(lua_State *L) {
     }
     void *obj_pointer = lua_touserdata(L, 3);
     bool is_nil = lua_isnil(L, 3);
+    int message_id = lua_tointeger(L, 4);
     if (!pointer) {
         luaL_error(L, "cpp_table_container_get_obj: invalid container");
         return 0;
     }
-    int message_id = lua_tointeger(L, 4);
     auto container = gLuaContainerHolder.Get(pointer);
     if (!container) {
         luaL_error(L, "cpp_table_container_get_obj: no container found %p", pointer);
@@ -859,52 +951,82 @@ static int cpp_table_container_set_obj(lua_State *L) {
     return 0;
 }
 
-static void cpp_table_reg_array_container_userdata(lua_State *L, Array *array, const std::string &key) {
-    // create weak table _G.CPP_TABLE_ARRAY_CONTAINER, and set array pointer -> userdata pointer mapping
-    lua_getglobal(L, "CPP_TABLE_ARRAY_CONTAINER");// stack: 1: userdata, 2: weak table
-    if (lua_type(L, -1) != LUA_TTABLE) { // stack: 1: userdata, 2: nil
-        lua_pop(L, 1); // stack: 1: userdata
-        // create weak table
-        lua_newtable(L); // stack: 1: userdata, 2: table
-        lua_newtable(L); // stack: 1: userdata, 2: table, 3: table
-        lua_pushstring(L, "v"); // stack: 1: userdata, 2: table, 3: table, 4: "v"
-        lua_setfield(L, -2, "__mode"); // stack: 1: userdata, 2: table, 3: table(__mode = "v")
-        lua_setmetatable(L, -2); // stack: 1: userdata, 2: table
-        lua_setglobal(L, "CPP_TABLE_ARRAY_CONTAINER"); // stack: 1: userdata
-        lua_getglobal(L, "CPP_TABLE_ARRAY_CONTAINER"); // stack: 1: userdata, 2: weak table
+static int cpp_table_container_get_array(lua_State *L) {
+    auto pointer = lua_touserdata(L, 1);
+    int idx = lua_tointeger(L, 2);
+    if (!pointer) {
+        luaL_error(L, "cpp_table_container_get_obj: invalid container");
+        return 0;
     }
-    lua_pushlightuserdata(L, array); // stack: 1: userdata, 2: weak table, 3: pointer
-    lua_pushvalue(L, -3); // stack: 1: userdata, 2: weak table, 3: pointer, 4: userdata
-    lua_settable(L, -3); // stack: 1: userdata, 2: weak table
-    lua_pop(L, 1); // stack: 1: userdata
-    // set meta table from _G.CPP_TABLE_LAYOUT_META_TABLE
-    lua_getglobal(L, "CPP_TABLE_LAYOUT_ARRAY_META_TABLE");// stack: 1: userdata, 2: global meta
-    if (lua_type(L, -1) != LUA_TTABLE) { // stack: 1: userdata, 2: nil
-        lua_pop(L, 1); // stack: 1: userdata
-        luaL_error(L, "cpp_table_reg_container_userdata: no _G.CPP_TABLE_LAYOUT_ARRAY_META_TABLE found");
-        return;
+    auto container = gLuaContainerHolder.Get(pointer);
+    if (!container) {
+        luaL_error(L, "cpp_table_container_get_obj: no container found %p", pointer);
+        return 0;
     }
-    lua_pushlstring(L, key.c_str(), key.size()); // stack: 1: userdata, 2: global meta, 3: name
-    lua_gettable(L, -2); // stack: 1: userdata, 2: global meta, 3: meta
-    if (lua_type(L, -1) != LUA_TTABLE) {
-        lua_pop(L, 1); // stack: 1: userdata, 2: global meta
-        luaL_error(L, "cpp_table_reg_container_userdata: no meta table found %s", key.c_str());
-        return;
+    ArrayPtr array;
+    bool is_nil = false;
+    auto ret = container->GetSharedObj<Array>(idx, array, is_nil);
+    if (!ret) {
+        luaL_error(L, "cpp_table_container_get_obj: %s invalid idx %d", container->GetName().data(), idx);
+        return 0;
     }
-    lua_setmetatable(L, -3); // stack: 1: userdata, 2: global meta
-    lua_pop(L, 1); // stack: 1: userdata
+    if (is_nil) {
+        lua_pushnil(L);
+        return 1;
+    }
+    auto array_pointer = array.get();
+    auto find = cpp_table_get_array_container_userdata(L, array_pointer);
+    if (!find) {
+        auto userdata_pointer = (void **) lua_newuserdata(L, sizeof(void *));
+        *userdata_pointer = array.get();
+        gLuaContainerHolder.SetArray(userdata_pointer, array);
+        cpp_table_reg_array_container_userdata(L, array_pointer, array->GetLayoutMember()->key);
+        LLOG("cpp_table_container_get_obj: %s new %p", array->GetName().data(), array_pointer);
+    } else {
+        LLOG("cpp_table_container_get_obj: %s already exist %p", array->GetName().data(), array_pointer);
+    }
+    return 1;
 }
 
-static void cpp_table_remove_array_container_userdata(lua_State *L, Array *array) {
-    lua_getglobal(L, "CPP_TABLE_ARRAY_CONTAINER");// stack: 1: weak table
-    if (lua_type(L, -1) != LUA_TTABLE) { // stack: 1: nil
-        lua_pop(L, 1); // stack:
-        return;
+static int cpp_table_container_set_array(lua_State *L) {
+    auto pointer = lua_touserdata(L, 1);
+    int idx = lua_tointeger(L, 2);
+    if (lua_type(L, 3) != LUA_TUSERDATA && lua_type(L, 3) != LUA_TNIL) {
+        luaL_error(L, "cpp_table_container_set_obj: invalid value type %d", lua_type(L, 3));
+        return 0;
     }
-    lua_pushlightuserdata(L, array); // stack: 1: weak table, 2: pointer
-    lua_pushnil(L); // stack: 1: weak table, 2: pointer, 3: nil
-    lua_settable(L, -3); // stack: 1: weak table
-    lua_pop(L, 1); // stack:
+    void *array_pointer = lua_touserdata(L, 3);
+    bool is_nil = lua_isnil(L, 3);
+    int message_id = lua_tointeger(L, 4);
+    if (!pointer) {
+        luaL_error(L, "cpp_table_container_get_obj: invalid container");
+        return 0;
+    }
+    auto container = gLuaContainerHolder.Get(pointer);
+    if (!container) {
+        luaL_error(L, "cpp_table_container_get_obj: no container found %p", pointer);
+        return 0;
+    }
+    if (!array_pointer) {
+        luaL_error(L, "cpp_table_container_set_obj: invalid array");
+        return 0;
+    }
+    auto array = gLuaContainerHolder.GetArray(array_pointer);
+    if (!array) {
+        luaL_error(L, "cpp_table_container_set_obj: no array found %p", array_pointer);
+        return 0;
+    }
+    // check message_id avoid set wrong obj
+    if (array->GetMessageId() != message_id) {
+        luaL_error(L, "cpp_table_container_set_obj: %s invalid message_id %d", array->GetName().data(), message_id);
+        return 0;
+    }
+    auto ret = container->SetSharedObj<Array>(idx, array, is_nil);
+    if (!ret) {
+        luaL_error(L, "cpp_table_container_set_obj: %s invalid idx %d", container->GetName().data(), idx);
+        return 0;
+    }
+    return 0;
 }
 
 static int cpp_table_create_array_container(lua_State *L) {
@@ -914,24 +1036,27 @@ static int cpp_table_create_array_container(lua_State *L) {
         luaL_error(L, "cpp_table_create_array_container: invalid name %s", name);
         return 0;
     }
-    int key_size = lua_tointeger(L, 2);
-    if (key_size <= 0) {
-        luaL_error(L, "cpp_table_create_array_container: invalid key size %d", key_size);
+    int tag = lua_tointeger(L, 2);
+    if (tag < 0) {
+        luaL_error(L, "cpp_table_create_array_container: invalid tag %d", tag);
         return 0;
     }
-    int key_shared = lua_toboolean(L, 3);
-    auto key = std::string(name, name_size);
-    auto layout_it = gLayoutMap.find(key);
-    LayoutPtr layout;
-    if (layout_it != gLayoutMap.end()) {
-        layout = layout_it->second;
+    auto layout = gLayoutMgr.GetLayout(std::string(name, name_size));
+    if (!layout) {
+        luaL_error(L, "cpp_table_create_array_container: no layout found %s", name);
+        return 0;
     }
-    auto array = MakeShared<Array>(layout, key_size, key_shared > 0);
+    auto layout_member = layout->GetMember(tag);
+    if (!layout_member) {
+        luaL_error(L, "cpp_table_create_array_container: no layout member found %s %d", name, tag);
+        return 0;
+    }
+    auto array = MakeShared<Array>(layout_member);
     auto pointer = (void **) lua_newuserdata(L, sizeof(void *));
     *pointer = array.get();
     gLuaContainerHolder.SetArray(pointer, array);
     // create array pointer -> userdata pointer mapping in lua _G.CPP_TABLE_ARRAY_CONTAINER which is a weak table
-    cpp_table_reg_array_container_userdata(L, array.get(), key);
+    cpp_table_reg_array_container_userdata(L, array.get(), layout_member->key);
     return 1;
 }
 
@@ -1492,6 +1617,8 @@ std::vector<luaL_Reg> GetCppTableFuncs() {
             {"cpp_table_container_set_string",       cpp_table::cpp_table_container_set_string},
             {"cpp_table_container_get_obj",          cpp_table::cpp_table_container_get_obj},
             {"cpp_table_container_set_obj",          cpp_table::cpp_table_container_set_obj},
+            {"cpp_table_container_get_array",        cpp_table::cpp_table_container_get_array},
+            {"cpp_table_container_set_array",        cpp_table::cpp_table_container_set_array},
 
             {"cpp_table_create_array_container",     cpp_table::cpp_table_create_array_container},
             {"cpp_table_delete_array_container",     cpp_table::cpp_table_delete_array_container},

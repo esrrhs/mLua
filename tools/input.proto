@@ -33,6 +33,7 @@ message Pet {
   int32 age = 2;
   string breed = 3;
   double weight = 4;
+  repeated bool is_vaccinated = 5;
 }
 
 message Friend {
