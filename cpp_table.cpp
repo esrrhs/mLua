@@ -859,6 +859,54 @@ static int cpp_table_container_set_obj(lua_State *L) {
     return 0;
 }
 
+static void cpp_table_reg_array_container_userdata(lua_State *L, Array *array, const std::string &key) {
+    // create weak table _G.CPP_TABLE_ARRAY_CONTAINER, and set array pointer -> userdata pointer mapping
+    lua_getglobal(L, "CPP_TABLE_ARRAY_CONTAINER");// stack: 1: userdata, 2: weak table
+    if (lua_type(L, -1) != LUA_TTABLE) { // stack: 1: userdata, 2: nil
+        lua_pop(L, 1); // stack: 1: userdata
+        // create weak table
+        lua_newtable(L); // stack: 1: userdata, 2: table
+        lua_newtable(L); // stack: 1: userdata, 2: table, 3: table
+        lua_pushstring(L, "v"); // stack: 1: userdata, 2: table, 3: table, 4: "v"
+        lua_setfield(L, -2, "__mode"); // stack: 1: userdata, 2: table, 3: table(__mode = "v")
+        lua_setmetatable(L, -2); // stack: 1: userdata, 2: table
+        lua_setglobal(L, "CPP_TABLE_ARRAY_CONTAINER"); // stack: 1: userdata
+        lua_getglobal(L, "CPP_TABLE_ARRAY_CONTAINER"); // stack: 1: userdata, 2: weak table
+    }
+    lua_pushlightuserdata(L, array); // stack: 1: userdata, 2: weak table, 3: pointer
+    lua_pushvalue(L, -3); // stack: 1: userdata, 2: weak table, 3: pointer, 4: userdata
+    lua_settable(L, -3); // stack: 1: userdata, 2: weak table
+    lua_pop(L, 1); // stack: 1: userdata
+    // set meta table from _G.CPP_TABLE_LAYOUT_META_TABLE
+    lua_getglobal(L, "CPP_TABLE_LAYOUT_ARRAY_META_TABLE");// stack: 1: userdata, 2: global meta
+    if (lua_type(L, -1) != LUA_TTABLE) { // stack: 1: userdata, 2: nil
+        lua_pop(L, 1); // stack: 1: userdata
+        luaL_error(L, "cpp_table_reg_container_userdata: no _G.CPP_TABLE_LAYOUT_ARRAY_META_TABLE found");
+        return;
+    }
+    lua_pushlstring(L, key.c_str(), key.size()); // stack: 1: userdata, 2: global meta, 3: name
+    lua_gettable(L, -2); // stack: 1: userdata, 2: global meta, 3: meta
+    if (lua_type(L, -1) != LUA_TTABLE) {
+        lua_pop(L, 1); // stack: 1: userdata, 2: global meta
+        luaL_error(L, "cpp_table_reg_container_userdata: no meta table found %s", key.c_str());
+        return;
+    }
+    lua_setmetatable(L, -3); // stack: 1: userdata, 2: global meta
+    lua_pop(L, 1); // stack: 1: userdata
+}
+
+static void cpp_table_remove_array_container_userdata(lua_State *L, Array *array) {
+    lua_getglobal(L, "CPP_TABLE_ARRAY_CONTAINER");// stack: 1: weak table
+    if (lua_type(L, -1) != LUA_TTABLE) { // stack: 1: nil
+        lua_pop(L, 1); // stack:
+        return;
+    }
+    lua_pushlightuserdata(L, array); // stack: 1: weak table, 2: pointer
+    lua_pushnil(L); // stack: 1: weak table, 2: pointer, 3: nil
+    lua_settable(L, -3); // stack: 1: weak table
+    lua_pop(L, 1); // stack:
+}
+
 static int cpp_table_create_array_container(lua_State *L) {
     size_t name_size = 0;
     const char *name = lua_tolstring(L, 1, &name_size);
@@ -872,93 +920,548 @@ static int cpp_table_create_array_container(lua_State *L) {
         return 0;
     }
     int key_shared = lua_toboolean(L, 3);
-    auto layout_it = gLayoutMap.find(std::string(name, name_size));
+    auto key = std::string(name, name_size);
+    auto layout_it = gLayoutMap.find(key);
     LayoutPtr layout;
     if (layout_it != gLayoutMap.end()) {
         layout = layout_it->second;
     }
-    auto container = MakeShared<Array>(layout, key_size, key_shared > 0);
+    auto array = MakeShared<Array>(layout, key_size, key_shared > 0);
     auto pointer = (void **) lua_newuserdata(L, sizeof(void *));
-    *pointer = container.get();
-    gLuaContainerHolder.SetArray(pointer, container);
-    // create container pointer -> userdata pointer mapping in lua _G.CPP_TABLE_CONTAINER which is a weak table
-//    cpp_table_reg_container_userdata(L, container.get());
+    *pointer = array.get();
+    gLuaContainerHolder.SetArray(pointer, array);
+    // create array pointer -> userdata pointer mapping in lua _G.CPP_TABLE_ARRAY_CONTAINER which is a weak table
+    cpp_table_reg_array_container_userdata(L, array.get(), key);
     return 1;
 }
 
 static int cpp_table_delete_array_container(lua_State *L) {
+    auto pointer = lua_touserdata(L, 1);
+    if (!pointer) {
+        luaL_error(L, "cpp_table_delete_array_container: invalid pointer");
+        return 0;
+    }
+    auto array = gLuaContainerHolder.GetArray(pointer);
+    if (!array) {
+        luaL_error(L, "cpp_table_delete_array_container: no array found %p", pointer);
+        return 0;
+    }
+    cpp_table_remove_array_container_userdata(L, array.get());
+    gLuaContainerHolder.RemoveArray(pointer);
     return 0;
 }
 
 static int cpp_table_array_container_get_int32(lua_State *L) {
-    return 0;
+    auto pointer = lua_touserdata(L, 1);
+    int idx = lua_tointeger(L, 2);
+    if (!pointer) {
+        luaL_error(L, "cpp_table_array_container_get_int32: invalid array");
+        return 0;
+    }
+    auto array = gLuaContainerHolder.GetArray(pointer);
+    if (!array) {
+        luaL_error(L, "cpp_table_array_container_get_int32: no array found %p", pointer);
+        return 0;
+    }
+    int32_t value = 0;
+    bool is_nil = false;
+    auto ret = array->Get<int32_t>(idx, value, is_nil);
+    if (!ret) {
+        luaL_error(L, "cpp_table_array_container_get_int32: %s invalid idx %d", array->GetName().data(), idx);
+        return 0;
+    }
+    if (is_nil) {
+        lua_pushnil(L);
+        return 1;
+    }
+    lua_pushinteger(L, value);
+    return 1;
 }
 
 static int cpp_table_array_container_set_int32(lua_State *L) {
+    auto pointer = lua_touserdata(L, 1);
+    int idx = lua_tointeger(L, 2);
+    if (lua_type(L, 3) != LUA_TNUMBER && lua_type(L, 3) != LUA_TNIL) {
+        luaL_error(L, "cpp_table_array_container_set_int32: invalid value type %d", lua_type(L, 3));
+        return 0;
+    }
+    int32_t value = lua_tointeger(L, 3);
+    bool is_nil = lua_isnil(L, 3);
+    if (!pointer) {
+        luaL_error(L, "cpp_table_array_container_set_int32: invalid array");
+        return 0;
+    }
+    auto array = gLuaContainerHolder.GetArray(pointer);
+    if (!array) {
+        luaL_error(L, "cpp_table_array_container_set_int32: no array found %p", pointer);
+        return 0;
+    }
+    auto ret = array->Set<int32_t>(idx, value, is_nil);
+    if (!ret) {
+        luaL_error(L, "cpp_table_array_container_set_int32: %s invalid idx %d", array->GetName().data(), idx);
+        return 0;
+    }
+    lua_pushboolean(L, 1);
     return 0;
 }
 
 static int cpp_table_array_container_get_uint32(lua_State *L) {
-    return 0;
+    auto pointer = lua_touserdata(L, 1);
+    int idx = lua_tointeger(L, 2);
+    if (!pointer) {
+        luaL_error(L, "cpp_table_array_container_get_uint32: invalid array");
+        return 0;
+    }
+    auto array = gLuaContainerHolder.GetArray(pointer);
+    if (!array) {
+        luaL_error(L, "cpp_table_array_container_get_uint32: no array found %p", pointer);
+        return 0;
+    }
+    uint32_t value = 0;
+    bool is_nil = false;
+    auto ret = array->Get<uint32_t>(idx, value, is_nil);
+    if (!ret) {
+        luaL_error(L, "cpp_table_array_container_get_uint32: %s invalid idx %d", array->GetName().data(), idx);
+        return 0;
+    }
+    if (is_nil) {
+        lua_pushnil(L);
+        return 1;
+    }
+    lua_pushinteger(L, value);
+    return 1;
 }
 
 static int cpp_table_array_container_set_uint32(lua_State *L) {
+    auto pointer = lua_touserdata(L, 1);
+    int idx = lua_tointeger(L, 2);
+    if (lua_type(L, 3) != LUA_TNUMBER && lua_type(L, 3) != LUA_TNIL) {
+        luaL_error(L, "cpp_table_array_container_set_uint32: invalid value type %d", lua_type(L, 3));
+        return 0;
+    }
+    uint32_t value = lua_tointeger(L, 3);
+    bool is_nil = lua_isnil(L, 3);
+    if (!pointer) {
+        luaL_error(L, "cpp_table_array_container_set_uint32: invalid array");
+        return 0;
+    }
+    auto array = gLuaContainerHolder.GetArray(pointer);
+    if (!array) {
+        luaL_error(L, "cpp_table_array_container_set_uint32: no array found %p", pointer);
+        return 0;
+    }
+    auto ret = array->Set<uint32_t>(idx, value, is_nil);
+    if (!ret) {
+        luaL_error(L, "cpp_table_array_container_set_uint32: %s invalid idx %d", array->GetName().data(), idx);
+        return 0;
+    }
+    lua_pushboolean(L, 1);
     return 0;
 }
 
 static int cpp_table_array_container_get_int64(lua_State *L) {
-    return 0;
+    auto pointer = lua_touserdata(L, 1);
+    int idx = lua_tointeger(L, 2);
+    if (!pointer) {
+        luaL_error(L, "cpp_table_array_container_get_int64: invalid array");
+        return 0;
+    }
+    auto array = gLuaContainerHolder.GetArray(pointer);
+    if (!array) {
+        luaL_error(L, "cpp_table_array_container_get_int64: no array found %p", pointer);
+        return 0;
+    }
+    int64_t value = 0;
+    bool is_nil = false;
+    auto ret = array->Get<int64_t>(idx, value, is_nil);
+    if (!ret) {
+        luaL_error(L, "cpp_table_array_container_get_int64: %s invalid idx %d", array->GetName().data(), idx);
+        return 0;
+    }
+    if (is_nil) {
+        lua_pushnil(L);
+        return 1;
+    }
+    lua_pushinteger(L, value);
+    return 1;
 }
 
 static int cpp_table_array_container_set_int64(lua_State *L) {
+    auto pointer = lua_touserdata(L, 1);
+    int idx = lua_tointeger(L, 2);
+    if (lua_type(L, 3) != LUA_TNUMBER && lua_type(L, 3) != LUA_TNIL) {
+        luaL_error(L, "cpp_table_array_container_set_int64: invalid value type %d", lua_type(L, 3));
+        return 0;
+    }
+    int64_t value = lua_tointeger(L, 3);
+    bool is_nil = lua_isnil(L, 3);
+    if (!pointer) {
+        luaL_error(L, "cpp_table_array_container_set_int64: invalid array");
+        return 0;
+    }
+    auto array = gLuaContainerHolder.GetArray(pointer);
+    if (!array) {
+        luaL_error(L, "cpp_table_array_container_set_int64: no array found %p", pointer);
+        return 0;
+    }
+    auto ret = array->Set<int64_t>(idx, value, is_nil);
+    if (!ret) {
+        luaL_error(L, "cpp_table_array_container_set_int64: %s invalid idx %d", array->GetName().data(), idx);
+        return 0;
+    }
+    lua_pushboolean(L, 1);
     return 0;
 }
 
 static int cpp_table_array_container_get_uint64(lua_State *L) {
-    return 0;
+    auto pointer = lua_touserdata(L, 1);
+    int idx = lua_tointeger(L, 2);
+    if (!pointer) {
+        luaL_error(L, "cpp_table_array_container_get_uint64: invalid array");
+        return 0;
+    }
+    auto array = gLuaContainerHolder.GetArray(pointer);
+    if (!array) {
+        luaL_error(L, "cpp_table_array_container_get_uint64: no array found %p", pointer);
+        return 0;
+    }
+    uint64_t value = 0;
+    bool is_nil = false;
+    auto ret = array->Get<uint64_t>(idx, value, is_nil);
+    if (!ret) {
+        luaL_error(L, "cpp_table_array_container_get_uint64: %s invalid idx %d", array->GetName().data(), idx);
+        return 0;
+    }
+    if (is_nil) {
+        lua_pushnil(L);
+        return 1;
+    }
+    lua_pushinteger(L, value);
+    return 1;
 }
 
 static int cpp_table_array_container_set_uint64(lua_State *L) {
+    auto pointer = lua_touserdata(L, 1);
+    int idx = lua_tointeger(L, 2);
+    if (lua_type(L, 3) != LUA_TNUMBER && lua_type(L, 3) != LUA_TNIL) {
+        luaL_error(L, "cpp_table_array_container_set_uint64: invalid value type %d", lua_type(L, 3));
+        return 0;
+    }
+    uint64_t value = lua_tointeger(L, 3);
+    bool is_nil = lua_isnil(L, 3);
+    if (!pointer) {
+        luaL_error(L, "cpp_table_array_container_set_uint64: invalid array");
+        return 0;
+    }
+    auto array = gLuaContainerHolder.GetArray(pointer);
+    if (!array) {
+        luaL_error(L, "cpp_table_array_container_set_uint64: no array found %p", pointer);
+        return 0;
+    }
+    auto ret = array->Set<uint64_t>(idx, value, is_nil);
+    if (!ret) {
+        luaL_error(L, "cpp_table_array_container_set_uint64: %s invalid idx %d", array->GetName().data(), idx);
+        return 0;
+    }
+    lua_pushboolean(L, 1);
     return 0;
 }
 
 static int cpp_table_array_container_get_float(lua_State *L) {
-    return 0;
+    auto pointer = lua_touserdata(L, 1);
+    int idx = lua_tointeger(L, 2);
+    if (!pointer) {
+        luaL_error(L, "cpp_table_array_container_get_float: invalid array");
+        return 0;
+    }
+    auto array = gLuaContainerHolder.GetArray(pointer);
+    if (!array) {
+        luaL_error(L, "cpp_table_array_container_get_float: no array found %p", pointer);
+        return 0;
+    }
+    float value = 0;
+    bool is_nil = false;
+    auto ret = array->Get<float>(idx, value, is_nil);
+    if (!ret) {
+        luaL_error(L, "cpp_table_array_container_get_float: %s invalid idx %d", array->GetName().data(), idx);
+        return 0;
+    }
+    if (is_nil) {
+        lua_pushnil(L);
+        return 1;
+    }
+    lua_pushnumber(L, value);
+    return 1;
 }
 
 static int cpp_table_array_container_set_float(lua_State *L) {
+    auto pointer = lua_touserdata(L, 1);
+    int idx = lua_tointeger(L, 2);
+    if (lua_type(L, 3) != LUA_TNUMBER && lua_type(L, 3) != LUA_TNIL) {
+        luaL_error(L, "cpp_table_array_container_set_float: invalid value type %d", lua_type(L, 3));
+        return 0;
+    }
+    float value = lua_tonumber(L, 3);
+    bool is_nil = lua_isnil(L, 3);
+    if (!pointer) {
+        luaL_error(L, "cpp_table_array_container_set_float: invalid array");
+        return 0;
+    }
+    auto array = gLuaContainerHolder.GetArray(pointer);
+    if (!array) {
+        luaL_error(L, "cpp_table_array_container_set_float: no array found %p", pointer);
+        return 0;
+    }
+    auto ret = array->Set<float>(idx, value, is_nil);
+    if (!ret) {
+        luaL_error(L, "cpp_table_array_container_set_float: %s invalid idx %d", array->GetName().data(), idx);
+        return 0;
+    }
+    lua_pushboolean(L, 1);
     return 0;
 }
 
 static int cpp_table_array_container_get_double(lua_State *L) {
-    return 0;
+    auto pointer = lua_touserdata(L, 1);
+    int idx = lua_tointeger(L, 2);
+    if (!pointer) {
+        luaL_error(L, "cpp_table_array_container_get_double: invalid array");
+        return 0;
+    }
+    auto array = gLuaContainerHolder.GetArray(pointer);
+    if (!array) {
+        luaL_error(L, "cpp_table_array_container_get_double: no array found %p", pointer);
+        return 0;
+    }
+    double value = 0;
+    bool is_nil = false;
+    auto ret = array->Get<double>(idx, value, is_nil);
+    if (!ret) {
+        luaL_error(L, "cpp_table_array_container_get_double: %s invalid idx %d", array->GetName().data(), idx);
+        return 0;
+    }
+    if (is_nil) {
+        lua_pushnil(L);
+        return 1;
+    }
+    lua_pushnumber(L, value);
+    return 1;
 }
 
 static int cpp_table_array_container_set_double(lua_State *L) {
+    auto pointer = lua_touserdata(L, 1);
+    int idx = lua_tointeger(L, 2);
+    if (lua_type(L, 3) != LUA_TNUMBER && lua_type(L, 3) != LUA_TNIL) {
+        luaL_error(L, "cpp_table_array_container_set_double: invalid value type %d", lua_type(L, 3));
+        return 0;
+    }
+    double value = lua_tonumber(L, 3);
+    bool is_nil = lua_isnil(L, 3);
+    if (!pointer) {
+        luaL_error(L, "cpp_table_array_container_set_double: invalid array");
+        return 0;
+    }
+    auto array = gLuaContainerHolder.GetArray(pointer);
+    if (!array) {
+        luaL_error(L, "cpp_table_array_container_set_double: no array found %p", pointer);
+        return 0;
+    }
+    auto ret = array->Set<double>(idx, value, is_nil);
+    if (!ret) {
+        luaL_error(L, "cpp_table_array_container_set_double: %s invalid idx %d", array->GetName().data(), idx);
+        return 0;
+    }
+    lua_pushboolean(L, 1);
     return 0;
 }
 
 static int cpp_table_array_container_get_bool(lua_State *L) {
-    return 0;
+    auto pointer = lua_touserdata(L, 1);
+    int idx = lua_tointeger(L, 2);
+    if (!pointer) {
+        luaL_error(L, "cpp_table_array_container_get_bool: invalid array");
+        return 0;
+    }
+    auto array = gLuaContainerHolder.GetArray(pointer);
+    if (!array) {
+        luaL_error(L, "cpp_table_array_container_get_bool: no array found %p", pointer);
+        return 0;
+    }
+    bool value = false;
+    bool is_nil = false;
+    auto ret = array->Get<bool>(idx, value, is_nil);
+    if (!ret) {
+        luaL_error(L, "cpp_table_array_container_get_bool: %s invalid idx %d", array->GetName().data(), idx);
+        return 0;
+    }
+    if (is_nil) {
+        lua_pushnil(L);
+        return 1;
+    }
+    lua_pushboolean(L, value);
+    return 1;
 }
 
 static int cpp_table_array_container_set_bool(lua_State *L) {
+    auto pointer = lua_touserdata(L, 1);
+    int idx = lua_tointeger(L, 2);
+    if (lua_type(L, 3) != LUA_TBOOLEAN && lua_type(L, 3) != LUA_TNIL) {
+        luaL_error(L, "cpp_table_array_container_set_bool: invalid value type %d", lua_type(L, 3));
+        return 0;
+    }
+    bool value = lua_toboolean(L, 3);
+    bool is_nil = lua_isnil(L, 3);
+    if (!pointer) {
+        luaL_error(L, "cpp_table_array_container_set_bool: invalid array");
+        return 0;
+    }
+    auto array = gLuaContainerHolder.GetArray(pointer);
+    if (!array) {
+        luaL_error(L, "cpp_table_array_container_set_bool: no array found %p", pointer);
+        return 0;
+    }
+    auto ret = array->Set<bool>(idx, value, is_nil);
+    if (!ret) {
+        luaL_error(L, "cpp_table_array_container_set_bool: %s invalid idx %d", array->GetName().data(), idx);
+        return 0;
+    }
+    lua_pushboolean(L, 1);
     return 0;
 }
 
 static int cpp_table_array_container_get_string(lua_State *L) {
-    return 0;
+    auto pointer = lua_touserdata(L, 1);
+    int idx = lua_tointeger(L, 2);
+    if (!pointer) {
+        luaL_error(L, "cpp_table_array_container_get_string: invalid array");
+        return 0;
+    }
+    auto array = gLuaContainerHolder.GetArray(pointer);
+    if (!array) {
+        luaL_error(L, "cpp_table_array_container_get_string: no array found %p", pointer);
+        return 0;
+    }
+    StringPtr value;
+    bool is_nil = false;
+    auto ret = array->GetSharedObj<String>(idx, value, is_nil);
+    if (!ret) {
+        luaL_error(L, "cpp_table_array_container_get_string: %s invalid idx %d", array->GetName().data(), idx);
+        return 0;
+    }
+    if (is_nil) {
+        lua_pushnil(L);
+        return 1;
+    }
+    lua_pushlstring(L, value->c_str(), value->size());
+    return 1;
 }
 
 static int cpp_table_array_container_set_string(lua_State *L) {
+    auto pointer = lua_touserdata(L, 1);
+    int idx = lua_tointeger(L, 2);
+    size_t size = 0;
+    if (lua_type(L, 3) != LUA_TSTRING && lua_type(L, 3) != LUA_TNIL) {
+        luaL_error(L, "cpp_table_array_container_set_string: invalid value type %d", lua_type(L, 3));
+        return 0;
+    }
+    const char *str = lua_tolstring(L, 3, &size);
+    bool is_nil = lua_isnil(L, 3);
+    if (!pointer) {
+        luaL_error(L, "cpp_table_array_container_set_string: invalid array");
+        return 0;
+    }
+    auto array = gLuaContainerHolder.GetArray(pointer);
+    if (!array) {
+        luaL_error(L, "cpp_table_array_container_set_string: no array found %p", pointer);
+        return 0;
+    }
+    StringPtr shared_str;
+    if (!is_nil) {
+        shared_str = gStringHeap.Add(HashStringView(str, size));
+    }
+    auto ret = array->SetSharedObj(idx, shared_str, is_nil);
+    if (!ret) {
+        luaL_error(L, "cpp_table_array_container_set_string: %s invalid idx %d", array->GetName().data(), idx);
+        return 0;
+    }
     return 0;
 }
 
 static int cpp_table_array_container_get_obj(lua_State *L) {
-    return 0;
+    auto pointer = lua_touserdata(L, 1);
+    int idx = lua_tointeger(L, 2);
+    if (!pointer) {
+        luaL_error(L, "cpp_table_array_container_get_obj: invalid array");
+        return 0;
+    }
+    auto array = gLuaContainerHolder.GetArray(pointer);
+    if (!array) {
+        luaL_error(L, "cpp_table_array_container_get_obj: no array found %p", pointer);
+        return 0;
+    }
+    ContainerPtr obj;
+    bool is_nil = false;
+    auto ret = array->GetSharedObj<Container>(idx, obj, is_nil);
+    if (!ret) {
+        luaL_error(L, "cpp_table_array_container_get_obj: %s invalid idx %d", array->GetName().data(), idx);
+        return 0;
+    }
+    if (is_nil) {
+        lua_pushnil(L);
+        return 1;
+    }
+    auto container_pointer = obj.get();
+    auto find = cpp_table_get_container_userdata(L, container_pointer);
+    if (!find) {
+        auto userdata_pointer = (void **) lua_newuserdata(L, sizeof(void *));
+        *userdata_pointer = obj.get();
+        gLuaContainerHolder.Set(userdata_pointer, obj);
+        cpp_table_reg_container_userdata(L, container_pointer);
+        LLOG("cpp_table_array_container_get_obj: %s new %p", obj->GetName().data(), container_pointer);
+    } else {
+        LLOG("cpp_table_array_container_get_obj: %s already exist %p", obj->GetName().data(), container_pointer);
+    }
+    return 1;
 }
 
 static int cpp_table_array_container_set_obj(lua_State *L) {
+    auto pointer = lua_touserdata(L, 1);
+    int idx = lua_tointeger(L, 2);
+    if (lua_type(L, 3) != LUA_TUSERDATA && lua_type(L, 3) != LUA_TNIL) {
+        luaL_error(L, "cpp_table_array_container_set_obj: invalid value type %d", lua_type(L, 3));
+        return 0;
+    }
+    void *obj_pointer = lua_touserdata(L, 3);
+    bool is_nil = lua_isnil(L, 3);
+    if (!pointer) {
+        luaL_error(L, "cpp_table_array_container_get_obj: invalid array");
+        return 0;
+    }
+    int message_id = lua_tointeger(L, 4);
+    auto array = gLuaContainerHolder.GetArray(pointer);
+    if (!array) {
+        luaL_error(L, "cpp_table_array_container_get_obj: no array found %p", pointer);
+        return 0;
+    }
+    if (!obj_pointer) {
+        luaL_error(L, "cpp_table_array_container_set_obj: invalid obj");
+        return 0;
+    }
+    auto obj = gLuaContainerHolder.Get(obj_pointer);
+    if (!obj) {
+        luaL_error(L, "cpp_table_array_container_set_obj: no obj found %p", obj_pointer);
+        return 0;
+    }
+    // check message_id avoid set wrong obj
+    if (obj->GetMessageId() != message_id) {
+        luaL_error(L, "cpp_table_array_container_set_obj: %s invalid message_id %d", obj->GetName().data(), message_id);
+        return 0;
+    }
+    auto ret = array->SetSharedObj<Container>(idx, obj, is_nil);
+    if (!ret) {
+        luaL_error(L, "cpp_table_array_container_set_obj: %s invalid idx %d", array->GetName().data(), idx);
+        return 0;
+    }
     return 0;
 }
 
