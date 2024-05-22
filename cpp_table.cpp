@@ -20,6 +20,10 @@ Container::~Container() {
     ReleaseAllSharedObj();
 }
 
+LuaContainerHolder::~LuaContainerHolder() {
+    LLOG("LuaContainerHolder::~LuaContainerHolder");
+}
+
 void Container::ReleaseAllSharedObj() {
     auto &members = m_layout->GetMember();
     for (auto &it: members) {

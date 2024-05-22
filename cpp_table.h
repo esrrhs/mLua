@@ -610,7 +610,7 @@ class LuaContainerHolder {
 public:
     LuaContainerHolder() {}
 
-    ~LuaContainerHolder() {}
+    ~LuaContainerHolder();
 
     ContainerPtr Get(void *ptr) {
         auto it = m_container.find(ptr);

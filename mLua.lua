@@ -71,8 +71,8 @@ function lua_to_cpp.sink_array(message_name, layout_member, array)
     for i, v in ipairs(array) do
         if not lua_to_cpp.is_normal_type(key) then
             v = _G.cpp_table_sink(key, v)
-            container[i] = v
         end
+        container[i] = v
     end
     return container
 end

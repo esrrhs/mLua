@@ -34,4 +34,13 @@ local pet = {
 }
 
 local cpptable = _G.cpp_table_sink("Pet", pet)
-print(cpptable.name)
+print("1=" .. tostring(cpptable.is_vaccinated[1]))
+print("2=" .. tostring(cpptable.is_vaccinated[2]))
+print("3=" .. tostring(cpptable.is_vaccinated[3]))
+
+cpptable.is_vaccinated[3] = true
+print("3=" .. tostring(cpptable.is_vaccinated[3]))
+
+------------------------------------------
+cpptable = nil
+collectgarbage("collect")
