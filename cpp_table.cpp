@@ -73,6 +73,13 @@ void Array::ReleaseAllSharedObj() {
     }
 }
 
+Map::Map(Layout::MemberPtr layout_member) {
+
+}
+
+Map::~Map() {
+}
+
 static int cpp_table_set_message_id(lua_State *L) {
     size_t name_size = 0;
     const char *name = lua_tolstring(L, 1, &name_size);
@@ -1033,6 +1040,14 @@ static int cpp_table_container_set_array(lua_State *L) {
     return 0;
 }
 
+static int cpp_table_container_get_map(lua_State *L) {
+    return 0;
+}
+
+static int cpp_table_container_set_map(lua_State *L) {
+    return 0;
+}
+
 static int cpp_table_create_array_container(lua_State *L) {
     size_t name_size = 0;
     const char *name = lua_tolstring(L, 1, &name_size);
@@ -1623,6 +1638,8 @@ std::vector<luaL_Reg> GetCppTableFuncs() {
             {"cpp_table_container_set_obj",          cpp_table::cpp_table_container_set_obj},
             {"cpp_table_container_get_array",        cpp_table::cpp_table_container_get_array},
             {"cpp_table_container_set_array",        cpp_table::cpp_table_container_set_array},
+            {"cpp_table_container_get_map",          cpp_table::cpp_table_container_get_map},
+            {"cpp_table_container_set_map",          cpp_table::cpp_table_container_set_map},
 
             {"cpp_table_create_array_container",     cpp_table::cpp_table_create_array_container},
             {"cpp_table_delete_array_container",     cpp_table::cpp_table_delete_array_container},

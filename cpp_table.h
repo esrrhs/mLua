@@ -605,6 +605,55 @@ private:
 
 typedef SharedPtr<Array> ArrayPtr;
 
+class Map : public RefCntObj {
+public:
+    Map(Layout::MemberPtr layout_member);
+
+    ~Map();
+
+private:
+    // use the simplest way to implement map, just use a union to store different type of key-value pair
+    // key(bool, int32, uint32, int64, uint64, string) -> value(bool, int32, uint32, int64, uint64, string, float, double, message)
+    enum MapType {
+        MT_32_32,
+        MT_32_64,
+
+        MT_64_32,
+        MT_64_64,
+
+        MT_32_STRING,
+        MT_32_MESSAGE,
+
+        MT_64_STRING,
+        MT_64_MESSAGE,
+
+        MT_STRING_32,
+        MT_STRING_64,
+        MT_STRING_STRING,
+        MT_STRING_MESSAGE,
+    };
+    union MapPointer {
+        std::unordered_map<int32_t, int32_t> *m_32_32;
+        std::unordered_map<int32_t, int64_t> *m_32_64;
+
+        std::unordered_map<int64_t, int32_t> *m_64_32;
+        std::unordered_map<int64_t, int64_t> *m_64_64;
+
+        std::unordered_map<int32_t, StringPtr> *m_32_string;
+        std::unordered_map<int32_t, ContainerPtr> *m_32_message;
+
+        std::unordered_map<int64_t, StringPtr> *m_64_string;
+        std::unordered_map<int64_t, ContainerPtr> *m_64_message;
+
+        std::unordered_map<StringPtr, int32_t> *m_string_32;
+        std::unordered_map<StringPtr, int64_t> *m_string_64;
+        std::unordered_map<StringPtr, StringPtr> *m_string_string;
+        std::unordered_map<StringPtr, ContainerPtr> *m_string_message;
+    };
+    MapType m_type;
+    MapPointer m_map;
+};
+
 // use to store Container which passed to lua
 class LuaContainerHolder {
 public:

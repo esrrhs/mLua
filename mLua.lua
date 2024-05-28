@@ -65,6 +65,18 @@ local core_quick_archiver_set_lz_acceleration = core.quick_archiver_set_lz_accel
 
 local lua_to_cpp = {}
 
+function lua_to_cpp.sink_map(message_name, layout_member, map)
+    local value = layout_member.value
+    local container = core_cpp_table_create_map_container(message_name, layout_member.tag)
+    for k, v in ipairs(map) do
+        if not lua_to_cpp.is_normal_type(value) then
+            v = _G.cpp_table_sink(value, v)
+        end
+        container[k] = v
+    end
+    return container
+end
+
 function lua_to_cpp.sink_array(message_name, layout_member, array)
     local key = layout_member.key
     local container = core_cpp_table_create_array_container(message_name, layout_member.tag)
@@ -264,6 +276,9 @@ function lua_to_cpp.create_layout_meta_func(message_name, layout)
                 return core_cpp_table_container_get_map(t, pos, key)
             end
             v.newindex_func = function(t, key, value)
+                if type(value) == "table" then
+                    value = lua_to_cpp.sink_map(message_name, v, value)
+                end
                 core_cpp_table_container_set_map(t, pos, key, value)
             end
         else
