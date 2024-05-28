@@ -2,6 +2,7 @@ local core = require "libmluacore"
 
 local core_cpp_table_set_message_id = core.cpp_table_set_message_id
 local core_cpp_table_update_layout = core.cpp_table_update_layout
+
 local core_cpp_table_create_container = core.cpp_table_create_container
 local core_cpp_table_container_get_int32 = core.cpp_table_container_get_int32
 local core_cpp_table_container_set_int32 = core.cpp_table_container_set_int32
@@ -26,6 +27,7 @@ local core_cpp_table_container_set_array = core.cpp_table_container_set_array
 local core_cpp_table_container_get_map = core.cpp_table_container_get_map
 local core_cpp_table_container_set_map = core.cpp_table_container_set_map
 local core_cpp_table_delete_container = core.cpp_table_delete_container
+
 local core_cpp_table_create_array_container = core.cpp_table_create_array_container
 local core_cpp_table_array_container_get_int32 = core.cpp_table_array_container_get_int32
 local core_cpp_table_array_container_set_int32 = core.cpp_table_array_container_set_int32
@@ -46,6 +48,11 @@ local core_cpp_table_array_container_set_string = core.cpp_table_array_container
 local core_cpp_table_array_container_get_obj = core.cpp_table_array_container_get_obj
 local core_cpp_table_array_container_set_obj = core.cpp_table_array_container_set_obj
 local core_cpp_table_delete_array_container = core.cpp_table_delete_array_container
+
+local core_cpp_table_create_map_container = core.cpp_table_create_map_container
+local core_cpp_table_map_container_get = core.cpp_table_map_container_get
+local core_cpp_table_map_container_set = core.cpp_table_map_container_set
+local core_cpp_table_delete_map_container = core.cpp_table_delete_map_container
 
 local core_roaring64map_add = core.roaring64map_add
 local core_roaring64map_addchecked = core.roaring64map_addchecked
@@ -75,6 +82,56 @@ function lua_to_cpp.sink_map(message_name, layout_member, map)
         container[k] = v
     end
     return container
+end
+
+function lua_to_cpp.create_layout_map_meta_func(layout_member)
+    _G.CPP_TABLE_LAYOUT_MAP_META_TABLE = _G.CPP_TABLE_LAYOUT_MAP_META_TABLE or {}
+
+    local key = layout_member.key
+    local message_id = layout_member.message_id
+
+    local value_type = layout_member.value
+    local value_message_id = layout_member.value_message_id
+
+    if _G.CPP_TABLE_LAYOUT_MAP_META_TABLE[key .. "-" .. value_type] then
+        return
+    end
+
+    if key == "float" or key == "double" then
+        error("key type is not supported")
+    end
+
+    local index_func = function(t, key)
+        return core_cpp_table_map_container_get(t, key, message_id, value_message_id)
+    end
+
+    local newindex_func
+
+    if lua_to_cpp.is_normal_type(value_type) then
+        newindex_func = function(t, key, value)
+            core_cpp_table_map_container_set(t, key, value, message_id, value_message_id)
+        end
+    else
+        newindex_func = function(t, key, value)
+            if type(value) == "table" then
+                value = _G.cpp_table_sink(value_type, value)
+            end
+            core_cpp_table_map_container_set(t, key, value, message_id, value_message_id)
+        end
+    end
+
+    local gc_func = function(t)
+        core_cpp_table_delete_map_container(t)
+    end
+
+    local metatable = {
+        __index = index_func,
+        __newindex = newindex_func,
+        __gc = gc_func,
+    }
+
+    _G.CPP_TABLE_LAYOUT_MAP_META_TABLE[key .. "-" .. value_type] = metatable
+
 end
 
 function lua_to_cpp.sink_array(message_name, layout_member, array)
@@ -192,6 +249,7 @@ function lua_to_cpp.create_layout_meta_func(message_name, layout)
         local key_size = v.key_size
         local key_shared = v.key_shared
         local message_id = v.message_id
+        local value_message_id = v.value_message_id
         if t == "normal" then
             if key == "int32" then
                 v.index_func = function(t)
@@ -272,6 +330,7 @@ function lua_to_cpp.create_layout_meta_func(message_name, layout)
                 core_cpp_table_container_set_array(t, pos, value, message_id)
             end
         elseif t == "map" then
+            lua_to_cpp.create_layout_map_meta_func(v)
             v.index_func = function(t, key)
                 return core_cpp_table_container_get_map(t, pos, key)
             end
@@ -279,7 +338,7 @@ function lua_to_cpp.create_layout_meta_func(message_name, layout)
                 if type(value) == "table" then
                     value = lua_to_cpp.sink_map(message_name, v, value)
                 end
-                core_cpp_table_container_set_map(t, pos, key, value)
+                core_cpp_table_container_set_map(t, pos, key, value, message_id, value_message_id)
             end
         else
             error("create layout meta func error, unknown type " .. type)
@@ -303,6 +362,17 @@ function lua_to_cpp.update_message_layout_id(message_name, layout)
             error("update message layout id error, message " .. key .. " not exist")
         end
         v.message_id = message_id
+
+        local value = v.value
+        if value ~= "" then
+            local message_id = _G.cpp_table_message_id[value]
+            if not message_id then
+                error("update message layout id error, message " .. value .. " not exist")
+            end
+            v.value_message_id = message_id
+        else
+            v.value_message_id = 0
+        end
     end
 end
 

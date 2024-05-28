@@ -74,10 +74,16 @@ void Array::ReleaseAllSharedObj() {
 }
 
 Map::Map(Layout::MemberPtr layout_member) {
-
+    m_layout_member = layout_member;
+    ReleaseAllSharedObj();
 }
 
 Map::~Map() {
+    LLOG("Map::~Map: %s %p", GetName().data(), this);
+}
+
+void Map::ReleaseAllSharedObj() {
+    // TODO
 }
 
 static int cpp_table_set_message_id(lua_State *L) {
@@ -233,6 +239,16 @@ static int cpp_table_update_layout(lua_State *L) {
             return 0;
         }
         mem->message_id = lua_tointeger(L, -1);
+        lua_pop(L, 1);
+
+        // value_message_id
+        lua_pushstring(L, "value_message_id");
+        lua_gettable(L, -2);
+        if (lua_type(L, -1) != LUA_TNUMBER) {
+            luaL_error(L, "cpp_table_update_layout: invalid value_message_id type %d", lua_type(L, -1));
+            return 0;
+        }
+        mem->value_message_id = lua_tointeger(L, -1);
         lua_pop(L, 1);
 
         // key_size
@@ -409,6 +425,15 @@ static void cpp_table_remove_array_container_userdata(lua_State *L, Array *array
     lua_pushnil(L); // stack: 1: weak table, 2: pointer, 3: nil
     lua_settable(L, -3); // stack: 1: weak table
     lua_pop(L, 1); // stack:
+}
+
+static void
+cpp_table_reg_map_container_userdata(lua_State *L, Map *map, const std::string &key, const std::string &value) {
+
+}
+
+static bool cpp_table_get_map_container_userdata(lua_State *L, Map *map) {
+
 }
 
 static int cpp_table_create_container(lua_State *L) {
@@ -932,12 +957,12 @@ static int cpp_table_container_set_obj(lua_State *L) {
     bool is_nil = lua_isnil(L, 3);
     int message_id = lua_tointeger(L, 4);
     if (!pointer) {
-        luaL_error(L, "cpp_table_container_get_obj: invalid container");
+        luaL_error(L, "cpp_table_container_set_obj: invalid container");
         return 0;
     }
     auto container = gLuaContainerHolder.Get(pointer);
     if (!container) {
-        luaL_error(L, "cpp_table_container_get_obj: no container found %p", pointer);
+        luaL_error(L, "cpp_table_container_set_obj: no container found %p", pointer);
         return 0;
     }
     if (!obj_pointer) {
@@ -966,19 +991,19 @@ static int cpp_table_container_get_array(lua_State *L) {
     auto pointer = lua_touserdata(L, 1);
     int idx = lua_tointeger(L, 2);
     if (!pointer) {
-        luaL_error(L, "cpp_table_container_get_obj: invalid container");
+        luaL_error(L, "cpp_table_container_get_array: invalid container");
         return 0;
     }
     auto container = gLuaContainerHolder.Get(pointer);
     if (!container) {
-        luaL_error(L, "cpp_table_container_get_obj: no container found %p", pointer);
+        luaL_error(L, "cpp_table_container_get_array: no container found %p", pointer);
         return 0;
     }
     ArrayPtr array;
     bool is_nil = false;
     auto ret = container->GetSharedObj<Array>(idx, array, is_nil);
     if (!ret) {
-        luaL_error(L, "cpp_table_container_get_obj: %s invalid idx %d", container->GetName().data(), idx);
+        luaL_error(L, "cpp_table_container_get_array: %s invalid idx %d", container->GetName().data(), idx);
         return 0;
     }
     if (is_nil) {
@@ -992,9 +1017,9 @@ static int cpp_table_container_get_array(lua_State *L) {
         *userdata_pointer = array.get();
         gLuaContainerHolder.SetArray(userdata_pointer, array);
         cpp_table_reg_array_container_userdata(L, array_pointer, array->GetLayoutMember()->key);
-        LLOG("cpp_table_container_get_obj: %s new %p", array->GetName().data(), array_pointer);
+        LLOG("cpp_table_container_get_array: %s new %p", array->GetName().data(), array_pointer);
     } else {
-        LLOG("cpp_table_container_get_obj: %s already exist %p", array->GetName().data(), array_pointer);
+        LLOG("cpp_table_container_get_array: %s already exist %p", array->GetName().data(), array_pointer);
     }
     return 1;
 }
@@ -1003,48 +1028,124 @@ static int cpp_table_container_set_array(lua_State *L) {
     auto pointer = lua_touserdata(L, 1);
     int idx = lua_tointeger(L, 2);
     if (lua_type(L, 3) != LUA_TUSERDATA && lua_type(L, 3) != LUA_TNIL) {
-        luaL_error(L, "cpp_table_container_set_obj: invalid value type %d", lua_type(L, 3));
+        luaL_error(L, "cpp_table_container_set_array: invalid value type %d", lua_type(L, 3));
         return 0;
     }
     void *array_pointer = lua_touserdata(L, 3);
     bool is_nil = lua_isnil(L, 3);
     int message_id = lua_tointeger(L, 4);
     if (!pointer) {
-        luaL_error(L, "cpp_table_container_get_obj: invalid container");
+        luaL_error(L, "cpp_table_container_set_array: invalid container");
         return 0;
     }
     auto container = gLuaContainerHolder.Get(pointer);
     if (!container) {
-        luaL_error(L, "cpp_table_container_get_obj: no container found %p", pointer);
+        luaL_error(L, "cpp_table_container_set_array: no container found %p", pointer);
         return 0;
     }
     if (!array_pointer) {
-        luaL_error(L, "cpp_table_container_set_obj: invalid array");
+        luaL_error(L, "cpp_table_container_set_array: invalid array");
         return 0;
     }
     auto array = gLuaContainerHolder.GetArray(array_pointer);
     if (!array) {
-        luaL_error(L, "cpp_table_container_set_obj: no array found %p", array_pointer);
+        luaL_error(L, "cpp_table_container_set_array: no array found %p", array_pointer);
         return 0;
     }
     // check message_id avoid set wrong obj
     if (array->GetMessageId() != message_id) {
-        luaL_error(L, "cpp_table_container_set_obj: %s invalid message_id %d", array->GetName().data(), message_id);
+        luaL_error(L, "cpp_table_container_set_array: %s invalid message_id %d", array->GetName().data(), message_id);
         return 0;
     }
     auto ret = container->SetSharedObj<Array>(idx, array, is_nil);
     if (!ret) {
-        luaL_error(L, "cpp_table_container_set_obj: %s invalid idx %d", container->GetName().data(), idx);
+        luaL_error(L, "cpp_table_container_set_array: %s invalid idx %d", container->GetName().data(), idx);
         return 0;
     }
     return 0;
 }
 
 static int cpp_table_container_get_map(lua_State *L) {
-    return 0;
+    auto pointer = lua_touserdata(L, 1);
+    int idx = lua_tointeger(L, 2);
+    if (!pointer) {
+        luaL_error(L, "cpp_table_container_get_map: invalid container");
+        return 0;
+    }
+    auto container = gLuaContainerHolder.Get(pointer);
+    if (!container) {
+        luaL_error(L, "cpp_table_container_get_map: no container found %p", pointer);
+        return 0;
+    }
+    MapPtr map;
+    bool is_nil = false;
+    auto ret = container->GetSharedObj<Map>(idx, map, is_nil);
+    if (!ret) {
+        luaL_error(L, "cpp_table_container_get_map: %s invalid idx %d", container->GetName().data(), idx);
+        return 0;
+    }
+    if (is_nil) {
+        lua_pushnil(L);
+        return 1;
+    }
+    auto map_pointer = map.get();
+    auto find = cpp_table_get_map_container_userdata(L, map_pointer);
+    if (!find) {
+        auto userdata_pointer = (void **) lua_newuserdata(L, sizeof(void *));
+        *userdata_pointer = map.get();
+        gLuaContainerHolder.SetMap(userdata_pointer, map);
+        cpp_table_reg_map_container_userdata(L, map_pointer, map->GetLayoutMember()->key,
+                                             map->GetLayoutMember()->value);
+        LLOG("cpp_table_container_get_map: %s new %p", map->GetName().data(), map_pointer);
+    } else {
+        LLOG("cpp_table_container_get_map: %s already exist %p", map->GetName().data(), map_pointer);
+    }
+    return 1;
 }
 
 static int cpp_table_container_set_map(lua_State *L) {
+    auto pointer = lua_touserdata(L, 1);
+    int idx = lua_tointeger(L, 2);
+    if (lua_type(L, 3) != LUA_TUSERDATA && lua_type(L, 3) != LUA_TNIL) {
+        luaL_error(L, "cpp_table_container_set_map: invalid value type %d", lua_type(L, 3));
+        return 0;
+    }
+    void *map_pointer = lua_touserdata(L, 3);
+    bool is_nil = lua_isnil(L, 3);
+    int key_message_id = lua_tointeger(L, 4);
+    int value_message_id = lua_tointeger(L, 5);
+    if (!pointer) {
+        luaL_error(L, "cpp_table_container_set_map: invalid container");
+        return 0;
+    }
+    auto container = gLuaContainerHolder.Get(pointer);
+    if (!container) {
+        luaL_error(L, "cpp_table_container_set_map: no container found %p", pointer);
+        return 0;
+    }
+    if (!map_pointer) {
+        luaL_error(L, "cpp_table_container_set_map: invalid array");
+        return 0;
+    }
+    auto map = gLuaContainerHolder.GetMap(map_pointer);
+    if (!map) {
+        luaL_error(L, "cpp_table_container_set_map: no array found %p", map_pointer);
+        return 0;
+    }
+    // check message_id avoid set wrong obj
+    if (map->GetKeyMessageId() != key_message_id) {
+        luaL_error(L, "cpp_table_container_set_map: %s invalid message_id %d", map->GetName().data(), key_message_id);
+        return 0;
+    }
+    if (map->GetValueMessageId() != value_message_id) {
+        luaL_error(L, "cpp_table_container_set_map: %s invalid message_id %d", map->GetName().data(), value_message_id);
+        return 0;
+    }
+    auto ret = container->SetSharedObj<Map>(idx, map, is_nil);
+    if (!ret) {
+        luaL_error(L, "cpp_table_container_set_map: %s invalid idx %d", container->GetName().data(), idx);
+        return 0;
+    }
     return 0;
 }
 
@@ -1609,6 +1710,37 @@ static int cpp_table_array_container_set_obj(lua_State *L) {
     return 0;
 }
 
+static int cpp_table_create_map_container(lua_State *L) {
+    size_t name_size = 0;
+    const char *name = lua_tolstring(L, 1, &name_size);
+    if (name_size == 0) {
+        luaL_error(L, "cpp_table_create_array_container: invalid name %s", name);
+        return 0;
+    }
+    int tag = lua_tointeger(L, 2);
+    if (tag < 0) {
+        luaL_error(L, "cpp_table_create_array_container: invalid tag %d", tag);
+        return 0;
+    }
+    auto layout = gLayoutMgr.GetLayout(std::string(name, name_size));
+    if (!layout) {
+        luaL_error(L, "cpp_table_create_array_container: no layout found %s", name);
+        return 0;
+    }
+    auto layout_member = layout->GetMember(tag);
+    if (!layout_member) {
+        luaL_error(L, "cpp_table_create_array_container: no layout member found %s %d", name, tag);
+        return 0;
+    }
+    auto map = MakeShared<Map>(layout_member);
+    auto pointer = (void **) lua_newuserdata(L, sizeof(void *));
+    *pointer = map.get();
+    gLuaContainerHolder.SetMap(pointer, map);
+    // create map pointer -> userdata pointer mapping in lua _G.CPP_TABLE_MAP_CONTAINER which is a weak table
+    cpp_table_reg_map_container_userdata(L, map.get(), layout_member->key, layout_member->value);
+    return 1;
+}
+
 }
 
 std::vector<luaL_Reg> GetCppTableFuncs() {
@@ -1661,5 +1793,7 @@ std::vector<luaL_Reg> GetCppTableFuncs() {
             {"cpp_table_array_container_set_string", cpp_table::cpp_table_array_container_set_string},
             {"cpp_table_array_container_get_obj",    cpp_table::cpp_table_array_container_get_obj},
             {"cpp_table_array_container_set_obj",    cpp_table::cpp_table_array_container_set_obj},
+
+            {"cpp_table_create_map_container",       cpp_table::cpp_table_create_map_container},
     };
 }

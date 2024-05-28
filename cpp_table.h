@@ -303,6 +303,7 @@ public:
         int tag;
         int shared;
         int message_id;
+        int value_message_id;
         int key_size;
         int key_shared;
     };
@@ -611,7 +612,25 @@ public:
 
     ~Map();
 
+    StringView GetName() const {
+        return m_layout_member->name;
+    }
+
+    Layout::MemberPtr GetLayoutMember() const {
+        return m_layout_member;
+    }
+
+    int GetKeyMessageId() const {
+        return m_layout_member->message_id;
+    }
+
+    int GetValueMessageId() const {
+        return m_layout_member->value_message_id;
+    }
+
 private:
+    void ReleaseAllSharedObj();
+
     // use the simplest way to implement map, just use a union to store different type of key-value pair
     // key(bool, int32, uint32, int64, uint64, string) -> value(bool, int32, uint32, int64, uint64, string, float, double, message)
     enum MapType {
@@ -650,9 +669,14 @@ private:
         std::unordered_map<StringPtr, StringPtr> *m_string_string;
         std::unordered_map<StringPtr, ContainerPtr> *m_string_message;
     };
+
+private:
+    Layout::MemberPtr m_layout_member;
     MapType m_type;
     MapPointer m_map;
 };
+
+typedef SharedPtr<Map> MapPtr;
 
 // use to store Container which passed to lua
 class LuaContainerHolder {
@@ -693,9 +717,26 @@ public:
         m_array.erase(ptr);
     }
 
+    MapPtr GetMap(void *ptr) {
+        auto it = m_map.find(ptr);
+        if (it != m_map.end()) {
+            return it->second;
+        }
+        return 0;
+    }
+
+    void SetMap(void *ptr, MapPtr map) {
+        m_map[ptr] = map;
+    }
+
+    void RemoveMap(void *ptr) {
+        m_map.erase(ptr);
+    }
+
 private:
     std::unordered_map<void *, ContainerPtr> m_container;
     std::unordered_map<void *, ArrayPtr> m_array;
+    std::unordered_map<void *, MapPtr> m_map;
 };
 
 }
