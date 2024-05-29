@@ -701,16 +701,6 @@ public:
         return MapValue64();
     }
 
-    MapValue32 Get32byString(int32_t key, bool &is_nil) {
-        // cheat compiler, use key as string
-        return MapValue32();
-    }
-
-    MapValue64 Get64byString(int32_t key, bool &is_nil) {
-        // cheat compiler, use key as string
-        return MapValue64();
-    }
-
     MapValue32 Get32byString(StringPtr key, bool &is_nil) {
         auto it = m_map.m_string_32->find(key);
         if (it != m_map.m_string_32->end()) {

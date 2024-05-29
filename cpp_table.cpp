@@ -1746,14 +1746,19 @@ static int cpp_table_create_map_container(lua_State *L) {
     return 1;
 }
 
-template<typename K, int F>
+template<typename K>
 int cpp_table_map_container_get_by(lua_State *L, MapPtr map, K key, int value_message_id) {
     bool is_nil = false;
     switch (value_message_id) {
         case mt_int32: {
-            auto ret = F == 0 ? map->Get32by32(key, is_nil) :
-                       (F == 1 ? map->Get32by64(key, is_nil) :
-                        map->Get32byString(key, is_nil));
+            Map::MapValue32 ret;
+            if constexpr (std::is_same<K, int32_t>::value) {
+                ret = map->Get32by32(key, is_nil);
+            } else if constexpr (std::is_same<K, int64_t>::value) {
+                ret = map->Get32by64(key, is_nil);
+            } else {
+                map->Get32byString(key, is_nil);
+            }
             if (is_nil) {
                 lua_pushnil(L);
                 return 1;
@@ -1762,9 +1767,14 @@ int cpp_table_map_container_get_by(lua_State *L, MapPtr map, K key, int value_me
             return 1;
         }
         case mt_uint32: {
-            auto ret = F == 0 ? map->Get32by32(key, is_nil) :
-                       (F == 1 ? map->Get32by64(key, is_nil) :
-                        map->Get32byString(key, is_nil));
+            Map::MapValue32 ret;
+            if constexpr (std::is_same<K, int32_t>::value) {
+                ret = map->Get32by32(key, is_nil);
+            } else if constexpr (std::is_same<K, int64_t>::value) {
+                ret = map->Get32by64(key, is_nil);
+            } else {
+                map->Get32byString(key, is_nil);
+            }
             if (is_nil) {
                 return 1;
             }
@@ -1772,9 +1782,14 @@ int cpp_table_map_container_get_by(lua_State *L, MapPtr map, K key, int value_me
             return 1;
         }
         case mt_int64: {
-            auto ret = F == 0 ? map->Get64by32(key, is_nil) :
-                       (F == 1 ? map->Get64by64(key, is_nil) :
-                        map->Get64byString(key, is_nil));
+            Map::MapValue64 ret;
+            if constexpr (std::is_same<K, int32_t>::value) {
+                ret = map->Get64by32(key, is_nil);
+            } else if constexpr (std::is_same<K, int64_t>::value) {
+                ret = map->Get64by64(key, is_nil);
+            } else {
+                map->Get64byString(key, is_nil);
+            }
             if (is_nil) {
                 lua_pushnil(L);
                 return 1;
@@ -1783,9 +1798,14 @@ int cpp_table_map_container_get_by(lua_State *L, MapPtr map, K key, int value_me
             return 1;
         }
         case mt_uint64: {
-            auto ret = F == 0 ? map->Get64by32(key, is_nil) :
-                       (F == 1 ? map->Get64by64(key, is_nil) :
-                        map->Get64byString(key, is_nil));
+            Map::MapValue64 ret;
+            if constexpr (std::is_same<K, int32_t>::value) {
+                ret = map->Get64by32(key, is_nil);
+            } else if constexpr (std::is_same<K, int64_t>::value) {
+                ret = map->Get64by64(key, is_nil);
+            } else {
+                map->Get64byString(key, is_nil);
+            }
             if (is_nil) {
                 lua_pushnil(L);
                 return 1;
@@ -1794,9 +1814,14 @@ int cpp_table_map_container_get_by(lua_State *L, MapPtr map, K key, int value_me
             return 1;
         }
         case mt_float: {
-            auto ret = F == 0 ? map->Get32by32(key, is_nil) :
-                       (F == 1 ? map->Get32by64(key, is_nil) :
-                        map->Get32byString(key, is_nil));
+            Map::MapValue32 ret;
+            if constexpr (std::is_same<K, int32_t>::value) {
+                ret = map->Get32by32(key, is_nil);
+            } else if constexpr (std::is_same<K, int64_t>::value) {
+                ret = map->Get32by64(key, is_nil);
+            } else {
+                map->Get32byString(key, is_nil);
+            }
             if (is_nil) {
                 lua_pushnil(L);
                 return 1;
@@ -1805,9 +1830,14 @@ int cpp_table_map_container_get_by(lua_State *L, MapPtr map, K key, int value_me
             return 1;
         }
         case mt_double: {
-            auto ret = F == 0 ? map->Get64by32(key, is_nil) :
-                       (F == 1 ? map->Get64by64(key, is_nil) :
-                        map->Get64byString(key, is_nil));
+            Map::MapValue64 ret;
+            if constexpr (std::is_same<K, int32_t>::value) {
+                ret = map->Get64by32(key, is_nil);
+            } else if constexpr (std::is_same<K, int64_t>::value) {
+                ret = map->Get64by64(key, is_nil);
+            } else {
+                map->Get64byString(key, is_nil);
+            }
             if (is_nil) {
                 lua_pushnil(L);
                 return 1;
@@ -1816,9 +1846,14 @@ int cpp_table_map_container_get_by(lua_State *L, MapPtr map, K key, int value_me
             return 1;
         }
         case mt_bool: {
-            auto ret = F == 0 ? map->Get32by32(key, is_nil) :
-                       (F == 1 ? map->Get32by64(key, is_nil) :
-                        map->Get32byString(key, is_nil));
+            Map::MapValue32 ret;
+            if constexpr (std::is_same<K, int32_t>::value) {
+                ret = map->Get32by32(key, is_nil);
+            } else if constexpr (std::is_same<K, int64_t>::value) {
+                ret = map->Get32by64(key, is_nil);
+            } else {
+                map->Get32byString(key, is_nil);
+            }
             if (is_nil) {
                 lua_pushnil(L);
                 return 1;
@@ -1827,9 +1862,14 @@ int cpp_table_map_container_get_by(lua_State *L, MapPtr map, K key, int value_me
             return 1;
         }
         case mt_string: {
-            auto ret = F == 0 ? map->Get64by32(key, is_nil) :
-                       (F == 1 ? map->Get64by64(key, is_nil) :
-                        map->Get64byString(key, is_nil));
+            Map::MapValue64 ret;
+            if constexpr (std::is_same<K, int32_t>::value) {
+                ret = map->Get64by32(key, is_nil);
+            } else if constexpr (std::is_same<K, int64_t>::value) {
+                ret = map->Get64by64(key, is_nil);
+            } else {
+                map->Get64byString(key, is_nil);
+            }
             if (is_nil) {
                 lua_pushnil(L);
                 return 1;
@@ -1838,9 +1878,14 @@ int cpp_table_map_container_get_by(lua_State *L, MapPtr map, K key, int value_me
             return 1;
         }
         default: {
-            auto ret = F == 0 ? map->Get64by32(key, is_nil) :
-                       (F == 1 ? map->Get64by64(key, is_nil) :
-                        map->Get64byString(key, is_nil));
+            Map::MapValue64 ret;
+            if constexpr (std::is_same<K, int32_t>::value) {
+                ret = map->Get64by32(key, is_nil);
+            } else if constexpr (std::is_same<K, int64_t>::value) {
+                ret = map->Get64by64(key, is_nil);
+            } else {
+                map->Get64byString(key, is_nil);
+            }
             if (is_nil) {
                 lua_pushnil(L);
                 return 1;
@@ -1876,19 +1921,19 @@ static int cpp_table_map_container_get(lua_State *L) {
     switch (key_message_id) {
         case mt_int32: {
             int32_t key = (int32_t) lua_tointeger(L, 2);
-            return cpp_table_map_container_get_by<int32_t, 0>(L, map, (int32_t) key, value_message_id);
+            return cpp_table_map_container_get_by<int32_t>(L, map, (int32_t) key, value_message_id);
         }
         case mt_uint32: {
             uint32_t key = (uint32_t) lua_tointeger(L, 2);
-            return cpp_table_map_container_get_by<int32_t, 0>(L, map, (int32_t) key, value_message_id);
+            return cpp_table_map_container_get_by<int32_t>(L, map, (int32_t) key, value_message_id);
         }
         case mt_int64: {
             int64_t key = (int64_t) lua_tointeger(L, 2);
-            return cpp_table_map_container_get_by<int64_t, 1>(L, map, (int64_t) key, value_message_id);
+            return cpp_table_map_container_get_by<int64_t>(L, map, (int64_t) key, value_message_id);
         }
         case mt_uint64: {
             uint64_t key = (uint64_t) lua_tointeger(L, 2);
-            return cpp_table_map_container_get_by<int64_t, 1>(L, map, (int64_t) key, value_message_id);
+            return cpp_table_map_container_get_by<int64_t>(L, map, (int64_t) key, value_message_id);
         }
         case mt_float: {
             luaL_error(L, "cpp_table_map_container_get: invalid key type %d", key_message_id);
@@ -1900,13 +1945,13 @@ static int cpp_table_map_container_get(lua_State *L) {
         }
         case mt_bool: {
             bool key = (bool) lua_toboolean(L, 2);
-            return cpp_table_map_container_get_by<int32_t, 0>(L, map, (int32_t) key, value_message_id);
+            return cpp_table_map_container_get_by<int32_t>(L, map, (int32_t) key, value_message_id);
         }
         case mt_string: {
             size_t size = 0;
             const char *str = lua_tolstring(L, 2, &size);
             auto shared_str = gStringHeap.Add(StringView(str, size));
-            return cpp_table_map_container_get_by<StringPtr, 2>(L, map, shared_str, value_message_id);
+            return cpp_table_map_container_get_by<StringPtr>(L, map, shared_str, value_message_id);
         }
         default: {
             luaL_error(L, "cpp_table_map_container_get: invalid key type %d", key_message_id);
