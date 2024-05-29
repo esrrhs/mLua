@@ -99,7 +99,7 @@ static int cpp_table_set_message_id(lua_State *L) {
         luaL_error(L, "cpp_table_set_message_id: invalid message_id %d", message_id);
         return 0;
     }
-    auto layout_key = gStringHeap.Add(HashStringView(name, name_size));
+    auto layout_key = gStringHeap.Add(StringView(name, name_size));
     gLayoutMgr.SetMessageId(layout_key, message_id);
     return 0;
 }
@@ -113,7 +113,7 @@ static int cpp_table_update_layout(lua_State *L) {
     }
     luaL_checktype(L, 2, LUA_TTABLE);
 
-    auto layout_key = gStringHeap.Add(HashStringView(name, name_size));
+    auto layout_key = gStringHeap.Add(StringView(name, name_size));
     auto layout = gLayoutMgr.GetLayout(layout_key);
     if (!layout) {
         layout = MakeShared<Layout>();
@@ -146,7 +146,7 @@ static int cpp_table_update_layout(lua_State *L) {
             luaL_error(L, "cpp_table_update_layout: invalid key %s", name);
             return 0;
         }
-        mem->name = gStringHeap.Add(HashStringView(name, name_size));
+        mem->name = gStringHeap.Add(StringView(name, name_size));
 
         if (lua_type(L, -1) != LUA_TTABLE) {
             luaL_error(L, "cpp_table_update_layout: invalid table type %d", lua_type(L, -1));
@@ -166,7 +166,7 @@ static int cpp_table_update_layout(lua_State *L) {
             luaL_error(L, "cpp_table_update_layout: invalid type %s", type);
             return 0;
         }
-        mem->type = gStringHeap.Add(HashStringView(type, type_size));
+        mem->type = gStringHeap.Add(StringView(type, type_size));
         lua_pop(L, 1);
 
         // key
@@ -182,7 +182,7 @@ static int cpp_table_update_layout(lua_State *L) {
             luaL_error(L, "cpp_table_update_layout: invalid key %s", key);
             return 0;
         }
-        mem->key = gStringHeap.Add(HashStringView(key, key_size));
+        mem->key = gStringHeap.Add(StringView(key, key_size));
         lua_pop(L, 1);
 
         // value
@@ -194,7 +194,7 @@ static int cpp_table_update_layout(lua_State *L) {
         }
         size_t value_size = 0;
         const char *value = lua_tolstring(L, -1, &value_size);
-        mem->value = gStringHeap.Add(HashStringView(value, value_size));
+        mem->value = gStringHeap.Add(StringView(value, value_size));
         lua_pop(L, 1);
 
         // pos
@@ -463,7 +463,7 @@ static int cpp_table_create_container(lua_State *L) {
         luaL_error(L, "cpp_table_create_container: invalid name %s", name);
         return 0;
     }
-    auto layout_key = gStringHeap.Add(HashStringView(name, name_size));
+    auto layout_key = gStringHeap.Add(StringView(name, name_size));
     auto layout = gLayoutMgr.GetLayout(layout_key);
     if (!layout) {
         luaL_error(L, "cpp_table_create_container: no layout found %s", name);
@@ -920,7 +920,7 @@ static int cpp_table_container_set_string(lua_State *L) {
     }
     StringPtr shared_str;
     if (!is_nil) {
-        shared_str = gStringHeap.Add(HashStringView(str, size));
+        shared_str = gStringHeap.Add(StringView(str, size));
     }
     auto ret = container->SetSharedObj(idx, shared_str, is_nil);
     if (!ret) {
@@ -1173,7 +1173,7 @@ static int cpp_table_create_array_container(lua_State *L) {
         luaL_error(L, "cpp_table_create_array_container: invalid tag %d", tag);
         return 0;
     }
-    auto layout_key = gStringHeap.Add(HashStringView(name, name_size));
+    auto layout_key = gStringHeap.Add(StringView(name, name_size));
     auto layout = gLayoutMgr.GetLayout(layout_key);
     if (!layout) {
         luaL_error(L, "cpp_table_create_array_container: no layout found %s", name);
@@ -1635,7 +1635,7 @@ static int cpp_table_array_container_set_string(lua_State *L) {
     }
     StringPtr shared_str;
     if (!is_nil) {
-        shared_str = gStringHeap.Add(HashStringView(str, size));
+        shared_str = gStringHeap.Add(StringView(str, size));
     }
     auto ret = array->SetSharedObj(idx, shared_str, is_nil);
     if (!ret) {
@@ -1726,7 +1726,7 @@ static int cpp_table_create_map_container(lua_State *L) {
         luaL_error(L, "cpp_table_create_array_container: invalid tag %d", tag);
         return 0;
     }
-    auto layout_key = gStringHeap.Add(HashStringView(name, name_size));
+    auto layout_key = gStringHeap.Add(StringView(name, name_size));
     auto layout = gLayoutMgr.GetLayout(layout_key);
     if (!layout) {
         luaL_error(L, "cpp_table_create_array_container: no layout found %s", name);
@@ -1746,11 +1746,14 @@ static int cpp_table_create_map_container(lua_State *L) {
     return 1;
 }
 
-static int cpp_table_map_container_get_by_int32(lua_State *L, MapPtr map, int32_t key, int value_message_id) {
+template<typename K, int F>
+int cpp_table_map_container_get_by(lua_State *L, MapPtr map, K key, int value_message_id) {
     bool is_nil = false;
     switch (value_message_id) {
         case mt_int32: {
-            auto ret = map->Get32by32(key, is_nil);
+            auto ret = F == 0 ? map->Get32by32(key, is_nil) :
+                       (F == 1 ? map->Get32by64(key, is_nil) :
+                        map->Get32byString(key, is_nil));
             if (is_nil) {
                 lua_pushnil(L);
                 return 1;
@@ -1759,7 +1762,9 @@ static int cpp_table_map_container_get_by_int32(lua_State *L, MapPtr map, int32_
             return 1;
         }
         case mt_uint32: {
-            auto ret = map->Get32by32(key, is_nil);
+            auto ret = F == 0 ? map->Get32by32(key, is_nil) :
+                       (F == 1 ? map->Get32by64(key, is_nil) :
+                        map->Get32byString(key, is_nil));
             if (is_nil) {
                 return 1;
             }
@@ -1767,7 +1772,9 @@ static int cpp_table_map_container_get_by_int32(lua_State *L, MapPtr map, int32_
             return 1;
         }
         case mt_int64: {
-            auto ret = map->Get64by32(key, is_nil);
+            auto ret = F == 0 ? map->Get64by32(key, is_nil) :
+                       (F == 1 ? map->Get64by64(key, is_nil) :
+                        map->Get64byString(key, is_nil));
             if (is_nil) {
                 lua_pushnil(L);
                 return 1;
@@ -1776,7 +1783,9 @@ static int cpp_table_map_container_get_by_int32(lua_State *L, MapPtr map, int32_
             return 1;
         }
         case mt_uint64: {
-            auto ret = map->Get64by32(key, is_nil);
+            auto ret = F == 0 ? map->Get64by32(key, is_nil) :
+                       (F == 1 ? map->Get64by64(key, is_nil) :
+                        map->Get64byString(key, is_nil));
             if (is_nil) {
                 lua_pushnil(L);
                 return 1;
@@ -1785,7 +1794,9 @@ static int cpp_table_map_container_get_by_int32(lua_State *L, MapPtr map, int32_
             return 1;
         }
         case mt_float: {
-            auto ret = map->Get32by32(key, is_nil);
+            auto ret = F == 0 ? map->Get32by32(key, is_nil) :
+                       (F == 1 ? map->Get32by64(key, is_nil) :
+                        map->Get32byString(key, is_nil));
             if (is_nil) {
                 lua_pushnil(L);
                 return 1;
@@ -1794,7 +1805,9 @@ static int cpp_table_map_container_get_by_int32(lua_State *L, MapPtr map, int32_
             return 1;
         }
         case mt_double: {
-            auto ret = map->Get64by32(key, is_nil);
+            auto ret = F == 0 ? map->Get64by32(key, is_nil) :
+                       (F == 1 ? map->Get64by64(key, is_nil) :
+                        map->Get64byString(key, is_nil));
             if (is_nil) {
                 lua_pushnil(L);
                 return 1;
@@ -1803,7 +1816,9 @@ static int cpp_table_map_container_get_by_int32(lua_State *L, MapPtr map, int32_
             return 1;
         }
         case mt_bool: {
-            auto ret = map->Get32by32(key, is_nil);
+            auto ret = F == 0 ? map->Get32by32(key, is_nil) :
+                       (F == 1 ? map->Get32by64(key, is_nil) :
+                        map->Get32byString(key, is_nil));
             if (is_nil) {
                 lua_pushnil(L);
                 return 1;
@@ -1812,7 +1827,9 @@ static int cpp_table_map_container_get_by_int32(lua_State *L, MapPtr map, int32_
             return 1;
         }
         case mt_string: {
-            auto ret = map->Get64by32(key, is_nil);
+            auto ret = F == 0 ? map->Get64by32(key, is_nil) :
+                       (F == 1 ? map->Get64by64(key, is_nil) :
+                        map->Get64byString(key, is_nil));
             if (is_nil) {
                 lua_pushnil(L);
                 return 1;
@@ -1821,94 +1838,9 @@ static int cpp_table_map_container_get_by_int32(lua_State *L, MapPtr map, int32_
             return 1;
         }
         default: {
-            auto ret = map->Get64by32(key, is_nil);
-            if (is_nil) {
-                lua_pushnil(L);
-                return 1;
-            }
-            auto obj = ret.m_obj;
-            cpp_table_get_container_push_pointer(L, obj);
-            return 1;
-        }
-    }
-}
-
-static int cpp_table_map_container_get_by_int64(lua_State *L, MapPtr map, int64_t key, int value_message_id) {
-    bool is_nil = false;
-    switch (value_message_id) {
-        case mt_int32: {
-            auto ret = map->Get32by64(key, is_nil);
-            if (is_nil) {
-                lua_pushnil(L);
-                return 1;
-            }
-            lua_pushinteger(L, ret.m_32);
-            return 1;
-        }
-        case mt_uint32: {
-            auto ret = map->Get32by64(key, is_nil);
-            if (is_nil) {
-                return 1;
-            }
-            lua_pushinteger(L, ret.m_u32);
-            return 1;
-        }
-        case mt_int64: {
-            auto ret = map->Get64by64(key, is_nil);
-            if (is_nil) {
-                lua_pushnil(L);
-                return 1;
-            }
-            lua_pushinteger(L, ret.m_64);
-            return 1;
-        }
-        case mt_uint64: {
-            auto ret = map->Get64by64(key, is_nil);
-            if (is_nil) {
-                lua_pushnil(L);
-                return 1;
-            }
-            lua_pushinteger(L, ret.m_u64);
-            return 1;
-        }
-        case mt_float: {
-            auto ret = map->Get32by64(key, is_nil);
-            if (is_nil) {
-                lua_pushnil(L);
-                return 1;
-            }
-            lua_pushnumber(L, ret.m_float);
-            return 1;
-        }
-        case mt_double: {
-            auto ret = map->Get64by64(key, is_nil);
-            if (is_nil) {
-                lua_pushnil(L);
-                return 1;
-            }
-            lua_pushnumber(L, ret.m_double);
-            return 1;
-        }
-        case mt_bool: {
-            auto ret = map->Get32by64(key, is_nil);
-            if (is_nil) {
-                lua_pushnil(L);
-                return 1;
-            }
-            lua_pushboolean(L, ret.m_bool);
-            return 1;
-        }
-        case mt_string: {
-            auto ret = map->Get64by64(key, is_nil);
-            if (is_nil) {
-                lua_pushnil(L);
-                return 1;
-            }
-            lua_pushlstring(L, ret.m_string->c_str(), ret.m_string->size());
-            return 1;
-        }
-        default: {
-            auto ret = map->Get64by64(key, is_nil);
+            auto ret = F == 0 ? map->Get64by32(key, is_nil) :
+                       (F == 1 ? map->Get64by64(key, is_nil) :
+                        map->Get64byString(key, is_nil));
             if (is_nil) {
                 lua_pushnil(L);
                 return 1;
@@ -1944,19 +1876,19 @@ static int cpp_table_map_container_get(lua_State *L) {
     switch (key_message_id) {
         case mt_int32: {
             int32_t key = (int32_t) lua_tointeger(L, 2);
-            return cpp_table_map_container_get_by_int32(L, map, key, value_message_id);
+            return cpp_table_map_container_get_by<int32_t, 0>(L, map, (int32_t) key, value_message_id);
         }
         case mt_uint32: {
             uint32_t key = (uint32_t) lua_tointeger(L, 2);
-            return cpp_table_map_container_get_by_int32(L, map, (int32_t) key, value_message_id);
+            return cpp_table_map_container_get_by<int32_t, 0>(L, map, (int32_t) key, value_message_id);
         }
         case mt_int64: {
             int64_t key = (int64_t) lua_tointeger(L, 2);
-            return cpp_table_map_container_get_by_int64(L, map, key, value_message_id);
+            return cpp_table_map_container_get_by<int64_t, 1>(L, map, (int64_t) key, value_message_id);
         }
         case mt_uint64: {
             uint64_t key = (uint64_t) lua_tointeger(L, 2);
-            return cpp_table_map_container_get_by_int64(L, map, (int64_t) key, value_message_id);
+            return cpp_table_map_container_get_by<int64_t, 1>(L, map, (int64_t) key, value_message_id);
         }
         case mt_float: {
             luaL_error(L, "cpp_table_map_container_get: invalid key type %d", key_message_id);
@@ -1968,13 +1900,13 @@ static int cpp_table_map_container_get(lua_State *L) {
         }
         case mt_bool: {
             bool key = (bool) lua_toboolean(L, 2);
-            return cpp_table_map_container_get_by_int32(L, map, (int32_t) key, value_message_id);
+            return cpp_table_map_container_get_by<int32_t, 0>(L, map, (int32_t) key, value_message_id);
         }
         case mt_string: {
             size_t size = 0;
             const char *str = lua_tolstring(L, 2, &size);
-            auto shared_str = gStringHeap.Add(HashStringView(str, size));
-            return cpp_table_map_container_get_by_int64(L, map, (int64_t) shared_str.get(), value_message_id);
+            auto shared_str = gStringHeap.Add(StringView(str, size));
+            return cpp_table_map_container_get_by<StringPtr, 2>(L, map, shared_str, value_message_id);
         }
         default: {
             luaL_error(L, "cpp_table_map_container_get: invalid key type %d", key_message_id);

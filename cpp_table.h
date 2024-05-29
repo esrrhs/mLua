@@ -131,12 +131,35 @@ private:
     T *m_ptr;
 };
 
+static size_t StringHash(const char *str, size_t len) {
+    unsigned long h = 0x5bd1e995;
+    const unsigned char *data = (const unsigned char *) str;
+
+    while (len >= 4) {
+        unsigned int k = *(unsigned int *) data;
+        h ^= k;
+        data += 4;
+        len -= 4;
+    }
+
+    // Handle the last few bytes of the input array
+    switch (len) {
+        case 3:
+            h ^= data[2] << 16;
+        case 2:
+            h ^= data[1] << 8;
+        case 1:
+            h ^= data[0];
+    }
+    return h;
+}
+
 // a simple string class, use to store string data
 class String : public RefCntObj {
 public:
-    String(const char *str, size_t len) : m_str(str, len) {}
+    String(const char *str, size_t len, size_t hash) : m_str(str, len), m_hash(hash) {}
 
-    String(const std::string &str) : m_str(str) {}
+    String(const std::string &str) : m_str(str), m_hash(StringHash(str.c_str(), str.size())) {}
 
     virtual ~String() {}
 
@@ -150,8 +173,11 @@ public:
 
     bool empty() const { return m_str.empty(); }
 
+    size_t hash() const { return m_hash; }
+
 private:
     std::string m_str;
+    size_t m_hash;
 };
 
 typedef SharedPtr<String> StringPtr;
@@ -159,7 +185,7 @@ typedef WeakPtr<String> WeakStringPtr;
 
 struct StringPtrHash {
     size_t operator()(const StringPtr &str) const {
-        return std::hash<std::string>()(str->c_str());
+        return str->hash();
     }
 };
 
@@ -172,13 +198,16 @@ struct StringPtrEqual {
 // a simple string view class, std::string_view is not available in c++11
 class StringView {
 public:
-    StringView() : m_str(0), m_len(0) {}
+    StringView() : m_str(0), m_len(0), m_hash(0) {}
 
-    StringView(const char *str, size_t len) : m_str(str), m_len(len) {}
+    StringView(const char *str, size_t len, size_t hash) : m_str(str), m_len(len), m_hash(hash) {}
 
-    StringView(const std::string &str) : m_str(str.c_str()), m_len(str.size()) {}
+    StringView(const char *str, size_t len) : m_str(str), m_len(len), m_hash(StringHash(str, len)) {}
 
-    StringView(const StringPtr &str) : m_str(str->c_str()), m_len(str->size()) {}
+    StringView(const std::string &str) : m_str(str.c_str()), m_len(str.size()),
+                                         m_hash(StringHash(str.c_str(), str.size())) {}
+
+    StringView(const StringPtr &str) : m_str(str->c_str()), m_len(str->size()), m_hash(str->hash()) {}
 
     const char *data() const { return m_str; }
 
@@ -187,88 +216,32 @@ public:
     bool empty() const { return m_len == 0; }
 
     bool operator==(const StringView &rhs) const {
-        if (m_len != rhs.m_len) {
+        if (m_hash != rhs.m_hash || m_len != rhs.m_len) {
             return false;
         }
         return memcmp(m_str, rhs.m_str, m_len) == 0;
     }
 
     bool operator!=(const StringView &rhs) const {
-        if (m_len != rhs.m_len) {
-            return true;
-        }
-        return memcmp(m_str, rhs.m_str, m_len) != 0;
+        return !(*this == rhs);
     }
+
+    size_t hash() const { return m_hash; }
 
 protected:
     const char *m_str;
     size_t m_len;
-};
-
-class HashStringView : public StringView {
-public:
-    HashStringView(const char *str, size_t len) : StringView(str, len) { m_hash = Hash(str, m_len); }
-
-    HashStringView(const std::string &str) : StringView(str.c_str(), str.size()) { m_hash = Hash(m_str, m_len); }
-
-    HashStringView(const StringView &str) : StringView(str.data(), str.size()) { m_hash = Hash(m_str, m_len); }
-
-    HashStringView(const StringPtr &str) : StringView(str->c_str(), str->size()) { m_hash = Hash(m_str, m_len); }
-
-    HashStringView(const StringPtr &str, size_t hash) : StringView(str->c_str(), str->size()), m_hash(hash) {}
-
-    size_t hash() const { return m_hash; }
-
-    bool operator==(const HashStringView &rhs) const {
-        if (m_hash != rhs.m_hash || m_len != rhs.m_len) {
-            return false;
-        }
-        return memcmp(m_str, rhs.m_str, m_len) == 0;
-    }
-
-    bool operator!=(const HashStringView &rhs) const {
-        if (m_hash != rhs.m_hash || m_len != rhs.m_len) {
-            return true;
-        }
-        return memcmp(m_str, rhs.m_str, m_len) != 0;
-    }
-
-private:
-    static size_t Hash(const char *str, size_t len) {
-        unsigned long h = 0x5bd1e995;
-        const unsigned char *data = (const unsigned char *) str;
-
-        while (len >= 4) {
-            unsigned int k = *(unsigned int *) data;
-            h ^= k;
-            data += 4;
-            len -= 4;
-        }
-
-        // Handle the last few bytes of the input array
-        switch (len) {
-            case 3:
-                h ^= data[2] << 16;
-            case 2:
-                h ^= data[1] << 8;
-            case 1:
-                h ^= data[0];
-        }
-        return h;
-    }
-
-private:
     size_t m_hash;
 };
 
-struct HashStringViewHash {
-    size_t operator()(const HashStringView &str) const {
+struct StringViewHash {
+    size_t operator()(const StringView &str) const {
         return str.hash();
     }
 };
 
-struct HashStringViewEqual {
-    bool operator()(const HashStringView &str1, const HashStringView &str2) const {
+struct StringViewEqual {
+    bool operator()(const StringView &str1, const StringView &str2) const {
         return str1 == str2;
     }
 };
@@ -280,24 +253,24 @@ public:
 
     ~StringHeap() {}
 
-    StringPtr Add(HashStringView str) {
+    StringPtr Add(StringView str) {
         auto it = m_string_map.find(str);
         if (it != m_string_map.end()) {
             return it->second.lock();
         }
-        auto value = MakeShared<String>(str.data(), str.size());
-        auto key = HashStringView(value, str.hash());
+        auto value = MakeShared<String>(str.data(), str.size(), str.hash());
+        auto key = StringView(value);
         m_string_map[key] = value;
         return value;
     }
 
-    void Remove(HashStringView str) {
+    void Remove(StringView str) {
         LLOG("StringHeap remove string %s", str.data());
         m_string_map.erase(str);
     }
 
 private:
-    std::unordered_map<HashStringView, WeakStringPtr, HashStringViewHash, HashStringViewEqual> m_string_map;
+    std::unordered_map<StringView, WeakStringPtr, StringViewHash, StringViewEqual> m_string_map;
 };
 
 enum MessageIdType {
@@ -679,6 +652,9 @@ public:
 
         std::unordered_map<int64_t, MapValue32> *m_64_32;
         std::unordered_map<int64_t, MapValue64> *m_64_64;
+
+        std::unordered_map<StringPtr, MapValue32, StringPtrHash, StringPtrEqual> *m_string_32;
+        std::unordered_map<StringPtr, MapValue64, StringPtrHash, StringPtrEqual> *m_string_64;
     };
 
     MapPointer GetMap() const {
@@ -718,6 +694,36 @@ public:
     MapValue64 Get64by64(int64_t key, bool &is_nil) {
         auto it = m_map.m_64_64->find(key);
         if (it != m_map.m_64_64->end()) {
+            is_nil = false;
+            return it->second;
+        }
+        is_nil = true;
+        return MapValue64();
+    }
+
+    MapValue32 Get32byString(int32_t key, bool &is_nil) {
+        // cheat compiler, use key as string
+        return MapValue32();
+    }
+
+    MapValue64 Get64byString(int32_t key, bool &is_nil) {
+        // cheat compiler, use key as string
+        return MapValue64();
+    }
+
+    MapValue32 Get32byString(StringPtr key, bool &is_nil) {
+        auto it = m_map.m_string_32->find(key);
+        if (it != m_map.m_string_32->end()) {
+            is_nil = false;
+            return it->second;
+        }
+        is_nil = true;
+        return MapValue32();
+    }
+
+    MapValue64 Get64byString(StringPtr key, bool &is_nil) {
+        auto it = m_map.m_string_64->find(key);
+        if (it != m_map.m_string_64->end()) {
             is_nil = false;
             return it->second;
         }
