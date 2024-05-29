@@ -526,7 +526,9 @@ int cpp_table_container_get_normal(lua_State *L) {
     } else if constexpr (std::is_same<T, float>::value || std::is_same<T, double>::value) {
         lua_pushnumber(L, value);
     } else {
-        static_assert(false, "non-exhaustive visitor!");
+        luaL_error(L, "cpp_table_container_get_normal: invalid type %s %s", container->GetName().data(),
+                   typeid(T).name());
+        return 0;
     }
     return 1;
 }
@@ -569,7 +571,9 @@ int cpp_table_container_set_normal(lua_State *L) {
         T value = lua_tonumber(L, 3);
         ret = container->Set<T>(idx, value, is_nil);
     } else {
-        static_assert(false, "non-exhaustive visitor!");
+        luaL_error(L, "cpp_table_container_set_normal: invalid type %s %s", container->GetName().data(),
+                   typeid(T).name());
+        return 0;
     }
     if (!ret) {
         luaL_error(L, "cpp_table_container_set_normal: %s invalid idx %d", container->GetName().data(), idx);
@@ -921,19 +925,19 @@ int cpp_table_array_container_get_normal(lua_State *L) {
     auto pointer = lua_touserdata(L, 1);
     int idx = lua_tointeger(L, 2);
     if (!pointer) {
-        luaL_error(L, "cpp_table_array_container_get_int32: invalid array");
+        luaL_error(L, "cpp_table_array_container_get_normal: invalid array");
         return 0;
     }
     auto array = gLuaContainerHolder.GetArray(pointer);
     if (!array) {
-        luaL_error(L, "cpp_table_array_container_get_int32: no array found %p", pointer);
+        luaL_error(L, "cpp_table_array_container_get_normal: no array found %p", pointer);
         return 0;
     }
     T value = 0;
     bool is_nil = false;
     auto ret = array->Get<T>(idx, value, is_nil);
     if (!ret) {
-        luaL_error(L, "cpp_table_array_container_get_int32: %s invalid idx %d", array->GetName().data(), idx);
+        luaL_error(L, "cpp_table_array_container_get_normal: %s invalid idx %d", array->GetName().data(), idx);
         return 0;
     }
     if (is_nil) {
@@ -948,7 +952,9 @@ int cpp_table_array_container_get_normal(lua_State *L) {
     } else if constexpr (std::is_same<T, float>::value || std::is_same<T, double>::value) {
         lua_pushnumber(L, value);
     } else {
-        static_assert(false, "non-exhaustive visitor!");
+        luaL_error(L, "cpp_table_array_container_get_normal: invalid type %s %s", array->GetName().data(),
+                   typeid(T).name());
+        return 0;
     }
     return 1;
 }
@@ -991,7 +997,9 @@ int cpp_table_array_container_set_normal(lua_State *L) {
         float value = lua_tonumber(L, 3);
         ret = array->Set<float>(idx, value, is_nil);
     } else {
-        static_assert(false, "non-exhaustive visitor!");
+        luaL_error(L, "cpp_table_array_container_set_normal: invalid type %s %s", array->GetName().data(),
+                   typeid(T).name());
+        return 0;
     }
     if (!ret) {
         luaL_error(L, "cpp_table_array_container_set_normal: %s invalid idx %d", array->GetName().data(), idx);
