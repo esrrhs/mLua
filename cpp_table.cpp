@@ -36,7 +36,7 @@ void Container::ReleaseAllSharedObj() {
         bool is_nil = false;
         auto ret = GetSharedObj<RefCntObj>(pos, out, is_nil);
         if (!ret) {
-            LERR("Container::ReleaseAllSharedObj: %s invalid pos %d", m_layout->GetName().data(), pos);
+            LERR("Container::ReleaseAllSharedObj: %s invalid pos %d", m_layout->GetName()->data(), pos);
             return;
         }
         if (!is_nil) {
@@ -64,7 +64,7 @@ void Array::ReleaseAllSharedObj() {
         bool is_nil = false;
         auto ret = GetSharedObj<RefCntObj>(i, out, is_nil);
         if (!ret) {
-            LERR("Array::ReleaseAllSharedObj: %s invalid pos %d", m_layout_member->name.data(), i);
+            LERR("Array::ReleaseAllSharedObj: %s invalid pos %d", m_layout_member->name->data(), i);
             return;
         }
         if (!is_nil) {
@@ -95,7 +95,12 @@ static int cpp_table_set_message_id(lua_State *L) {
         return 0;
     }
     int message_id = lua_tointeger(L, 2);
-    gLayoutMgr.SetMessageId(std::string(name, name_size), message_id);
+    if (message_id < 0) {
+        luaL_error(L, "cpp_table_set_message_id: invalid message_id %d", message_id);
+        return 0;
+    }
+    auto layout_key = gStringHeap.Add(HashStringView(name, name_size));
+    gLayoutMgr.SetMessageId(layout_key, message_id);
     return 0;
 }
 
@@ -108,7 +113,7 @@ static int cpp_table_update_layout(lua_State *L) {
     }
     luaL_checktype(L, 2, LUA_TTABLE);
 
-    auto layout_key = std::string(name, name_size);
+    auto layout_key = gStringHeap.Add(HashStringView(name, name_size));
     auto layout = gLayoutMgr.GetLayout(layout_key);
     if (!layout) {
         layout = MakeShared<Layout>();
@@ -141,7 +146,7 @@ static int cpp_table_update_layout(lua_State *L) {
             luaL_error(L, "cpp_table_update_layout: invalid key %s", name);
             return 0;
         }
-        mem->name.assign(name, name_size);
+        mem->name = gStringHeap.Add(HashStringView(name, name_size));
 
         if (lua_type(L, -1) != LUA_TTABLE) {
             luaL_error(L, "cpp_table_update_layout: invalid table type %d", lua_type(L, -1));
@@ -161,7 +166,7 @@ static int cpp_table_update_layout(lua_State *L) {
             luaL_error(L, "cpp_table_update_layout: invalid type %s", type);
             return 0;
         }
-        mem->type.assign(type, type_size);
+        mem->type = gStringHeap.Add(HashStringView(type, type_size));
         lua_pop(L, 1);
 
         // key
@@ -177,7 +182,7 @@ static int cpp_table_update_layout(lua_State *L) {
             luaL_error(L, "cpp_table_update_layout: invalid key %s", key);
             return 0;
         }
-        mem->key.assign(key, key_size);
+        mem->key = gStringHeap.Add(HashStringView(key, key_size));
         lua_pop(L, 1);
 
         // value
@@ -189,7 +194,7 @@ static int cpp_table_update_layout(lua_State *L) {
         }
         size_t value_size = 0;
         const char *value = lua_tolstring(L, -1, &value_size);
-        mem->value.assign(value, value_size);
+        mem->value = gStringHeap.Add(HashStringView(value, value_size));
         lua_pop(L, 1);
 
         // pos
@@ -285,7 +290,7 @@ static int cpp_table_update_layout(lua_State *L) {
 
     auto message_id = gLayoutMgr.GetMessageId(layout_key);
     if (message_id < 0) {
-        luaL_error(L, "cpp_table_update_layout: no message_id found %s", layout_key.data());
+        luaL_error(L, "cpp_table_update_layout: no message_id found %s", layout_key->data());
         return 0;
     }
 
@@ -377,7 +382,7 @@ static void cpp_table_get_container_push_pointer(lua_State *L, Container *contai
     }
 }
 
-static void cpp_table_reg_array_container_userdata(lua_State *L, Array *array, const std::string &key) {
+static void cpp_table_reg_array_container_userdata(lua_State *L, Array *array, StringPtr key) {
     // create weak table _G.CPP_TABLE_ARRAY_CONTAINER, and set array pointer -> userdata pointer mapping
     lua_getglobal(L, "CPP_TABLE_ARRAY_CONTAINER");// stack: 1: userdata, 2: weak table
     if (lua_type(L, -1) != LUA_TTABLE) { // stack: 1: userdata, 2: nil
@@ -402,11 +407,11 @@ static void cpp_table_reg_array_container_userdata(lua_State *L, Array *array, c
         luaL_error(L, "cpp_table_reg_container_userdata: no _G.CPP_TABLE_LAYOUT_ARRAY_META_TABLE found");
         return;
     }
-    lua_pushlstring(L, key.c_str(), key.size()); // stack: 1: userdata, 2: global meta, 3: name
+    lua_pushlstring(L, key->c_str(), key->size()); // stack: 1: userdata, 2: global meta, 3: name
     lua_gettable(L, -2); // stack: 1: userdata, 2: global meta, 3: meta
     if (lua_type(L, -1) != LUA_TTABLE) {
         lua_pop(L, 1); // stack: 1: userdata, 2: global meta
-        luaL_error(L, "cpp_table_reg_container_userdata: no meta table found %s", key.c_str());
+        luaL_error(L, "cpp_table_reg_container_userdata: no meta table found %s", key->c_str());
         return;
     }
     lua_setmetatable(L, -3); // stack: 1: userdata, 2: global meta
@@ -443,7 +448,7 @@ static void cpp_table_remove_array_container_userdata(lua_State *L, Array *array
 }
 
 static void
-cpp_table_reg_map_container_userdata(lua_State *L, Map *map, const std::string &key, const std::string &value) {
+cpp_table_reg_map_container_userdata(lua_State *L, Map *map, StringPtr key, StringPtr value) {
 
 }
 
@@ -458,7 +463,8 @@ static int cpp_table_create_container(lua_State *L) {
         luaL_error(L, "cpp_table_create_container: invalid name %s", name);
         return 0;
     }
-    auto layout = gLayoutMgr.GetLayout(std::string(name, name_size));
+    auto layout_key = gStringHeap.Add(HashStringView(name, name_size));
+    auto layout = gLayoutMgr.GetLayout(layout_key);
     if (!layout) {
         luaL_error(L, "cpp_table_create_container: no layout found %s", name);
         return 0;
@@ -1167,7 +1173,8 @@ static int cpp_table_create_array_container(lua_State *L) {
         luaL_error(L, "cpp_table_create_array_container: invalid tag %d", tag);
         return 0;
     }
-    auto layout = gLayoutMgr.GetLayout(std::string(name, name_size));
+    auto layout_key = gStringHeap.Add(HashStringView(name, name_size));
+    auto layout = gLayoutMgr.GetLayout(layout_key);
     if (!layout) {
         luaL_error(L, "cpp_table_create_array_container: no layout found %s", name);
         return 0;
@@ -1719,7 +1726,8 @@ static int cpp_table_create_map_container(lua_State *L) {
         luaL_error(L, "cpp_table_create_array_container: invalid tag %d", tag);
         return 0;
     }
-    auto layout = gLayoutMgr.GetLayout(std::string(name, name_size));
+    auto layout_key = gStringHeap.Add(HashStringView(name, name_size));
+    auto layout = gLayoutMgr.GetLayout(layout_key);
     if (!layout) {
         luaL_error(L, "cpp_table_create_array_container: no layout found %s", name);
         return 0;

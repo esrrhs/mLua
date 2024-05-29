@@ -144,6 +144,8 @@ public:
 
     const char *c_str() const { return m_str.c_str(); }
 
+    const char *data() const { return m_str.c_str(); }
+
     size_t size() const { return m_str.size(); }
 
     bool empty() const { return m_str.empty(); }
@@ -154,6 +156,18 @@ private:
 
 typedef SharedPtr<String> StringPtr;
 typedef WeakPtr<String> WeakStringPtr;
+
+struct StringPtrHash {
+    size_t operator()(const StringPtr &str) const {
+        return std::hash<std::string>()(str->c_str());
+    }
+};
+
+struct StringPtrEqual {
+    bool operator()(const StringPtr &str1, const StringPtr &str2) const {
+        return str1.get() == str2.get();
+    }
+};
 
 // a simple string view class, std::string_view is not available in c++11
 class StringView {
@@ -305,10 +319,10 @@ public:
     ~Layout() {}
 
     struct Member : public RefCntObj {
-        std::string name;
-        std::string type;
-        std::string key;
-        std::string value;
+        StringPtr name;
+        StringPtr type;
+        StringPtr key;
+        StringPtr value;
         int pos;
         int size;
         int tag;
@@ -333,11 +347,11 @@ public:
         return m_member;
     }
 
-    void SetName(const std::string &name) {
+    void SetName(StringPtr name) {
         m_name = name;
     }
 
-    const std::string &GetName() const {
+    StringPtr GetName() const {
         return m_name;
     }
 
@@ -359,7 +373,7 @@ public:
 
 private:
     int m_message_id;
-    std::string m_name;
+    StringPtr m_name;
     std::unordered_map<int, MemberPtr> m_member;
     int m_total_size;
 };
@@ -372,7 +386,7 @@ public:
 
     ~LayoutMgr() {}
 
-    LayoutPtr GetLayout(const std::string &name) {
+    LayoutPtr GetLayout(StringPtr name) {
         auto it = m_layout.find(name);
         if (it != m_layout.end()) {
             return it->second;
@@ -380,11 +394,11 @@ public:
         return 0;
     }
 
-    void SetLayout(const std::string &name, LayoutPtr layout) {
+    void SetLayout(StringPtr name, LayoutPtr layout) {
         m_layout[name] = layout;
     }
 
-    int GetMessageId(const std::string &name) {
+    int GetMessageId(StringPtr name) {
         auto it = m_message_id.find(name);
         if (it != m_message_id.end()) {
             return it->second;
@@ -392,13 +406,13 @@ public:
         return -1;
     }
 
-    void SetMessageId(const std::string &name, int message_id) {
+    void SetMessageId(StringPtr name, int message_id) {
         m_message_id[name] = message_id;
     }
 
 private:
-    std::unordered_map<std::string, LayoutPtr> m_layout;
-    std::unordered_map<std::string, int> m_message_id;
+    std::unordered_map<StringPtr, LayoutPtr, StringPtrHash, StringPtrEqual> m_layout;
+    std::unordered_map<StringPtr, int, StringPtrHash, StringPtrEqual> m_message_id;
 };
 
 // use to store lua struct data
