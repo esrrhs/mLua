@@ -286,6 +286,17 @@ private:
     std::unordered_map<HashStringView, WeakStringPtr, HashStringViewHash, HashStringViewEqual> m_string_map;
 };
 
+enum MessageIdType {
+    mt_int32 = 1,
+    mt_uint32 = 2,
+    mt_int64 = 3,
+    mt_uint64 = 4,
+    mt_float = 5,
+    mt_double = 6,
+    mt_bool = 7,
+    mt_string = 8,
+};
+
 // same as lua table, use to store key-value schema data
 class Layout : public RefCntObj {
 public:
@@ -628,51 +639,83 @@ public:
         return m_layout_member->value_message_id;
     }
 
+    union MapValue32 {
+        int32_t m_32;
+        uint32_t m_u32;
+        float m_float;
+        bool m_bool;
+    };
+
+    union MapValue64 {
+        int64_t m_64;
+        uint64_t m_u64;
+        double m_double;
+        String *m_string;
+        Container *m_obj;
+    };
+
+    static_assert(sizeof(MapValue32) == 4, "MapValue32 size must be 4");
+    static_assert(sizeof(MapValue64) == 8, "MapValue64 size must be 8");
+
+    union MapPointer {
+        void *m_void;
+
+        std::unordered_map<int32_t, MapValue32> *m_32_32;
+        std::unordered_map<int32_t, MapValue64> *m_32_64;
+
+        std::unordered_map<int64_t, MapValue32> *m_64_32;
+        std::unordered_map<int64_t, MapValue64> *m_64_64;
+    };
+
+    MapPointer GetMap() const {
+        return m_map;
+    }
+
+    MapValue32 Get32by32(int32_t key, bool &is_nil) {
+        auto it = m_map.m_32_32->find(key);
+        if (it != m_map.m_32_32->end()) {
+            is_nil = false;
+            return it->second;
+        }
+        is_nil = true;
+        return MapValue32();
+    }
+
+    MapValue64 Get64by32(int32_t key, bool &is_nil) {
+        auto it = m_map.m_32_64->find(key);
+        if (it != m_map.m_32_64->end()) {
+            is_nil = false;
+            return it->second;
+        }
+        is_nil = true;
+        return MapValue64();
+    }
+
+    MapValue32 Get32by64(int64_t key, bool &is_nil) {
+        auto it = m_map.m_64_32->find(key);
+        if (it != m_map.m_64_32->end()) {
+            is_nil = false;
+            return it->second;
+        }
+        is_nil = true;
+        return MapValue32();
+    }
+
+    MapValue64 Get64by64(int64_t key, bool &is_nil) {
+        auto it = m_map.m_64_64->find(key);
+        if (it != m_map.m_64_64->end()) {
+            is_nil = false;
+            return it->second;
+        }
+        is_nil = true;
+        return MapValue64();
+    }
+
 private:
     void ReleaseAllSharedObj();
 
-    // use the simplest way to implement map, just use a union to store different type of key-value pair
-    // key(bool, int32, uint32, int64, uint64, string) -> value(bool, int32, uint32, int64, uint64, string, float, double, message)
-    enum MapType {
-        MT_32_32,
-        MT_32_64,
-
-        MT_64_32,
-        MT_64_64,
-
-        MT_32_STRING,
-        MT_32_MESSAGE,
-
-        MT_64_STRING,
-        MT_64_MESSAGE,
-
-        MT_STRING_32,
-        MT_STRING_64,
-        MT_STRING_STRING,
-        MT_STRING_MESSAGE,
-    };
-    union MapPointer {
-        std::unordered_map<int32_t, int32_t> *m_32_32;
-        std::unordered_map<int32_t, int64_t> *m_32_64;
-
-        std::unordered_map<int64_t, int32_t> *m_64_32;
-        std::unordered_map<int64_t, int64_t> *m_64_64;
-
-        std::unordered_map<int32_t, StringPtr> *m_32_string;
-        std::unordered_map<int32_t, ContainerPtr> *m_32_message;
-
-        std::unordered_map<int64_t, StringPtr> *m_64_string;
-        std::unordered_map<int64_t, ContainerPtr> *m_64_message;
-
-        std::unordered_map<StringPtr, int32_t> *m_string_32;
-        std::unordered_map<StringPtr, int64_t> *m_string_64;
-        std::unordered_map<StringPtr, StringPtr> *m_string_string;
-        std::unordered_map<StringPtr, ContainerPtr> *m_string_message;
-    };
-
 private:
     Layout::MemberPtr m_layout_member;
-    MapType m_type;
     MapPointer m_map;
 };
 

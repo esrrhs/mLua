@@ -98,7 +98,7 @@ function lua_to_cpp.create_layout_map_meta_func(layout_member)
     end
 
     if key == "float" or key == "double" then
-        error("key type is not supported")
+        error("key type is not supported " .. key)
     end
 
     local index_func = function(t, key)
