@@ -28,7 +28,7 @@ private:
 };
 
 // T must be a class derived from RefCntObj, use to manage the life cycle of T
-// simpler than std::shared_ptr, no weak_ptr, no custom deleter, and single thread only
+// simpler than std::shared_ptr, no weak_ptr, and single thread only
 template<typename T>
 class SharedPtr {
 public:
@@ -719,6 +719,84 @@ public:
         }
         is_nil = true;
         return MapValue64();
+    }
+
+    void Set32by32(int32_t key, MapValue32 value) {
+        if (!m_map.m_32_32) {
+            m_map.m_32_32 = new std::unordered_map<int32_t, MapValue32>();
+        }
+        (*m_map.m_32_32)[key] = value;
+    }
+
+    void Set64by32(int32_t key, MapValue64 value) {
+        if (!m_map.m_32_64) {
+            m_map.m_32_64 = new std::unordered_map<int32_t, MapValue64>();
+        }
+        (*m_map.m_32_64)[key] = value;
+    }
+
+    void Set32by64(int64_t key, MapValue32 value) {
+        if (!m_map.m_64_32) {
+            m_map.m_64_32 = new std::unordered_map<int64_t, MapValue32>();
+        }
+        (*m_map.m_64_32)[key] = value;
+    }
+
+    void Set64by64(int64_t key, MapValue64 value) {
+        if (!m_map.m_64_64) {
+            m_map.m_64_64 = new std::unordered_map<int64_t, MapValue64>();
+        }
+        (*m_map.m_64_64)[key] = value;
+    }
+
+    void Set32byString(StringPtr key, MapValue32 value) {
+        if (!m_map.m_string_32) {
+            m_map.m_string_32 = new std::unordered_map<StringPtr, MapValue32, StringPtrHash, StringPtrEqual>();
+        }
+        (*m_map.m_string_32)[key] = value;
+    }
+
+    void Set64byString(StringPtr key, MapValue64 value) {
+        if (!m_map.m_string_64) {
+            m_map.m_string_64 = new std::unordered_map<StringPtr, MapValue64, StringPtrHash, StringPtrEqual>();
+        }
+        (*m_map.m_string_64)[key] = value;
+    }
+
+    void Remove32by32(int32_t key) {
+        if (m_map.m_32_32) {
+            m_map.m_32_32->erase(key);
+        }
+    }
+
+    void Remove64by32(int32_t key) {
+        if (m_map.m_32_64) {
+            m_map.m_32_64->erase(key);
+        }
+    }
+
+    void Remove32by64(int64_t key) {
+        if (m_map.m_64_32) {
+            m_map.m_64_32->erase(key);
+        }
+    }
+
+    void Remove64by64(int64_t key) {
+        if (m_map.m_64_64) {
+            m_map.m_64_64->erase(key);
+        }
+    }
+
+    void Remove32byString(StringPtr key) {
+        if (m_map.m_string_32) {
+            m_map.m_string_32->erase(key);
+        }
+    }
+
+    void Remove64byString(StringPtr key) {
+        if (m_map.m_string_64) {
+            m_map.m_string_64->erase(key);
+        }
     }
 
 private:

@@ -25,21 +25,17 @@ local player = {
 
 _G.cpp_table_load_proto(_G.CPP_TABLE_PROTO)
 
-local pet = {
-    name = "dog",
-    age = 2,
-    breed = "poodle",
-    weight = 10.5,
-    is_vaccinated = { true, false },
+local player = {
+    items = {
+        { id = 100000000001, name = "item1", price = 100 },
+        { id = 100000000002, name = "item2", price = 200 },
+    },
 }
 
-local cpptable = _G.cpp_table_sink("Pet", pet)
-print("1=" .. tostring(cpptable.is_vaccinated[1]))
-print("2=" .. tostring(cpptable.is_vaccinated[2]))
-print("3=" .. tostring(cpptable.is_vaccinated[3]))
+local cpptable = _G.cpp_table_sink("Player", player)
+print("name " .. cpptable.items[1].name)
+print("age " .. cpptable.items[2].id)
 
-cpptable.is_vaccinated[3] = true
-print("3=" .. tostring(cpptable.is_vaccinated[3]))
 
 ------------------------------------------
 cpptable = nil
