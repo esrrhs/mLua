@@ -1473,6 +1473,7 @@ void cpp_table_map_container_set_by(lua_State *L, MapPtr map, K key, int value_m
             } else {
                 cpp_table_map_container_remove_map_value32(map, key);
             }
+            break;
         }
         case mt_uint32: {
             if (!is_nil) {
@@ -1482,6 +1483,7 @@ void cpp_table_map_container_set_by(lua_State *L, MapPtr map, K key, int value_m
             } else {
                 cpp_table_map_container_remove_map_value32(map, key);
             }
+            break;
         }
         case mt_int64: {
             if (!is_nil) {
@@ -1491,6 +1493,7 @@ void cpp_table_map_container_set_by(lua_State *L, MapPtr map, K key, int value_m
             } else {
                 cpp_table_map_container_remove_map_value64(map, key);
             }
+            break;
         }
         case mt_uint64: {
             if (!is_nil) {
@@ -1500,6 +1503,7 @@ void cpp_table_map_container_set_by(lua_State *L, MapPtr map, K key, int value_m
             } else {
                 cpp_table_map_container_remove_map_value64(map, key);
             }
+            break;
         }
         case mt_float: {
             if (!is_nil) {
@@ -1509,6 +1513,7 @@ void cpp_table_map_container_set_by(lua_State *L, MapPtr map, K key, int value_m
             } else {
                 cpp_table_map_container_remove_map_value32(map, key);
             }
+            break;
         }
         case mt_double: {
             if (!is_nil) {
@@ -1518,6 +1523,7 @@ void cpp_table_map_container_set_by(lua_State *L, MapPtr map, K key, int value_m
             } else {
                 cpp_table_map_container_remove_map_value64(map, key);
             }
+            break;
         }
         case mt_bool: {
             if (!is_nil) {
@@ -1527,6 +1533,7 @@ void cpp_table_map_container_set_by(lua_State *L, MapPtr map, K key, int value_m
             } else {
                 cpp_table_map_container_remove_map_value32(map, key);
             }
+            break;
         }
         case mt_string: {
             if (!is_nil) {
@@ -1558,6 +1565,7 @@ void cpp_table_map_container_set_by(lua_State *L, MapPtr map, K key, int value_m
                 }
                 cpp_table_map_container_remove_map_value64(map, key);
             }
+            break;
         }
         default: {
             if (!is_nil) {
@@ -1595,6 +1603,7 @@ void cpp_table_map_container_set_by(lua_State *L, MapPtr map, K key, int value_m
                 }
                 cpp_table_map_container_remove_map_value64(map, key);
             }
+            break;
         }
     }
 }
