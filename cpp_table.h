@@ -303,18 +303,33 @@ public:
     ~Layout() {}
 
     struct Member : public RefCntObj {
+        void CopyFrom(Member *other) {
+            name = other->name;
+            type = other->type;
+            key = other->key;
+            value = other->value;
+            pos = other->pos;
+            size = other->size;
+            tag = other->tag;
+            shared = other->shared;
+            message_id = other->message_id;
+            value_message_id = other->value_message_id;
+            key_size = other->key_size;
+            key_shared = other->key_shared;
+        }
+
         StringPtr name;
         StringPtr type;
         StringPtr key;
         StringPtr value;
-        int pos;
-        int size;
-        int tag;
-        int shared;
-        int message_id;
-        int value_message_id;
-        int key_size;
-        int key_shared;
+        int pos = 0;
+        int size = 0;
+        int tag = 0;
+        int shared = 0;
+        int message_id = 0;
+        int value_message_id = 0;
+        int key_size = 0;
+        int key_shared = 0;
     };
 
     typedef SharedPtr<Member> MemberPtr;

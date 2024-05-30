@@ -230,6 +230,10 @@ static bool cpp_table_get_layout_member_number(lua_State *L, const char *name, i
     }
     ret = lua_tointeger(L, -1);
     lua_pop(L, 1);
+    if (ret < 0) {
+        luaL_error(L, "cpp_table_get_layout_member_number: invalid value %s %d", name, ret);
+        return false;
+    }
     return true;
 }
 
@@ -362,7 +366,7 @@ static int cpp_table_update_layout(lua_State *L) {
 
         auto old = layout->GetMember(mem->tag);
         if (old) {
-            *old = *mem;
+            old->CopyFrom(mem.get());
         } else {
             layout->SetMember(mem->tag, mem);
         }
@@ -478,8 +482,7 @@ static void cpp_table_remove_container_userdata(lua_State *L, Container *contain
 static void cpp_table_get_container_push_pointer(lua_State *L, Container *container_pointer) {
     auto find = cpp_table_get_container_userdata(L, container_pointer);
     if (!find) {
-        auto userdata_pointer = (void **) lua_newuserdata(L, sizeof(void *));
-        *userdata_pointer = container_pointer;
+        auto userdata_pointer = lua_newuserdata(L, 0);
         gLuaContainerHolder.Set(userdata_pointer, container_pointer);
         cpp_table_reg_container_userdata(L, container_pointer);
         LLOG("cpp_table_get_container_push_pointer: %s new %p", container_pointer->GetName().data(), container_pointer);
@@ -530,8 +533,7 @@ static int cpp_table_create_container(lua_State *L) {
         return 0;
     }
     auto container = MakeShared<Container>(layout);
-    auto pointer = (void **) lua_newuserdata(L, sizeof(void *));
-    *pointer = container.get();
+    auto pointer = lua_newuserdata(L, 0);
     gLuaContainerHolder.Set(pointer, container);
     // create container pointer -> userdata pointer mapping in lua _G.CPP_TABLE_CONTAINER which is a weak table
     cpp_table_reg_container_userdata(L, container.get());
@@ -797,8 +799,7 @@ static int cpp_table_container_get_array(lua_State *L) {
     auto array_pointer = array.get();
     auto find = cpp_table_get_array_container_userdata(L, array_pointer);
     if (!find) {
-        auto userdata_pointer = (void **) lua_newuserdata(L, sizeof(void *));
-        *userdata_pointer = array.get();
+        auto userdata_pointer = lua_newuserdata(L, 0);
         gLuaContainerHolder.SetArray(userdata_pointer, array);
         cpp_table_reg_array_container_userdata(L, array_pointer, array->GetLayoutMember()->key);
         LLOG("cpp_table_container_get_array: %s new %p", array->GetName().data(), array_pointer);
@@ -875,8 +876,7 @@ static int cpp_table_container_get_map(lua_State *L) {
     auto map_pointer = map.get();
     auto find = cpp_table_get_map_container_userdata(L, map_pointer);
     if (!find) {
-        auto userdata_pointer = (void **) lua_newuserdata(L, sizeof(void *));
-        *userdata_pointer = map.get();
+        auto userdata_pointer = lua_newuserdata(L, 0);
         gLuaContainerHolder.SetMap(userdata_pointer, map);
         cpp_table_reg_map_container_userdata(L, map_pointer, map->GetLayoutMember()->key,
                                              map->GetLayoutMember()->value);
@@ -957,8 +957,7 @@ static int cpp_table_create_array_container(lua_State *L) {
         return 0;
     }
     auto array = MakeShared<Array>(layout_member);
-    auto pointer = (void **) lua_newuserdata(L, sizeof(void *));
-    *pointer = array.get();
+    auto pointer = lua_newuserdata(L, 0);
     gLuaContainerHolder.SetArray(pointer, array);
     // create array pointer -> userdata pointer mapping in lua _G.CPP_TABLE_ARRAY_CONTAINER which is a weak table
     cpp_table_reg_array_container_userdata(L, array.get(), layout_member->key);
@@ -1222,8 +1221,7 @@ static int cpp_table_create_map_container(lua_State *L) {
         return 0;
     }
     auto map = MakeShared<Map>(layout_member);
-    auto pointer = (void **) lua_newuserdata(L, sizeof(void *));
-    *pointer = map.get();
+    auto pointer = lua_newuserdata(L, 0);
     gLuaContainerHolder.SetMap(pointer, map);
     // create map pointer -> userdata pointer mapping in lua _G.CPP_TABLE_MAP_CONTAINER which is a weak table
     cpp_table_reg_map_container_userdata(L, map.get(), layout_member->key, layout_member->value);

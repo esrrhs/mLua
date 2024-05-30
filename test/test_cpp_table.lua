@@ -5,95 +5,140 @@ require "mLua"
 require "cpp_table_proto"
 local serpent = require "serpent"
 
-local player = {
-    name = "jack",
-    score = 100,
-    is_vip = true,
-    experience = 100.2,
-    items = {
-        { id = 100000000001, name = "item1", price = 100 },
-        { id = 100000000002, name = "item2", price = 200 },
-    },
-    labels = { 1, -2, 3, -4, 5 },
-    pet = { name = "dog", age = 2, breed = "poodle", weight = 10.5 },
-    friends = {
-        jack = { name = "jack", age = 20, email = "jack@email.com" },
-        tom = { name = "tom", age = 22, email = "tom@email.com" },
-    },
-    params = { [101] = 100, [102] = 200, [103] = 300 },
-}
+function test_get_set()
 
-_G.cpp_table_load_proto(_G.CPP_TABLE_PROTO)
+    local player = {
+        name = "jack",
+        score = 100,
+        is_vip = true,
+        experience = 100.2,
+        items = {
+            { id = 100000000001, name = "item1", price = 100 },
+            { id = 100000000002, name = "item2", price = 200 },
+        },
+        labels = { 1, -2, 3, -4, 5 },
+        pet = { name = "dog", age = 2, breed = "poodle", weight = 10.5 },
+        friends = {
+            jack = { name = "jack", age = 20, email = "jack@email.com" },
+            tom = { name = "tom", age = 22, email = "tom@email.com" },
+        },
+        params = { [101] = 100, [102] = 200, [103] = 300 },
+    }
 
-local cpptable = _G.cpp_table_sink("Player", player)
-print("name " .. cpptable.name)
-cpptable.name = "tom!"
-print("name " .. cpptable.name)
+    _G.cpp_table_load_proto(_G.CPP_TABLE_PROTO)
 
-print("score " .. cpptable.score)
-cpptable.score = 200
-print("score " .. cpptable.score)
+    local cpptable = _G.cpp_table_sink("Player", player)
+    print("name " .. cpptable.name)
+    cpptable.name = "tom!"
+    print("name " .. cpptable.name)
 
-print("is_vip " .. tostring(cpptable.is_vip))
-cpptable.is_vip = false
-print("is_vip " .. tostring(cpptable.is_vip))
+    print("score " .. cpptable.score)
+    cpptable.score = 200
+    print("score " .. cpptable.score)
 
-print("experience " .. cpptable.experience)
-cpptable.experience = 200.2
-print("experience " .. cpptable.experience)
+    print("is_vip " .. tostring(cpptable.is_vip))
+    cpptable.is_vip = false
+    print("is_vip " .. tostring(cpptable.is_vip))
 
-print("items1 name " .. cpptable.items[1].name)
-cpptable.items[1].name = "item3!"
-print("items1 name " .. cpptable.items[1].name)
+    print("experience " .. cpptable.experience)
+    cpptable.experience = 200.2
+    print("experience " .. cpptable.experience)
 
-print("items2 id " .. cpptable.items[2].id)
-cpptable.items[2].id = 100000000003
-print("items2 id " .. cpptable.items[2].id)
+    print("items1 name " .. cpptable.items[1].name)
+    cpptable.items[1].name = "item3!"
+    print("items1 name " .. cpptable.items[1].name)
 
-print("labels4 " .. cpptable.labels[4])
-cpptable.labels[4] = 4
-print("labels4 " .. cpptable.labels[4])
+    print("items2 id " .. cpptable.items[2].id)
+    cpptable.items[2].id = 100000000003
+    print("items2 id " .. cpptable.items[2].id)
 
-print("pet name " .. cpptable.pet.name)
-cpptable.pet.name = "cat!"
-print("pet name " .. cpptable.pet.name)
+    print("labels4 " .. cpptable.labels[4])
+    cpptable.labels[4] = 4
+    print("labels4 " .. cpptable.labels[4])
 
-print("pet breed " .. cpptable.pet.breed)
-cpptable.pet.breed = "bulldog!"
-print("pet breed " .. cpptable.pet.breed)
+    print("pet name " .. cpptable.pet.name)
+    cpptable.pet.name = "cat!"
+    print("pet name " .. cpptable.pet.name)
 
-print("pet age " .. cpptable.pet.age)
-cpptable.pet.age = 3
-print("pet age " .. cpptable.pet.age)
+    print("pet breed " .. cpptable.pet.breed)
+    cpptable.pet.breed = "bulldog!"
+    print("pet breed " .. cpptable.pet.breed)
 
-print("pet weight " .. cpptable.pet.weight)
-cpptable.pet.weight = 11.5
-print("pet weight " .. cpptable.pet.weight)
+    print("pet age " .. cpptable.pet.age)
+    cpptable.pet.age = 3
+    print("pet age " .. cpptable.pet.age)
 
-print("friend jack name " .. cpptable.friends.jack.name)
-cpptable.friends.jack.name = "jacky!"
-print("friend jack name " .. cpptable.friends.jack.name)
+    print("pet weight " .. cpptable.pet.weight)
+    cpptable.pet.weight = 11.5
+    print("pet weight " .. cpptable.pet.weight)
 
-print("friend tom age " .. cpptable.friends["tom"].age)
-cpptable.friends["tom"].age = 23
-print("friend tom age " .. cpptable.friends["tom"].age)
+    print("friend jack name " .. cpptable.friends.jack.name)
+    cpptable.friends.jack.name = "jacky!"
+    print("friend jack name " .. cpptable.friends.jack.name)
 
-print("params101 " .. cpptable.params[101])
-cpptable.params[101] = 101
-print("params101 " .. cpptable.params[101])
+    print("friend tom age " .. cpptable.friends["tom"].age)
+    cpptable.friends["tom"].age = 23
+    print("friend tom age " .. cpptable.friends["tom"].age)
 
-------------------------------------------
-cpptable = nil
-collectgarbage("collect")
+    print("params101 " .. cpptable.params[101])
+    cpptable.params[101] = 101
+    print("params101 " .. cpptable.params[101])
 
-for k, v in pairs(CPP_TABLE_CONTAINER) do
-    print("container leak " .. tostring(k))
+    ------------------------------------------
+    cpptable = nil
+    collectgarbage("collect")
+
+    for k, v in pairs(CPP_TABLE_CONTAINER) do
+        print("container leak " .. tostring(k))
+    end
+    for k, v in pairs(CPP_TABLE_ARRAY_CONTAINER) do
+        print("array leak " .. tostring(k))
+    end
+    for k, v in pairs(CPP_TABLE_MAP_CONTAINER) do
+        print("map leak " .. tostring(k))
+    end
+
+    print("stringheap:" .. serpent.block(_G.cpp_table_dump_string_heap()))
+
 end
-for k, v in pairs(CPP_TABLE_ARRAY_CONTAINER) do
-    print("array leak " .. tostring(k))
-end
-for k, v in pairs(CPP_TABLE_MAP_CONTAINER) do
-    print("map leak " .. tostring(k))
+
+function test_benchmark()
+    local all_player = {}
+    for player_id = 1000000, 1005000 do
+        local res2cnt = {}
+        for item_id = 100000, 100200 do
+            res2cnt[item_id] = { [0] = 100, [1] = 200, [2] = 300 }
+        end
+        all_player[player_id] = { cnts = res2cnt }
+    end
+    collectgarbage("collect")
+    print("lua memory " .. collectgarbage("count") / 1024 .. "MB")
+    os.execute("pause")
+
+    _G.cpp_table_load_proto(_G.CPP_TABLE_PROTO)
+    for player_id = 1000000, 1005000 do
+        all_player[player_id] = _G.cpp_table_sink("Res2Cnt", all_player[player_id])
+    end
+    collectgarbage("collect")
+    print("cpp memory " .. collectgarbage("count") / 1024 .. "MB")
+    os.execute("pause")
+
+    _G.static_perf("_G.pro", _G)
+
+    all_player = nil
+    collectgarbage("collect")
+    print("lua memory " .. collectgarbage("count") / 1024 .. "MB")
+    os.execute("pause")
+
+    CPP_TABLE_CONTAINER = nil
+
+    collectgarbage("collect")
+    print("lua memory1 " .. collectgarbage("count") / 1024 .. "MB")
+    os.execute("pause")
+
+
 end
 
-print("stringheap:" .. serpent.block(_G.cpp_table_dump_string_heap()))
+test_get_set()
+
+test_benchmark()

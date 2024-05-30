@@ -41,3 +41,13 @@ message Friend {
   int32 age = 2;
   string email = 3;
 }
+
+message Res2Cnt {
+  map<int64, CntInfo> cnts = 1;
+}
+
+message CntInfo{
+  int32 permanent = 1;
+  int32 timing = 2;
+  int32 all = 3;
+}

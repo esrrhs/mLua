@@ -33,3 +33,11 @@ _G.CPP_TABLE_PROTO.Friend = {
     age = { type = "normal", key = "int32", tag = 2, size = 5, shared = 0 },
     email = { type = "normal", key = "string", tag = 3, size = 9, shared = 1 },
 }
+_G.CPP_TABLE_PROTO.Res2Cnt = {
+    cnts = { type = "map", key = "int64", value = "CntInfo", tag = 1, size = 9, shared = 1 },
+}
+_G.CPP_TABLE_PROTO.CntInfo = {
+    permanent = { type = "normal", key = "int32", tag = 1, size = 5, shared = 0 },
+    timing = { type = "normal", key = "int32", tag = 2, size = 5, shared = 0 },
+    all = { type = "normal", key = "int32", tag = 3, size = 5, shared = 0 },
+}
