@@ -269,6 +269,17 @@ public:
         m_string_map.erase(str);
     }
 
+    std::vector<StringPtr> Dump() {
+        std::vector<StringPtr> ret;
+        for (auto &it: m_string_map) {
+            auto ptr = it.second.lock();
+            if (ptr) {
+                ret.push_back(ptr);
+            }
+        }
+        return ret;
+    }
+
 private:
     std::unordered_map<StringView, WeakStringPtr, StringViewHash, StringViewEqual> m_string_map;
 };
@@ -801,6 +812,48 @@ public:
 
 private:
     void ReleaseAllSharedObj();
+
+    void ReleaseStrBy32() {
+        for (auto &it: *m_map.m_32_64) {
+            auto v = it.second;
+            v.m_string->Release();
+        }
+    }
+
+    void ReleaseStrBy64() {
+        for (auto &it: *m_map.m_64_64) {
+            auto v = it.second;
+            v.m_string->Release();
+        }
+    }
+
+    void ReleaseStrByString() {
+        for (auto &it: *m_map.m_string_64) {
+            auto v = it.second;
+            v.m_string->Release();
+        }
+    }
+
+    void ReleaseObjBy32() {
+        for (auto &it: *m_map.m_32_64) {
+            auto v = it.second;
+            v.m_obj->Release();
+        }
+    }
+
+    void ReleaseObjBy64() {
+        for (auto &it: *m_map.m_64_64) {
+            auto v = it.second;
+            v.m_obj->Release();
+        }
+    }
+
+    void ReleaseObjByString() {
+        for (auto &it: *m_map.m_string_64) {
+            auto v = it.second;
+            v.m_obj->Release();
+        }
+    }
 
 private:
     Layout::MemberPtr m_layout_member;

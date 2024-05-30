@@ -13,6 +13,7 @@ void String::Delete() {
 
 Container::Container(LayoutPtr layout) {
     m_layout = layout;
+    LLOG("Container::Container: %s %p", GetName().data(), this);
 }
 
 Container::~Container() {
@@ -76,15 +77,131 @@ void Array::ReleaseAllSharedObj() {
 Map::Map(Layout::MemberPtr layout_member) {
     m_layout_member = layout_member;
     m_map.m_void = 0;
-    ReleaseAllSharedObj();
+    LLOG("Map::Map: %s %p", layout_member->name->data(), this);
 }
 
 Map::~Map() {
     LLOG("Map::~Map: %s %p", GetName().data(), this);
+    ReleaseAllSharedObj();
 }
 
 void Map::ReleaseAllSharedObj() {
-    // TODO
+    if (!m_map.m_void) {
+        return;
+    }
+
+    int key_message_id = m_layout_member->message_id;
+    int value_message_id = m_layout_member->value_message_id;
+
+    switch (key_message_id) {
+        case mt_int32:
+        case mt_uint32:
+        case mt_bool: {
+            switch (value_message_id) {
+                case mt_int32:
+                case mt_uint32:
+                case mt_float:
+                case mt_bool: {
+                    delete m_map.m_32_32;
+                    m_map.m_32_32 = 0;
+                    break;
+                }
+                case mt_int64:
+                case mt_uint64:
+                case mt_double: {
+                    delete m_map.m_32_64;
+                    m_map.m_32_64 = 0;
+                    break;
+                }
+                case mt_string: {
+                    ReleaseStrBy32();
+                    delete m_map.m_32_64;
+                    m_map.m_32_64 = 0;
+                    break;
+                }
+                default: {
+                    ReleaseObjBy32();
+                    delete m_map.m_32_64;
+                    m_map.m_32_64 = 0;
+                    break;
+                }
+            }
+            break;
+        }
+
+        case mt_int64:
+        case mt_uint64: {
+            switch (value_message_id) {
+                case mt_int32:
+                case mt_uint32:
+                case mt_float:
+                case mt_bool: {
+                    delete m_map.m_64_32;
+                    m_map.m_64_32 = 0;
+                    break;
+                }
+                case mt_int64:
+                case mt_uint64:
+                case mt_double: {
+                    delete m_map.m_64_64;
+                    m_map.m_64_64 = 0;
+                    break;
+                }
+                case mt_string: {
+                    ReleaseStrBy64();
+                    delete m_map.m_64_64;
+                    m_map.m_64_64 = 0;
+                    break;
+                }
+                default: {
+                    ReleaseObjBy64();
+                    delete m_map.m_64_64;
+                    m_map.m_64_64 = 0;
+                    break;
+                }
+            }
+            break;
+        }
+
+        case mt_string: {
+            switch (value_message_id) {
+                case mt_int32:
+                case mt_uint32:
+                case mt_float:
+                case mt_bool: {
+                    delete m_map.m_64_32;
+                    m_map.m_64_32 = 0;
+                    break;
+                }
+                case mt_int64:
+                case mt_uint64:
+                case mt_double: {
+                    delete m_map.m_64_64;
+                    m_map.m_64_64 = 0;
+                    break;
+                }
+                case mt_string: {
+                    ReleaseStrByString();
+                    delete m_map.m_64_64;
+                    m_map.m_64_64 = 0;
+                    break;
+                }
+                default: {
+                    ReleaseObjByString();
+                    delete m_map.m_64_64;
+                    m_map.m_64_64 = 0;
+                    break;
+                }
+            }
+            break;
+        }
+
+        default: {
+            LERR("Map::ReleaseAllSharedObj: %s invalid key message_id %d", m_layout_member->name->data(),
+                 key_message_id);
+            return;
+        }
+    }
 }
 
 static int cpp_table_set_message_id(lua_State *L) {
@@ -102,6 +219,41 @@ static int cpp_table_set_message_id(lua_State *L) {
     auto layout_key = gStringHeap.Add(StringView(name, name_size));
     gLayoutMgr.SetMessageId(layout_key, message_id);
     return 0;
+}
+
+static bool cpp_table_get_layout_member_number(lua_State *L, const char *name, int &ret) {
+    lua_pushstring(L, name);
+    lua_gettable(L, -2);
+    if (lua_type(L, -1) != LUA_TNUMBER) {
+        luaL_error(L, "cpp_table_get_layout_member_number: invalid type type %s %d", name, lua_type(L, -1));
+        return false;
+    }
+    ret = lua_tointeger(L, -1);
+    lua_pop(L, 1);
+    return true;
+}
+
+static bool cpp_table_get_layout_member_string(lua_State *L, const char *name, StringPtr &ret, bool can_empty = false) {
+    lua_pushstring(L, name);
+    lua_gettable(L, -2);
+    if (lua_type(L, -1) != LUA_TSTRING) {
+        luaL_error(L, "cpp_table_get_layout_member_string: invalid type type %s %d", name, lua_type(L, -1));
+        return false;
+    }
+    size_t str_size = 0;
+    const char *str = lua_tolstring(L, -1, &str_size);
+    if (str == 0) {
+        if (!can_empty) {
+            luaL_error(L, "cpp_table_get_layout_member_string: invalid type %s", name);
+            return false;
+        } else {
+            str = "";
+            str_size = 0;
+        }
+    }
+    ret = gStringHeap.Add(StringView(str, str_size));
+    lua_pop(L, 1);
+    return true;
 }
 
 static int cpp_table_update_layout(lua_State *L) {
@@ -154,128 +306,59 @@ static int cpp_table_update_layout(lua_State *L) {
         }
 
         // type
-        lua_pushstring(L, "type");
-        lua_gettable(L, -2);
-        if (lua_type(L, -1) != LUA_TSTRING) {
-            luaL_error(L, "cpp_table_update_layout: invalid type type %d", lua_type(L, -1));
+        if (!cpp_table_get_layout_member_string(L, "type", mem->type)) {
             return 0;
         }
-        size_t type_size = 0;
-        const char *type = lua_tolstring(L, -1, &type_size);
-        if (type_size == 0) {
-            luaL_error(L, "cpp_table_update_layout: invalid type %s", type);
-            return 0;
-        }
-        mem->type = gStringHeap.Add(StringView(type, type_size));
-        lua_pop(L, 1);
 
         // key
-        lua_pushstring(L, "key");
-        lua_gettable(L, -2);
-        if (lua_type(L, -1) != LUA_TSTRING) {
-            luaL_error(L, "cpp_table_update_layout: invalid key type %d", lua_type(L, -1));
+        if (!cpp_table_get_layout_member_string(L, "key", mem->key)) {
             return 0;
         }
-        size_t key_size = 0;
-        const char *key = lua_tolstring(L, -1, &key_size);
-        if (key_size == 0) {
-            luaL_error(L, "cpp_table_update_layout: invalid key %s", key);
-            return 0;
-        }
-        mem->key = gStringHeap.Add(StringView(key, key_size));
-        lua_pop(L, 1);
 
         // value
-        lua_pushstring(L, "value");
-        lua_gettable(L, -2);
-        if (lua_type(L, -1) != LUA_TSTRING) {
-            luaL_error(L, "cpp_table_update_layout: invalid value type %d", lua_type(L, -1));
+        if (!cpp_table_get_layout_member_string(L, "value", mem->value, true)) {
             return 0;
         }
-        size_t value_size = 0;
-        const char *value = lua_tolstring(L, -1, &value_size);
-        mem->value = gStringHeap.Add(StringView(value, value_size));
-        lua_pop(L, 1);
 
         // pos
-        lua_pushstring(L, "pos");
-        lua_gettable(L, -2);
-        if (lua_type(L, -1) != LUA_TNUMBER) {
-            luaL_error(L, "cpp_table_update_layout: invalid pos type %d", lua_type(L, -1));
+        if (!cpp_table_get_layout_member_number(L, "pos", mem->pos)) {
             return 0;
         }
-        mem->pos = lua_tointeger(L, -1);
-        lua_pop(L, 1);
 
         // size
-        lua_pushstring(L, "size");
-        lua_gettable(L, -2);
-        if (lua_type(L, -1) != LUA_TNUMBER) {
-            luaL_error(L, "cpp_table_update_layout: invalid size type %d", lua_type(L, -1));
+        if (!cpp_table_get_layout_member_number(L, "size", mem->size)) {
             return 0;
         }
-        mem->size = lua_tointeger(L, -1);
-        lua_pop(L, 1);
 
         // tag
-        lua_pushstring(L, "tag");
-        lua_gettable(L, -2);
-        if (lua_type(L, -1) != LUA_TNUMBER) {
-            luaL_error(L, "cpp_table_update_layout: invalid tag type %d", lua_type(L, -1));
+        if (!cpp_table_get_layout_member_number(L, "tag", mem->tag)) {
             return 0;
         }
-        mem->tag = lua_tointeger(L, -1);
-        lua_pop(L, 1);
 
         // shared
-        lua_pushstring(L, "shared");
-        lua_gettable(L, -2);
-        if (lua_type(L, -1) != LUA_TNUMBER) {
-            luaL_error(L, "cpp_table_update_layout: invalid tag type %d", lua_type(L, -1));
+        if (!cpp_table_get_layout_member_number(L, "shared", mem->shared)) {
             return 0;
         }
-        mem->shared = lua_tointeger(L, -1);
-        lua_pop(L, 1);
 
         // message_id
-        lua_pushstring(L, "message_id");
-        lua_gettable(L, -2);
-        if (lua_type(L, -1) != LUA_TNUMBER) {
-            luaL_error(L, "cpp_table_update_layout: invalid message_id type %d", lua_type(L, -1));
+        if (!cpp_table_get_layout_member_number(L, "message_id", mem->message_id)) {
             return 0;
         }
-        mem->message_id = lua_tointeger(L, -1);
-        lua_pop(L, 1);
 
         // value_message_id
-        lua_pushstring(L, "value_message_id");
-        lua_gettable(L, -2);
-        if (lua_type(L, -1) != LUA_TNUMBER) {
-            luaL_error(L, "cpp_table_update_layout: invalid value_message_id type %d", lua_type(L, -1));
+        if (!cpp_table_get_layout_member_number(L, "value_message_id", mem->value_message_id)) {
             return 0;
         }
-        mem->value_message_id = lua_tointeger(L, -1);
-        lua_pop(L, 1);
 
         // key_size
-        lua_pushstring(L, "key_size");
-        lua_gettable(L, -2);
-        if (lua_type(L, -1) != LUA_TNUMBER) {
-            luaL_error(L, "cpp_table_update_layout: invalid key_size type %d", lua_type(L, -1));
+        if (!cpp_table_get_layout_member_number(L, "key_size", mem->key_size)) {
             return 0;
         }
-        mem->key_size = lua_tointeger(L, -1);
-        lua_pop(L, 1);
 
         // key_shared
-        lua_pushstring(L, "key_shared");
-        lua_gettable(L, -2);
-        if (lua_type(L, -1) != LUA_TNUMBER) {
-            luaL_error(L, "cpp_table_update_layout: invalid key_shared type %d", lua_type(L, -1));
+        if (!cpp_table_get_layout_member_number(L, "key_shared", mem->key_shared)) {
             return 0;
         }
-        mem->key_shared = lua_tointeger(L, -1);
-        lua_pop(L, 1);
 
         auto old = layout->GetMember(mem->tag);
         if (old) {
@@ -300,6 +383,17 @@ static int cpp_table_update_layout(lua_State *L) {
     LLOG("cpp_table_update_layout: %s total size %d message_id %d", name, total_size, message_id);
 
     return 0;
+}
+
+static int cpp_table_dump_string_heap(lua_State *L) {
+    auto ret = gStringHeap.Dump();
+    lua_newtable(L);
+    for (size_t i = 0; i < ret.size(); ++i) {
+        lua_pushinteger(L, i + 1);
+        lua_pushlstring(L, ret[i]->data(), ret[i]->size());
+        lua_settable(L, -3);
+    }
+    return 1;
 }
 
 static void cpp_table_reg_userdata(lua_State *L, void *p, const std::string &lua_table_name,
@@ -455,6 +549,7 @@ static int cpp_table_delete_container(lua_State *L) {
         luaL_error(L, "cpp_table_delete_container: no container found %p", pointer);
         return 0;
     }
+    LLOG("cpp_table_delete_container: %s %p", container->GetName().data(), container.get());
     cpp_table_remove_container_userdata(L, container.get());
     gLuaContainerHolder.Remove(pointer);
     return 0;
@@ -881,6 +976,7 @@ static int cpp_table_delete_array_container(lua_State *L) {
         luaL_error(L, "cpp_table_delete_array_container: no array found %p", pointer);
         return 0;
     }
+    LLOG("cpp_table_delete_array_container: %s %p", array->GetName().data(), array.get());
     cpp_table_remove_array_container_userdata(L, array.get());
     gLuaContainerHolder.RemoveArray(pointer);
     return 0;
@@ -1131,31 +1227,43 @@ static int cpp_table_create_map_container(lua_State *L) {
     gLuaContainerHolder.SetMap(pointer, map);
     // create map pointer -> userdata pointer mapping in lua _G.CPP_TABLE_MAP_CONTAINER which is a weak table
     cpp_table_reg_map_container_userdata(L, map.get(), layout_member->key, layout_member->value);
+    LLOG("cpp_table_create_map_container: %s %p %s %s", map->GetName().data(), map.get(), layout_member->key->data(),
+         layout_member->value->data());
     return 1;
 }
 
 template<typename K>
-Map::MapValue32 cpp_table_map_container_get_map_value32(MapPtr map, K key, bool &is_nil) {
+Map::MapValue32 cpp_table_map_container_get_map_value32(MapPtr map, K key, bool &is_nil) {// no data, just return nil
+    if (!map->GetMap().m_void) {
+        is_nil = true;
+        return Map::MapValue32();
+    }
+
     Map::MapValue32 ret;
     if constexpr (std::is_same<K, int32_t>::value) {
         ret = map->Get32by32(key, is_nil);
     } else if constexpr (std::is_same<K, int64_t>::value) {
         ret = map->Get32by64(key, is_nil);
     } else {
-        map->Get32byString(key, is_nil);
+        ret = map->Get32byString(key, is_nil);
     }
     return ret;
 }
 
 template<typename K>
 Map::MapValue64 cpp_table_map_container_get_map_value64(MapPtr map, K key, bool &is_nil) {
+    if (!map->GetMap().m_void) {
+        is_nil = true;
+        return Map::MapValue64();
+    }
+
     Map::MapValue64 ret;
     if constexpr (std::is_same<K, int32_t>::value) {
         ret = map->Get64by32(key, is_nil);
     } else if constexpr (std::is_same<K, int64_t>::value) {
         ret = map->Get64by64(key, is_nil);
     } else {
-        map->Get64byString(key, is_nil);
+        ret = map->Get64byString(key, is_nil);
     }
     return ret;
 }
@@ -1262,13 +1370,6 @@ static int cpp_table_map_container_get(lua_State *L) {
         return 0;
     }
 
-    // no data, just return nil
-    auto m = map->GetMap();
-    if (!m.m_void) {
-        lua_pushnil(L);
-        return 1;
-    }
-
     switch (key_message_id) {
         case mt_int32: {
             int32_t key = (int32_t) lua_tointeger(L, 2);
@@ -1335,6 +1436,9 @@ void cpp_table_map_container_set_map_value64(MapPtr map, K key, Map::MapValue64 
 
 template<typename K>
 void cpp_table_map_container_remove_map_value32(MapPtr map, K key) {
+    if (!map->GetMap().m_void) {
+        return;
+    }
     if constexpr (std::is_same<K, int32_t>::value) {
         map->Remove32by32(key);
     } else if constexpr (std::is_same<K, int64_t>::value) {
@@ -1346,6 +1450,9 @@ void cpp_table_map_container_remove_map_value32(MapPtr map, K key) {
 
 template<typename K>
 void cpp_table_map_container_remove_map_value64(MapPtr map, K key) {
+    if (!map->GetMap().m_void) {
+        return;
+    }
     if constexpr (std::is_same<K, int32_t>::value) {
         map->Remove64by32(key);
     } else if constexpr (std::is_same<K, int64_t>::value) {
@@ -1435,16 +1542,19 @@ void cpp_table_map_container_set_by(lua_State *L, MapPtr map, K key, int value_m
                     }
                     old_value.m_string->Release();
                 }
+
                 new_value->AddRef();
 
                 Map::MapValue64 value;
                 value.m_string = new_value.get();
                 cpp_table_map_container_set_map_value64(map, key, value);
             } else {
-                bool old_is_nil = false;
-                auto old_value = cpp_table_map_container_get_map_value64(map, key, old_is_nil);
-                if (!old_is_nil) {
-                    old_value.m_string->Release();
+                if (map->GetMap().m_void) {
+                    bool old_is_nil = false;
+                    auto old_value = cpp_table_map_container_get_map_value64(map, key, old_is_nil);
+                    if (!old_is_nil) {
+                        old_value.m_string->Release();
+                    }
                 }
                 cpp_table_map_container_remove_map_value64(map, key);
             }
@@ -1457,6 +1567,12 @@ void cpp_table_map_container_set_by(lua_State *L, MapPtr map, K key, int value_m
                     return;
                 }
 
+                if (new_obj->GetMessageId() != value_message_id) {
+                    luaL_error(L, "cpp_table_map_container_set: invalid obj message_id %d %d", new_obj->GetMessageId(),
+                               value_message_id);
+                    return;
+                }
+
                 bool old_is_nil = false;
                 auto old_value = cpp_table_map_container_get_map_value64(map, key, old_is_nil);
                 if (!old_is_nil) {
@@ -1465,6 +1581,7 @@ void cpp_table_map_container_set_by(lua_State *L, MapPtr map, K key, int value_m
                     }
                     old_value.m_obj->Release();
                 }
+
                 new_obj->AddRef();
 
                 Map::MapValue64 value;
@@ -1485,17 +1602,22 @@ void cpp_table_map_container_set_by(lua_State *L, MapPtr map, K key, int value_m
 static int cpp_table_map_container_set(lua_State *L) {
     auto pointer = lua_touserdata(L, 1);
     if (!pointer) {
-        luaL_error(L, "cpp_table_map_container_get: invalid map");
+        luaL_error(L, "cpp_table_map_container_set: invalid map");
         return 0;
     }
     auto map = gLuaContainerHolder.GetMap(pointer);
     if (!map) {
-        luaL_error(L, "cpp_table_map_container_get: no map found %p", pointer);
+        luaL_error(L, "cpp_table_map_container_set: no map found %p", pointer);
         return 0;
     }
     int key_message_id = lua_tointeger(L, 4);
     int value_message_id = lua_tointeger(L, 5);
     bool is_nil = lua_isnil(L, 3);
+
+    if (key_message_id != map->GetKeyMessageId() || value_message_id != map->GetValueMessageId()) {
+        luaL_error(L, "cpp_table_map_container_set: invalid message_id %d %d", key_message_id, value_message_id);
+        return 0;
+    }
 
     switch (key_message_id) {
         case mt_int32: {
@@ -1519,11 +1641,11 @@ static int cpp_table_map_container_set(lua_State *L) {
             return 0;
         }
         case mt_float: {
-            luaL_error(L, "cpp_table_map_container_get: invalid key type %d", key_message_id);
+            luaL_error(L, "cpp_table_map_container_set: invalid key type %d", key_message_id);
             return 0;
         }
         case mt_double: {
-            luaL_error(L, "cpp_table_map_container_get: invalid key type %d", key_message_id);
+            luaL_error(L, "cpp_table_map_container_set: invalid key type %d", key_message_id);
             return 0;
         }
         case mt_bool: {
@@ -1539,7 +1661,7 @@ static int cpp_table_map_container_set(lua_State *L) {
             return 0;
         }
         default: {
-            luaL_error(L, "cpp_table_map_container_get: invalid key type %d", key_message_id);
+            luaL_error(L, "cpp_table_map_container_set: invalid key type %d", key_message_id);
             return 0;
         }
     }
@@ -1556,6 +1678,7 @@ static int cpp_table_delete_map_container(lua_State *L) {
         luaL_error(L, "cpp_table_delete_map_container: no map found %p", pointer);
         return 0;
     }
+    LLOG("cpp_table_delete_map_container: %s %p", map->GetName().data(), map.get());
     cpp_table_remove_map_container_userdata(L, map.get());
     gLuaContainerHolder.RemoveMap(pointer);
     return 0;
@@ -1567,6 +1690,7 @@ std::vector<luaL_Reg> GetCppTableFuncs() {
     return {
             {"cpp_table_set_message_id",             cpp_table::cpp_table_set_message_id},
             {"cpp_table_update_layout",              cpp_table::cpp_table_update_layout},
+            {"cpp_table_dump_string_heap",           cpp_table::cpp_table_dump_string_heap},
 
             {"cpp_table_create_container",           cpp_table::cpp_table_create_container},
             {"cpp_table_delete_container",           cpp_table::cpp_table_delete_container},
@@ -1617,6 +1741,6 @@ std::vector<luaL_Reg> GetCppTableFuncs() {
             {"cpp_table_create_map_container",       cpp_table::cpp_table_create_map_container},
             {"cpp_table_map_container_get",          cpp_table::cpp_table_map_container_get},
             {"cpp_table_map_container_set",          cpp_table::cpp_table_map_container_set},
-            {"core_cpp_table_delete_map_container",  cpp_table::cpp_table_delete_map_container},
+            {"cpp_table_delete_map_container",       cpp_table::cpp_table_delete_map_container},
     };
 }

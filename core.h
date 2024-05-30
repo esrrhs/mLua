@@ -38,7 +38,7 @@ extern "C" {
 // for debug
 #define LOG_DEBUG_LEVEL 0
 #define LOG_ERROR_LEVEL 1
-#define LOG_LEVEL LOG_DEBUG_LEVEL
+#define LOG_LEVEL LOG_ERROR_LEVEL
 
 #define LLOG(...) if (LOG_LEVEL <= LOG_DEBUG_LEVEL) llog(LOG_DEBUG_LEVEL, __FILE__, __FUNCTION__, __LINE__, __VA_ARGS__)
 #define LERR(...) if (LOG_LEVEL <= LOG_ERROR_LEVEL) llog(LOG_ERROR_LEVEL, __FILE__, __FUNCTION__, __LINE__, __VA_ARGS__)

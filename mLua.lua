@@ -2,6 +2,7 @@ local core = require "libmluacore"
 
 local core_cpp_table_set_message_id = core.cpp_table_set_message_id
 local core_cpp_table_update_layout = core.cpp_table_update_layout
+local core_cpp_table_dump_string_heap = core.cpp_table_dump_string_heap
 
 local core_cpp_table_create_container = core.cpp_table_create_container
 local core_cpp_table_container_get_int32 = core.cpp_table_container_get_int32
@@ -75,7 +76,7 @@ local lua_to_cpp = {}
 function lua_to_cpp.sink_map(message_name, layout_member, map)
     local value = layout_member.value
     local container = core_cpp_table_create_map_container(message_name, layout_member.tag)
-    for k, v in ipairs(map) do
+    for k, v in pairs(map) do
         if not lua_to_cpp.is_normal_type(value) then
             v = _G.cpp_table_sink(value, v)
         end
@@ -331,14 +332,14 @@ function lua_to_cpp.create_layout_meta_func(message_name, layout)
             end
         elseif t == "map" then
             lua_to_cpp.create_layout_map_meta_func(v)
-            v.index_func = function(t, key)
-                return core_cpp_table_container_get_map(t, pos, key)
+            v.index_func = function(t)
+                return core_cpp_table_container_get_map(t, pos)
             end
-            v.newindex_func = function(t, key, value)
+            v.newindex_func = function(t, value)
                 if type(value) == "table" then
                     value = lua_to_cpp.sink_map(message_name, v, value)
                 end
-                core_cpp_table_container_set_map(t, pos, key, value, message_id, value_message_id)
+                core_cpp_table_container_set_map(t, pos, value, message_id, value_message_id)
             end
         else
             error("create layout meta func error, unknown type " .. type)
@@ -613,6 +614,11 @@ function _G.cpp_table_sink(name, table)
     end
 
     return container
+end
+
+-- print all the string in cpp table heap
+function _G.cpp_table_dump_string_heap()
+    return core_cpp_table_dump_string_heap()
 end
 
 --------------------------cpp-table end-------------------------------------

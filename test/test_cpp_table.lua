@@ -26,21 +26,25 @@ local player = {
 _G.cpp_table_load_proto(_G.CPP_TABLE_PROTO)
 
 local player = {
-    name = "jack",
+    name = "jack!",
     score = 100,
     is_vip = true,
     experience = 100.2,
     items = {
-        { id = 100000000001, name = "item1", price = 100 },
-        { id = 100000000002, name = "item2", price = 200 },
+        { id = 100000000001, name = "item1!", price = 100 },
+        { id = 100000000002, name = "item2!", price = 200 },
     },
     labels = { 1, -2, 3, -4, 5 },
-    pet = { name = "dog", age = 2, breed = "poodle", weight = 10.5 },
+    pet = { name = "dog!", age = 2, breed = "poodle!", weight = 10.5 },
+    friends = {
+        jack = { name = "jack!", age = 20, email = "jack@email.com!" },
+        tom = { name = "tom!", age = 22, email = "tom@email.com!" },
+    },
 }
 
 local cpptable = _G.cpp_table_sink("Player", player)
 print("name " .. cpptable.name)
-cpptable.name = "tom"
+cpptable.name = "tom!"
 print("name " .. cpptable.name)
 
 print("score " .. cpptable.score)
@@ -56,7 +60,7 @@ cpptable.experience = 200.2
 print("experience " .. cpptable.experience)
 
 print("items1 name " .. cpptable.items[1].name)
-cpptable.items[1].name = "item3"
+cpptable.items[1].name = "item3!"
 print("items1 name " .. cpptable.items[1].name)
 
 print("items2 id " .. cpptable.items[2].id)
@@ -68,11 +72,11 @@ cpptable.labels[4] = 4
 print("labels4 " .. cpptable.labels[4])
 
 print("pet name " .. cpptable.pet.name)
-cpptable.pet.name = "cat"
+cpptable.pet.name = "cat!"
 print("pet name " .. cpptable.pet.name)
 
 print("pet breed " .. cpptable.pet.breed)
-cpptable.pet.breed = "bulldog"
+cpptable.pet.breed = "bulldog!"
 print("pet breed " .. cpptable.pet.breed)
 
 print("pet age " .. cpptable.pet.age)
@@ -83,8 +87,26 @@ print("pet weight " .. cpptable.pet.weight)
 cpptable.pet.weight = 11.5
 print("pet weight " .. cpptable.pet.weight)
 
+print("friend jack name " .. cpptable.friends.jack.name)
+cpptable.friends.jack.name = "jacky!"
+print("friend jack name " .. cpptable.friends.jack.name)
 
+print("friend tom age " .. cpptable.friends["tom"].age)
+cpptable.friends["tom"].age = 23
+print("friend tom age " .. cpptable.friends["tom"].age)
 
 ------------------------------------------
 cpptable = nil
 collectgarbage("collect")
+
+for k, v in pairs(CPP_TABLE_CONTAINER) do
+    print("container leak " .. tostring(k))
+end
+for k, v in pairs(CPP_TABLE_ARRAY_CONTAINER) do
+    print("array leak " .. tostring(k))
+end
+for k, v in pairs(CPP_TABLE_MAP_CONTAINER) do
+    print("map leak " .. tostring(k))
+end
+
+print("stringheap:" .. serpent.block(_G.cpp_table_dump_string_heap()))
