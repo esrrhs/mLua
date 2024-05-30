@@ -6,9 +6,8 @@ StringHeap gStringHeap;
 LuaContainerHolder gLuaContainerHolder;
 LayoutMgr gLayoutMgr;
 
-void String::Delete() {
+String::~String() {
     gStringHeap.Remove(m_str);
-    RefCntObj::Delete();
 }
 
 Container::Container(LayoutPtr layout) {

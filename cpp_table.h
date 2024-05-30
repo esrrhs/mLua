@@ -13,12 +13,8 @@ public:
 
     void Release() {
         if (--m_ref == 0) {
-            Delete();
+            delete this;
         }
-    }
-
-    virtual void Delete() {
-        delete this;
     }
 
     int Ref() const { return m_ref; }
@@ -26,6 +22,8 @@ public:
 private:
     int m_ref;
 };
+
+static_assert(sizeof(RefCntObj) == 16, "RefCntObj size must be 4");
 
 // T must be a class derived from RefCntObj, use to manage the life cycle of T
 // simpler than std::shared_ptr, no weak_ptr, and single thread only
@@ -161,9 +159,7 @@ public:
 
     String(const std::string &str) : m_str(str), m_hash(StringHash(str.c_str(), str.size())) {}
 
-    virtual ~String() {}
-
-    virtual void Delete();
+    ~String();
 
     const char *c_str() const { return m_str.c_str(); }
 
@@ -303,6 +299,8 @@ public:
     ~Layout() {}
 
     struct Member : public RefCntObj {
+        Member() {}
+
         void CopyFrom(Member *other) {
             name = other->name;
             type = other->type;
@@ -378,6 +376,7 @@ private:
 };
 
 typedef SharedPtr<Layout> LayoutPtr;
+static_assert(sizeof(LayoutPtr) == 8, "LayoutPtr size must be 8");
 
 class LayoutMgr {
 public:
@@ -435,7 +434,7 @@ public:
         if (idx < 0 || max > m_layout->GetTotalSize()) {
             return false;
         }
-        if (max > (int) m_buffer.size()) {
+        if (max > m_buffer_size) {
             // hot fix, new member added, just return nil
             is_nil = true;
             return true;
@@ -443,7 +442,7 @@ public:
         char flag = m_buffer[idx] & 0x01;
         if (flag) {
             is_nil = false;
-            value = *(T *) (m_buffer.data() + idx + 1);
+            value = *(T *) (m_buffer + idx + 1);
         } else {
             is_nil = true;
         }
@@ -456,16 +455,23 @@ public:
         if (idx < 0 || max > m_layout->GetTotalSize()) {
             return false;
         }
-        if (max > (int) m_buffer.size()) {
+        if (max > m_buffer_size) {
             // hot fix, new member added, need to resize buffer, use double size
-            m_buffer.reserve(std::min(m_layout->GetTotalSize(), (int) (2 * m_buffer.capacity())));
-            m_buffer.resize(max);
+            auto new_size = std::min(m_layout->GetTotalSize(), max * 2);
+            auto new_buffer = new char[new_size];
+            memset(new_buffer, 0, new_size);
+            if (m_buffer) {
+                memcpy(new_buffer, m_buffer, m_buffer_size);
+                delete[] m_buffer;
+            }
+            m_buffer = new_buffer;
+            m_buffer_size = new_size;
         }
         if (is_nil) {
             m_buffer[idx] &= 0xfe;
         } else {
             m_buffer[idx] |= 0x01;
-            *(T *) (m_buffer.data() + idx + 1) = value;
+            *(T *) (m_buffer + idx + 1) = value;
         }
         return true;
     }
@@ -513,10 +519,12 @@ private:
     void ReleaseAllSharedObj();
 
 private:
+    int m_buffer_size = 0;
     LayoutPtr m_layout;
-    std::vector<char> m_buffer;
+    char *m_buffer = 0;
 };
 
+static_assert(sizeof(Container) == 32, "Container size must be 24");
 typedef SharedPtr<Container> ContainerPtr;
 
 // use to store lua array data
