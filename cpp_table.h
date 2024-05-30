@@ -932,6 +932,18 @@ public:
         m_map.erase(ptr);
     }
 
+    size_t GetContainerSize() const {
+        return m_container.size();
+    }
+
+    size_t GetArraySize() const {
+        return m_array.size();
+    }
+
+    size_t GetMapSize() const {
+        return m_map.size();
+    }
+
 private:
     std::unordered_map<void *, ContainerPtr> m_container;
     std::unordered_map<void *, ArrayPtr> m_array;

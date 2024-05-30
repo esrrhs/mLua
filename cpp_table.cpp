@@ -389,36 +389,35 @@ static int cpp_table_update_layout(lua_State *L) {
     return 0;
 }
 
-static int cpp_table_dump_string_heap(lua_State *L) {
+static int cpp_table_dump_statistic(lua_State *L) {
+    lua_newtable(L);
+
     auto ret = gStringHeap.Dump();
+    lua_pushstring(L, "string_heap");
     lua_newtable(L);
     for (size_t i = 0; i < ret.size(); ++i) {
         lua_pushinteger(L, i + 1);
         lua_pushlstring(L, ret[i]->data(), ret[i]->size());
         lua_settable(L, -3);
     }
+    lua_settable(L, -3);
+
+    lua_pushstring(L, "container_size");
+    lua_pushinteger(L, gLuaContainerHolder.GetContainerSize());
+    lua_settable(L, -3);
+
+    lua_pushstring(L, "array_size");
+    lua_pushinteger(L, gLuaContainerHolder.GetArraySize());
+    lua_settable(L, -3);
+
+    lua_pushstring(L, "map_size");
+    lua_pushinteger(L, gLuaContainerHolder.GetMapSize());
+    lua_settable(L, -3);
     return 1;
 }
 
 static void cpp_table_reg_userdata(lua_State *L, void *p, const std::string &lua_table_name,
                                    const std::string &lua_layout_table_name, const std::string &lua_key_name) {
-    // create weak table and set container pointer -> userdata pointer mapping
-    lua_getglobal(L, lua_table_name.c_str());// stack: 1: userdata, 2: weak table
-    if (lua_type(L, -1) != LUA_TTABLE) { // stack: 1: userdata, 2: nil
-        lua_pop(L, 1); // stack: 1: userdata
-        // create weak table
-        lua_newtable(L); // stack: 1: userdata, 2: table
-        lua_newtable(L); // stack: 1: userdata, 2: table, 3: table
-        lua_pushstring(L, "v"); // stack: 1: userdata, 2: table, 3: table, 4: "v"
-        lua_setfield(L, -2, "__mode"); // stack: 1: userdata, 2: table, 3: table(__mode = "v")
-        lua_setmetatable(L, -2); // stack: 1: userdata, 2: table
-        lua_setglobal(L, lua_table_name.c_str()); // stack: 1: userdata
-        lua_getglobal(L, lua_table_name.c_str()); // stack: 1: userdata, 2: weak table
-    }
-    lua_pushlightuserdata(L, p); // stack: 1: userdata, 2: weak table, 3: pointer
-    lua_pushvalue(L, -3); // stack: 1: userdata, 2: weak table, 3: pointer, 4: userdata
-    lua_settable(L, -3); // stack: 1: userdata, 2: weak table
-    lua_pop(L, 1); // stack: 1: userdata
     // set meta table from lua_layout_table_name
     lua_getglobal(L, lua_layout_table_name.c_str());// stack: 1: userdata, 2: global meta
     if (lua_type(L, -1) != LUA_TTABLE) { // stack: 1: userdata, 2: nil
@@ -437,59 +436,16 @@ static void cpp_table_reg_userdata(lua_State *L, void *p, const std::string &lua
     lua_pop(L, 1); // stack: 1: userdata
 }
 
-static bool cpp_table_get_userdata(lua_State *L, void *p, const std::string &lua_table_name) {
-    lua_getglobal(L, lua_table_name.c_str());// stack: 1: weak table
-    if (lua_type(L, -1) != LUA_TTABLE) { // stack: 1: nil
-        lua_pop(L, 1); // stack:
-        return false;
-    }
-    lua_pushlightuserdata(L, p); // stack: 1: weak table, 2: pointer
-    lua_gettable(L, -2); // stack: 1: weak table, 2: userdata
-    lua_remove(L, -2); // stack: 1: userdata
-    if (lua_type(L, -1) != LUA_TUSERDATA) {
-        lua_pop(L, 1); // stack:
-        return false;
-    }
-    // stack: 1: userdata
-    return true;
-}
-
-static void cpp_table_remove_userdata(lua_State *L, void *p, const std::string &lua_table_name) {
-    lua_getglobal(L, lua_table_name.c_str());// stack: 1: weak table
-    if (lua_type(L, -1) != LUA_TTABLE) { // stack: 1: nil
-        lua_pop(L, 1); // stack:
-        return;
-    }
-    lua_pushlightuserdata(L, p); // stack: 1: weak table, 2: pointer
-    lua_pushnil(L); // stack: 1: weak table, 2: pointer, 3: nil
-    lua_settable(L, -3); // stack: 1: weak table
-    lua_pop(L, 1); // stack:
-}
-
 static void cpp_table_reg_container_userdata(lua_State *L, Container *container) {
     cpp_table_reg_userdata(L, container, "CPP_TABLE_CONTAINER", "CPP_TABLE_LAYOUT_META_TABLE",
                            std::string(container->GetName().data(), container->GetName().size()));
 }
 
-static bool cpp_table_get_container_userdata(lua_State *L, Container *container) {
-    return cpp_table_get_userdata(L, container, "CPP_TABLE_CONTAINER");
-}
-
-static void cpp_table_remove_container_userdata(lua_State *L, Container *container) {
-    cpp_table_remove_userdata(L, container, "CPP_TABLE_CONTAINER");
-}
-
 static void cpp_table_get_container_push_pointer(lua_State *L, Container *container_pointer) {
-    auto find = cpp_table_get_container_userdata(L, container_pointer);
-    if (!find) {
-        auto userdata_pointer = lua_newuserdata(L, 0);
-        gLuaContainerHolder.Set(userdata_pointer, container_pointer);
-        cpp_table_reg_container_userdata(L, container_pointer);
-        LLOG("cpp_table_get_container_push_pointer: %s new %p", container_pointer->GetName().data(), container_pointer);
-    } else {
-        LLOG("cpp_table_get_container_push_pointer: %s already exist %p", container_pointer->GetName().data(),
-             container_pointer);
-    }
+    auto userdata_pointer = lua_newuserdata(L, 0);
+    gLuaContainerHolder.Set(userdata_pointer, container_pointer);
+    cpp_table_reg_container_userdata(L, container_pointer);
+    LLOG("cpp_table_get_container_push_pointer: %s new %p", container_pointer->GetName().data(), container_pointer);
 }
 
 static void cpp_table_reg_array_container_userdata(lua_State *L, Array *array, StringPtr key) {
@@ -497,26 +453,10 @@ static void cpp_table_reg_array_container_userdata(lua_State *L, Array *array, S
                            std::string(key->data(), key->size()));
 }
 
-static bool cpp_table_get_array_container_userdata(lua_State *L, Array *array) {
-    return cpp_table_get_userdata(L, array, "CPP_TABLE_ARRAY_CONTAINER");
-}
-
-static void cpp_table_remove_array_container_userdata(lua_State *L, Array *array) {
-    cpp_table_remove_userdata(L, array, "CPP_TABLE_ARRAY_CONTAINER");
-}
-
 static void
 cpp_table_reg_map_container_userdata(lua_State *L, Map *map, StringPtr key, StringPtr value) {
     std::string key_value = std::string(key->data(), key->size()) + "-" + std::string(value->data(), value->size());
     cpp_table_reg_userdata(L, map, "CPP_TABLE_MAP_CONTAINER", "CPP_TABLE_LAYOUT_MAP_META_TABLE", key_value);
-}
-
-static bool cpp_table_get_map_container_userdata(lua_State *L, Map *map) {
-    return cpp_table_get_userdata(L, map, "CPP_TABLE_MAP_CONTAINER");
-}
-
-static void cpp_table_remove_map_container_userdata(lua_State *L, Map *map) {
-    cpp_table_remove_userdata(L, map, "CPP_TABLE_MAP_CONTAINER");
 }
 
 static int cpp_table_create_container(lua_State *L) {
@@ -552,7 +492,6 @@ static int cpp_table_delete_container(lua_State *L) {
         return 0;
     }
     LLOG("cpp_table_delete_container: %s %p", container->GetName().data(), container.get());
-    cpp_table_remove_container_userdata(L, container.get());
     gLuaContainerHolder.Remove(pointer);
     return 0;
 }
@@ -797,15 +736,10 @@ static int cpp_table_container_get_array(lua_State *L) {
         return 1;
     }
     auto array_pointer = array.get();
-    auto find = cpp_table_get_array_container_userdata(L, array_pointer);
-    if (!find) {
-        auto userdata_pointer = lua_newuserdata(L, 0);
-        gLuaContainerHolder.SetArray(userdata_pointer, array);
-        cpp_table_reg_array_container_userdata(L, array_pointer, array->GetLayoutMember()->key);
-        LLOG("cpp_table_container_get_array: %s new %p", array->GetName().data(), array_pointer);
-    } else {
-        LLOG("cpp_table_container_get_array: %s already exist %p", array->GetName().data(), array_pointer);
-    }
+    auto userdata_pointer = lua_newuserdata(L, 0);
+    gLuaContainerHolder.SetArray(userdata_pointer, array);
+    cpp_table_reg_array_container_userdata(L, array_pointer, array->GetLayoutMember()->key);
+    LLOG("cpp_table_container_get_array: %s new %p", array->GetName().data(), array_pointer);
     return 1;
 }
 
@@ -874,16 +808,10 @@ static int cpp_table_container_get_map(lua_State *L) {
         return 1;
     }
     auto map_pointer = map.get();
-    auto find = cpp_table_get_map_container_userdata(L, map_pointer);
-    if (!find) {
-        auto userdata_pointer = lua_newuserdata(L, 0);
-        gLuaContainerHolder.SetMap(userdata_pointer, map);
-        cpp_table_reg_map_container_userdata(L, map_pointer, map->GetLayoutMember()->key,
-                                             map->GetLayoutMember()->value);
-        LLOG("cpp_table_container_get_map: %s new %p", map->GetName().data(), map_pointer);
-    } else {
-        LLOG("cpp_table_container_get_map: %s already exist %p", map->GetName().data(), map_pointer);
-    }
+    auto userdata_pointer = lua_newuserdata(L, 0);
+    gLuaContainerHolder.SetMap(userdata_pointer, map);
+    cpp_table_reg_map_container_userdata(L, map_pointer, map->GetLayoutMember()->key, map->GetLayoutMember()->value);
+    LLOG("cpp_table_container_get_map: %s new %p", map->GetName().data(), map_pointer);
     return 1;
 }
 
@@ -976,7 +904,6 @@ static int cpp_table_delete_array_container(lua_State *L) {
         return 0;
     }
     LLOG("cpp_table_delete_array_container: %s %p", array->GetName().data(), array.get());
-    cpp_table_remove_array_container_userdata(L, array.get());
     gLuaContainerHolder.RemoveArray(pointer);
     return 0;
 }
@@ -1686,7 +1613,6 @@ static int cpp_table_delete_map_container(lua_State *L) {
         return 0;
     }
     LLOG("cpp_table_delete_map_container: %s %p", map->GetName().data(), map.get());
-    cpp_table_remove_map_container_userdata(L, map.get());
     gLuaContainerHolder.RemoveMap(pointer);
     return 0;
 }
@@ -1697,7 +1623,7 @@ std::vector<luaL_Reg> GetCppTableFuncs() {
     return {
             {"cpp_table_set_message_id",             cpp_table::cpp_table_set_message_id},
             {"cpp_table_update_layout",              cpp_table::cpp_table_update_layout},
-            {"cpp_table_dump_string_heap",           cpp_table::cpp_table_dump_string_heap},
+            {"cpp_table_dump_statistic",             cpp_table::cpp_table_dump_statistic},
 
             {"cpp_table_create_container",           cpp_table::cpp_table_create_container},
             {"cpp_table_delete_container",           cpp_table::cpp_table_delete_container},

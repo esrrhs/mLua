@@ -2,7 +2,7 @@ local core = require "libmluacore"
 
 local core_cpp_table_set_message_id = core.cpp_table_set_message_id
 local core_cpp_table_update_layout = core.cpp_table_update_layout
-local core_cpp_table_dump_string_heap = core.cpp_table_dump_string_heap
+local core_cpp_table_dump_statistic = core.cpp_table_dump_statistic
 
 local core_cpp_table_create_container = core.cpp_table_create_container
 local core_cpp_table_container_get_int32 = core.cpp_table_container_get_int32
@@ -533,6 +533,7 @@ function lua_to_cpp.create_metatable(message_name)
     local index_func = function(t, k)
         local layout_v = layout.members[k]
         if not layout_v then
+            error("index error, member " .. k .. " not exist")
             return nil
         end
         return layout_v.index_func(t)
@@ -541,6 +542,7 @@ function lua_to_cpp.create_metatable(message_name)
     local newindex_func = function(t, k, value)
         local layout_v = layout.members[k]
         if not layout_v then
+            error("newindex error, member " .. k .. " not exist")
             return
         end
         layout_v.newindex_func(t, value)
@@ -617,8 +619,8 @@ function _G.cpp_table_sink(name, table)
 end
 
 -- print all the string in cpp table heap
-function _G.cpp_table_dump_string_heap()
-    return core_cpp_table_dump_string_heap()
+function _G.cpp_table_dump_statistic()
+    return core_cpp_table_dump_statistic()
 end
 
 --------------------------cpp-table end-------------------------------------

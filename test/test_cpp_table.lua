@@ -5,7 +5,14 @@ require "mLua"
 require "cpp_table_proto"
 local serpent = require "serpent"
 
-function test_get_set()
+local function gc()
+    -- userdata should call multiple times to release memory
+    collectgarbage("collect")
+    collectgarbage("collect")
+    collectgarbage("collect")
+end
+
+local function test_get_set()
 
     local player = {
         name = "jack",
@@ -86,32 +93,19 @@ function test_get_set()
 
     ------------------------------------------
     cpptable = nil
-    collectgarbage("collect")
-
-    for k, v in pairs(CPP_TABLE_CONTAINER) do
-        print("container leak " .. tostring(k))
-    end
-    for k, v in pairs(CPP_TABLE_ARRAY_CONTAINER) do
-        print("array leak " .. tostring(k))
-    end
-    for k, v in pairs(CPP_TABLE_MAP_CONTAINER) do
-        print("map leak " .. tostring(k))
-    end
-
-    print("stringheap:" .. serpent.block(_G.cpp_table_dump_string_heap()))
-
+    gc()
 end
 
-function test_benchmark()
+local function test_benchmark()
     local all_player = {}
     for player_id = 1000000, 1005000 do
         local res2cnt = {}
         for item_id = 100000, 100200 do
-            res2cnt[item_id] = { [0] = 100, [1] = 200, [2] = 300 }
+            res2cnt[item_id] = { permanent = 100, timing = 200, all = 300 }
         end
         all_player[player_id] = { cnts = res2cnt }
     end
-    collectgarbage("collect")
+    gc()
     print("lua memory " .. collectgarbage("count") / 1024 .. "MB")
     os.execute("pause")
 
@@ -119,24 +113,15 @@ function test_benchmark()
     for player_id = 1000000, 1005000 do
         all_player[player_id] = _G.cpp_table_sink("Res2Cnt", all_player[player_id])
     end
-    collectgarbage("collect")
+    gc()
+    print("dump_statistic:" .. serpent.block(_G.cpp_table_dump_statistic()))
     print("cpp memory " .. collectgarbage("count") / 1024 .. "MB")
     os.execute("pause")
 
-    _G.static_perf("_G.pro", _G)
-
     all_player = nil
-    collectgarbage("collect")
-    print("lua memory " .. collectgarbage("count") / 1024 .. "MB")
+    gc()
+    print("end memory " .. collectgarbage("count") / 1024 .. "MB")
     os.execute("pause")
-
-    CPP_TABLE_CONTAINER = nil
-
-    collectgarbage("collect")
-    print("lua memory1 " .. collectgarbage("count") / 1024 .. "MB")
-    os.execute("pause")
-
-
 end
 
 test_get_set()
