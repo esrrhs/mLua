@@ -2,28 +2,40 @@
 
 namespace cpp_table {
 
+enum RefObjType {
+    rot_container,
+    rot_array,
+    rot_map,
+    rot_string,
+    rot_layout,
+    rot_layout_member,
+};
+
 // there is no loop reference in protobuf defined message, so we can use a simple reference count
 class RefCntObj {
 public:
-    RefCntObj() : m_ref(0) {}
+    RefCntObj(RefObjType type) : m_type(type), m_ref(0) {}
 
-    virtual ~RefCntObj() {}
+    ~RefCntObj() {}
 
     void AddRef() { ++m_ref; }
 
     void Release() {
         if (--m_ref == 0) {
-            delete this;
+            Delete();
         }
     }
+
+    void Delete();
 
     int Ref() const { return m_ref; }
 
 private:
-    int m_ref;
+    RefObjType m_type: 8;
+    int m_ref: 24;
 };
 
-static_assert(sizeof(RefCntObj) == 16, "RefCntObj size must be 4");
+static_assert(sizeof(RefCntObj) == 4, "RefCntObj size must be 4");
 
 // T must be a class derived from RefCntObj, use to manage the life cycle of T
 // simpler than std::shared_ptr, no weak_ptr, and single thread only
@@ -155,9 +167,9 @@ static size_t StringHash(const char *str, size_t len) {
 // a simple string class, use to store string data
 class String : public RefCntObj {
 public:
-    String(const char *str, size_t len, size_t hash) : m_str(str, len), m_hash(hash) {}
+    String(const char *str, size_t len, size_t hash) : RefCntObj(rot_string), m_str(str, len), m_hash(hash) {}
 
-    String(const std::string &str) : m_str(str), m_hash(StringHash(str.c_str(), str.size())) {}
+    String(const std::string &str) : RefCntObj(rot_string), m_str(str), m_hash(StringHash(str.c_str(), str.size())) {}
 
     ~String();
 
@@ -294,12 +306,12 @@ enum MessageIdType {
 // same as lua table, use to store key-value schema data
 class Layout : public RefCntObj {
 public:
-    Layout() {}
+    Layout() : RefCntObj(rot_layout) {}
 
     ~Layout() {}
 
     struct Member : public RefCntObj {
-        Member() {}
+        Member() : RefCntObj(rot_layout_member) {}
 
         void CopyFrom(Member *other) {
             name = other->name;
@@ -524,7 +536,7 @@ private:
     char *m_buffer = 0;
 };
 
-static_assert(sizeof(Container) == 32, "Container size must be 24");
+static_assert(sizeof(Container) == 24, "Container size must be 24");
 typedef SharedPtr<Container> ContainerPtr;
 
 // use to store lua array data
@@ -553,7 +565,7 @@ public:
         if (idx < 0) {
             return false;
         }
-        if (max > (int) m_buffer.size()) {
+        if (max > m_buffer_size) {
             // out of range, just return nil
             is_nil = true;
             return true;
@@ -561,7 +573,7 @@ public:
         char flag = m_buffer[idx] & 0x01;
         if (flag) {
             is_nil = false;
-            value = *(T *) (m_buffer.data() + idx + 1);
+            value = *(T *) (m_buffer + idx + 1);
         } else {
             is_nil = true;
         }
@@ -575,16 +587,23 @@ public:
         if (idx < 0) {
             return false;
         }
-        if (max > (int) m_buffer.size()) {
+        if (max > m_buffer_size) {
             // out of range, need to resize buffer, use double size
-            m_buffer.reserve(2 * m_buffer.capacity());
-            m_buffer.resize(max);
+            auto new_size = 2 * max;
+            auto new_buffer = new char[new_size];
+            memset(new_buffer, 0, new_size);
+            if (m_buffer) {
+                memcpy(new_buffer, m_buffer, m_buffer_size);
+                delete[] m_buffer;
+            }
+            m_buffer = new_buffer;
+            m_buffer_size = new_size;
         }
         if (is_nil) {
             m_buffer[idx] &= 0xfe;
         } else {
             m_buffer[idx] |= 0x01;
-            *(T *) (m_buffer.data() + idx + 1) = value;
+            *(T *) (m_buffer + idx + 1) = value;
         }
         return true;
     }
@@ -632,10 +651,12 @@ private:
     void ReleaseAllSharedObj();
 
 private:
+    int m_buffer_size = 0;
     Layout::MemberPtr m_layout_member;
-    std::vector<char> m_buffer;
+    char *m_buffer = 0;
 };
 
+static_assert(sizeof(Array) == 24, "Array size must be 24");
 typedef SharedPtr<Array> ArrayPtr;
 
 class Map : public RefCntObj {

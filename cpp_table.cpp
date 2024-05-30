@@ -6,11 +6,45 @@ StringHeap gStringHeap;
 LuaContainerHolder gLuaContainerHolder;
 LayoutMgr gLayoutMgr;
 
+void RefCntObj::Delete() {
+    switch (m_type) {
+        case rot_container: {
+            delete (Container *) this;
+            break;
+        }
+        case rot_array: {
+            delete (Array *) this;
+            break;
+        }
+        case rot_map: {
+            delete (Map *) this;
+            break;
+        }
+        case rot_string: {
+            delete (String *) this;
+            break;
+        }
+
+        case rot_layout : {
+            delete (Layout *) this;
+            break;
+        }
+        case rot_layout_member: {
+            delete (Layout::Member *) this;
+            break;
+        }
+        default: {
+            LERR("RefCntObj::Delete: invalid type %d", m_type);
+            break;
+        }
+    }
+}
+
 String::~String() {
     gStringHeap.Remove(m_str);
 }
 
-Container::Container(LayoutPtr layout) {
+Container::Container(LayoutPtr layout) : RefCntObj(rot_container) {
     m_layout = layout;
     LLOG("Container::Container: %s %p", GetName().data(), this);
 }
@@ -18,6 +52,9 @@ Container::Container(LayoutPtr layout) {
 Container::~Container() {
     LLOG("Container::~Container: %s %p", GetName().data(), this);
     ReleaseAllSharedObj();
+    if (m_buffer) {
+        delete[] m_buffer;
+    }
 }
 
 LuaContainerHolder::~LuaContainerHolder() {
@@ -45,20 +82,23 @@ void Container::ReleaseAllSharedObj() {
     }
 }
 
-Array::Array(Layout::MemberPtr layout_member) {
+Array::Array(Layout::MemberPtr layout_member) : RefCntObj(rot_array) {
     m_layout_member = layout_member;
 }
 
 Array::~Array() {
     LLOG("Array::~Array: %s %p", GetName().data(), this);
     ReleaseAllSharedObj();
+    if (m_buffer) {
+        delete[] m_buffer;
+    }
 }
 
 void Array::ReleaseAllSharedObj() {
     if (!m_layout_member->key_shared) {
         return;
     }
-    int element_size = m_buffer.size() / m_layout_member->key_size;
+    int element_size = m_buffer_size / m_layout_member->key_size;
     for (int i = 0; i < element_size; ++i) {
         SharedPtr<RefCntObj> out;
         bool is_nil = false;
@@ -73,7 +113,7 @@ void Array::ReleaseAllSharedObj() {
     }
 }
 
-Map::Map(Layout::MemberPtr layout_member) {
+Map::Map(Layout::MemberPtr layout_member) : RefCntObj(rot_map) {
     m_layout_member = layout_member;
     m_map.m_void = 0;
     LLOG("Map::Map: %s %p", layout_member->name->data(), this);
