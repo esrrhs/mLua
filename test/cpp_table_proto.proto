@@ -46,8 +46,37 @@ message Res2Cnt {
   map<int64, CntInfo> cnts = 1;
 }
 
-message CntInfo{
+message CntInfo {
   int32 permanent = 1;
   int32 timing = 2;
   int32 all = 3;
+}
+
+message SimpleStruct {
+  int32 a = 1;
+  int32 b = 2;
+  int32 c = 3;
+  int32 d = 4;
+  int32 e = 5;
+  int32 f = 6;
+  int32 g = 7;
+  int32 h = 8;
+  int32 i = 9;
+  int32 j = 10;
+  int32 k = 11;
+  int32 l = 12;
+  int32 m = 13;
+  int32 n = 14;
+  int32 o = 15;
+  int32 p = 16;
+  int32 q = 17;
+  int32 r = 18;
+  int32 s = 19;
+  int32 t = 20;
+  int32 u = 21;
+  int32 v = 22;
+  int32 w = 23;
+  int32 x = 24;
+  int32 y = 25;
+  int32 z = 26;
 }

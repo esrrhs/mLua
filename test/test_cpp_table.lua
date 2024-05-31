@@ -109,37 +109,29 @@ local function test_get_set()
     gc()
 end
 
-local function test_benchmark_lua_re2cnt()
+local function test_benchmark_lua_simple()
     print("start test_benchmark_lua_re2cnt")
-    local all_player = {}
-    for player_id = 1000000, 1005000 do
-        local res2cnt = {}
-        for item_id = 100000, 100200 do
-            res2cnt[item_id] = { permanent = 100, timing = 200, all = 300 }
-        end
-        all_player[player_id] = { cnts = res2cnt }
+    local all_simple_player = {}
+    for player_id = 1000000, 1050000 do
+        all_simple_player[player_id] = {
+            a = 1, b = 2, c = 3, d = 4, e = 5, f = 6, g = 7, h = 8, i = 9, j = 10, k = 11, l = 12, m = 13, n = 14, o = 15, p = 16, q = 17, r = 18, s = 19, t = 20, u = 21, v = 22, w = 23, x = 24, y = 25, z = 26,
+        }
     end
     gc()
     print("lua memory " .. collectgarbage("count") / 1024 .. "MB")
     pause()
 end
 
-local function test_benchmark_cpp_re2cnt()
-    print("start test_benchmark_cpp_re2cnt")
-    local all_player = {}
-    local res2cnt = {}
-    local res_info = { permanent = 100, timing = 200, all = 300 }
-    for item_id = 100000, 100200 do
-        res2cnt[item_id] = res_info
-    end
-    local player_info = { cnts = res2cnt }
-    for player_id = 1000000, 1005000 do
-        all_player[player_id] = player_info
+local function test_benchmark_cpp_simple()
+    print("start test_benchmark_cpp_simple")
+    local all_simple_player = {}
+    local player_info = {
+        a = 1, b = 2, c = 3, d = 4, e = 5, f = 6, g = 7, h = 8, i = 9, j = 10, k = 11, l = 12, m = 13, n = 14, o = 15, p = 16, q = 17, r = 18, s = 19, t = 20, u = 21, v = 22, w = 23, x = 24, y = 25, z = 26,
+    }
+    for player_id = 1000000, 1050000 do
+        all_simple_player[player_id] = _G.cpp_table_sink("SimpleStruct", player_info)
     end
 
-    for player_id = 1000000, 1005000 do
-        all_player[player_id] = _G.cpp_table_sink("Res2Cnt", all_player[player_id])
-    end
     gc()
     print("dump_statistic:" .. serpent.block(_G.cpp_table_dump_statistic()))
     print("cpp memory " .. collectgarbage("count") / 1024 .. "MB")
@@ -206,8 +198,8 @@ _G.cpp_table_load_proto(_G.CPP_TABLE_PROTO)
 
 print("Please input test type: ")
 print("  1: test_get_set")
-print("  2: test_benchmark_lua_re2cnt")
-print("  3: test_benchmark_cpp_re2cnt")
+print("  2: test_benchmark_lua_simple")
+print("  3: test_benchmark_cpp_simple")
 print("  4: test_benchmark_lua_map")
 print("  5: test_benchmark_cpp_map")
 print("  6: test_benchmark_lua_array")
@@ -218,10 +210,11 @@ while true do
 
     if type == "1" then
         test_get_set()
+        break
     elseif type == "2" then
-        test_benchmark_lua_re2cnt()
+        test_benchmark_lua_simple()
     elseif type == "3" then
-        test_benchmark_cpp_re2cnt()
+        test_benchmark_cpp_simple()
     elseif type == "4" then
         test_benchmark_lua_map()
     elseif type == "5" then

@@ -533,7 +533,7 @@ function lua_to_cpp.create_metatable(message_name)
     local index_func = function(t, k)
         local layout_v = layout.members[k]
         if not layout_v then
-            error("index error, member " .. k .. " not exist")
+            error("index error, " .. message_name .. " member " .. k .. " not exist")
             return nil
         end
         return layout_v.index_func(t)
@@ -542,7 +542,7 @@ function lua_to_cpp.create_metatable(message_name)
     local newindex_func = function(t, k, value)
         local layout_v = layout.members[k]
         if not layout_v then
-            error("newindex error, member " .. k .. " not exist")
+            error("newindex error, " .. message_name .. " member " .. k .. " not exist")
             return
         end
         layout_v.newindex_func(t, value)
