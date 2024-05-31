@@ -7,9 +7,22 @@ local serpent = require "serpent"
 
 local function gc()
     -- userdata should call multiple times to release memory
-    collectgarbage("collect")
-    collectgarbage("collect")
-    collectgarbage("collect")
+    for i = 1, 10 do
+        collectgarbage("collect")
+    end
+end
+
+local function get_os()
+    return package.config:sub(1, 1) == "\\" and "win" or "unix"
+end
+
+local function pause()
+    if get_os() == "win" then
+        os.execute("pause")
+    else
+        print("Press enter to continue...")
+        io.read()
+    end
 end
 
 local function test_get_set()
@@ -96,7 +109,8 @@ local function test_get_set()
     gc()
 end
 
-local function test_benchmark()
+local function test_benchmark_lua_re2cnt()
+    print("start test_benchmark_lua_re2cnt")
     local all_player = {}
     for player_id = 1000000, 1005000 do
         local res2cnt = {}
@@ -107,23 +121,114 @@ local function test_benchmark()
     end
     gc()
     print("lua memory " .. collectgarbage("count") / 1024 .. "MB")
-    os.execute("pause")
+    pause()
+end
 
-    _G.cpp_table_load_proto(_G.CPP_TABLE_PROTO)
+local function test_benchmark_cpp_re2cnt()
+    print("start test_benchmark_cpp_re2cnt")
+    local all_player = {}
+    local res2cnt = {}
+    local res_info = { permanent = 100, timing = 200, all = 300 }
+    for item_id = 100000, 100200 do
+        res2cnt[item_id] = res_info
+    end
+    local player_info = { cnts = res2cnt }
+    for player_id = 1000000, 1005000 do
+        all_player[player_id] = player_info
+    end
+
     for player_id = 1000000, 1005000 do
         all_player[player_id] = _G.cpp_table_sink("Res2Cnt", all_player[player_id])
     end
     gc()
     print("dump_statistic:" .. serpent.block(_G.cpp_table_dump_statistic()))
     print("cpp memory " .. collectgarbage("count") / 1024 .. "MB")
-    os.execute("pause")
-
-    all_player = nil
-    gc()
-    print("end memory " .. collectgarbage("count") / 1024 .. "MB")
-    os.execute("pause")
+    pause()
 end
 
-test_get_set()
+local function test_benchmark_lua_map()
+    print("start test_benchmark_lua_map")
+    local player = {
+        params = { },
+    }
+    for i = 1, 10000000 do
+        player.params[1000 + i] = i
+    end
+    gc()
+    print("lua memory " .. collectgarbage("count") / 1024 .. "MB")
+    pause()
+end
 
-test_benchmark()
+local function test_benchmark_cpp_map()
+    print("start test_benchmark_cpp_map")
+    local player = {
+        params = { },
+    }
+    for i = 1, 10000000 do
+        player.params[1000 + i] = i
+    end
+    player = _G.cpp_table_sink("Player", player)
+    gc()
+    print("dump_statistic:" .. serpent.block(_G.cpp_table_dump_statistic()))
+    print("cpp memory " .. collectgarbage("count") / 1024 .. "MB")
+    pause()
+end
+
+local function test_benchmark_lua_array()
+    print("start test_benchmark_lua_array")
+    local player = {
+        labels = { },
+    }
+    for i = 1, 10000000 do
+        table.insert(player.labels, i)
+    end
+    gc()
+    print("lua memory " .. collectgarbage("count") / 1024 .. "MB")
+    pause()
+end
+
+local function test_benchmark_cpp_array()
+    print("start test_benchmark_cpp_array")
+    local player = {
+        labels = { },
+    }
+    for i = 1, 10000000 do
+        table.insert(player.labels, i)
+    end
+    player = _G.cpp_table_sink("Player", player)
+    gc()
+    print("dump_statistic:" .. serpent.block(_G.cpp_table_dump_statistic()))
+    print("cpp memory " .. collectgarbage("count") / 1024 .. "MB")
+    pause()
+end
+
+_G.cpp_table_load_proto(_G.CPP_TABLE_PROTO)
+
+print("Please input test type: ")
+print("  1: test_get_set")
+print("  2: test_benchmark_lua_re2cnt")
+print("  3: test_benchmark_cpp_re2cnt")
+print("  4: test_benchmark_lua_map")
+print("  5: test_benchmark_cpp_map")
+print("  6: test_benchmark_lua_array")
+print("  7: test_benchmark_cpp_array")
+
+local type = io.read()
+
+if type == "1" then
+    test_get_set()
+elseif type == "2" then
+    test_benchmark_lua_re2cnt()
+elseif type == "3" then
+    test_benchmark_cpp_re2cnt()
+elseif type == "4" then
+    test_benchmark_lua_map()
+elseif type == "5" then
+    test_benchmark_cpp_map()
+elseif type == "6" then
+    test_benchmark_lua_array()
+elseif type == "7" then
+    test_benchmark_cpp_array()
+else
+    print("Invalid test type")
+end
