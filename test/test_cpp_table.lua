@@ -214,21 +214,25 @@ print("  6: test_benchmark_lua_array")
 print("  7: test_benchmark_cpp_array")
 
 local type = io.read()
+while true do
 
-if type == "1" then
-    test_get_set()
-elseif type == "2" then
-    test_benchmark_lua_re2cnt()
-elseif type == "3" then
-    test_benchmark_cpp_re2cnt()
-elseif type == "4" then
-    test_benchmark_lua_map()
-elseif type == "5" then
-    test_benchmark_cpp_map()
-elseif type == "6" then
-    test_benchmark_lua_array()
-elseif type == "7" then
-    test_benchmark_cpp_array()
-else
-    print("Invalid test type")
+    if type == "1" then
+        test_get_set()
+    elseif type == "2" then
+        test_benchmark_lua_re2cnt()
+    elseif type == "3" then
+        test_benchmark_cpp_re2cnt()
+    elseif type == "4" then
+        test_benchmark_lua_map()
+    elseif type == "5" then
+        test_benchmark_cpp_map()
+    elseif type == "6" then
+        test_benchmark_lua_array()
+    elseif type == "7" then
+        test_benchmark_cpp_array()
+    else
+        print("Invalid test type")
+        break
+    end
+    print("try again")
 end
