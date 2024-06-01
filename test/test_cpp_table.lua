@@ -144,7 +144,7 @@ local function test_benchmark_lua_map()
         params = { },
     }
     for i = 1, 10000000 do
-        player.params[1000 + i] = i
+        player.params[math.random(10000000,100000000)] = i
     end
     gc()
     print("lua memory " .. collectgarbage("count") / 1024 .. "MB")
@@ -157,7 +157,7 @@ local function test_benchmark_cpp_map()
         params = { },
     }
     for i = 1, 10000000 do
-        player.params[1000 + i] = i
+        player.params[math.random(10000000,100000000)] = i
     end
     player = _G.cpp_table_sink("Player", player)
     gc()
