@@ -686,6 +686,16 @@ public:
     void insert(const Key &key, const Value &value) {
         auto mp = mainposition(key);
         if (m_nodes[mp].valid) { /* main position is taken? */
+            // try to find key first
+            auto cur = mp;
+            while (cur != -1) {
+                if (Equal()(m_nodes[cur].key, key)) {
+                    m_nodes[cur].value = value;
+                    return;
+                }
+                cur = m_nodes[cur].next;
+            }
+
             auto f = getfreeposition(); /* get a free place */
             if (f < 0) { /* cannot find a free place? */
                 auto b = rehash();  /* grow table */
@@ -725,6 +735,21 @@ public:
                 return true;
             }
             mp = m_nodes[mp].next;
+        }
+        return false;
+    }
+
+    bool erase(const Key &key) {
+        auto mp = mainposition(key);
+        auto cur = mp;
+        while (cur != -1) {
+            if (Equal()(m_nodes[cur].key, key)) {
+                m_nodes[cur].key = Key();
+                m_nodes[cur].value = Value();
+                m_nodes[cur].valid = false;
+                return true;
+            }
+            cur = m_nodes[cur].next;
         }
         return false;
     }
