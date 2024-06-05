@@ -659,6 +659,181 @@ private:
 static_assert(sizeof(Array) == 24, "Array size must be 24");
 typedef SharedPtr<Array> ArrayPtr;
 
+static const int primes[] = {2, 5, 7, 11, 17, 23, 37, 53, 79, 113, 167, 251, 373, 557, 839, 1259, 1889,
+                             2833, 4243, 6361, 9533, 14249, 21373, 32059, 48089, 72131, 108197, 162293,
+                             243439, 365159, 547739, 821609, 1232413, 1848619, 2772929, 4159393, 6239089,
+                             9358633, 14037949, 21056923, 31585387, 47378081, 71067121, 106600683,
+                             159901019, 239851529, 359777293, 539665939, 809498909, 1214247359,
+                             1821371039};
+
+template<typename Key, typename Value, typename Hash, typename Equal>
+class CoalescedHashMap {
+public:
+    CoalescedHashMap(int size = 1) {
+        m_nodes.resize(size);
+        m_lastfree = size - 1;
+    }
+
+    ~CoalescedHashMap() {}
+
+    /*
+    ** inserts a new key into a hash table; first, check whether key's main
+    ** position is free. If not, check whether colliding node is in its main
+    ** position or not: if it is not, move colliding node to an empty place and
+    ** put new key in its main position; otherwise (colliding node is in its main
+    ** position), new key goes to an empty position.
+    */
+    void insert(const Key &key, const Value &value) {
+        auto mp = mainposition(key);
+        if (m_nodes[mp].valid) { /* main position is taken? */
+            auto f = getfreeposition(); /* get a free place */
+            if (f < 0) { /* cannot find a free place? */
+                auto b = rehash();  /* grow table */
+                if (b < 0) {
+                    return;  /* grow failed */
+                }
+                return insert(key, value);  /* insert key into grown table */
+            }
+            auto othern = mainposition(m_nodes[mp].key); /* other node's main position */
+            if (othern != mp) {  /* is colliding node out of its main position? */
+                /* yes; move colliding node into free position */
+                while (m_nodes[othern].next != mp) { /* find previous */
+                    othern = m_nodes[othern].next;
+                }
+                m_nodes[othern].next = f; /* rechain to point to 'f' */
+                m_nodes[f] = m_nodes[mp]; /* copy colliding node into free pos. (mp->next also goes)*/
+                m_nodes[mp].next = -1; /* now 'mp' is free */
+            } else { /* colliding node is in its own main position */
+                /* new node will go into free position */
+                if (m_nodes[mp].next != -1) {
+                    m_nodes[f].next = m_nodes[mp].next; /* chain new position */
+                }
+                m_nodes[mp].next = f;
+                mp = f;
+            }
+        }
+        m_nodes[mp].key = key;
+        m_nodes[mp].value = value;
+        m_nodes[mp].valid = true;
+    }
+
+    bool find(const Key &key, Value &value) {
+        auto mp = mainposition(key);
+        while (mp != -1) {
+            if (m_nodes[mp].key == key) {
+                value = m_nodes[mp].value;
+                return true;
+            }
+            mp = m_nodes[mp].next;
+        }
+        return false;
+    }
+
+    int capacity() const {
+        return m_nodes.size();
+    }
+
+    int size() const {
+        return std::count_if(m_nodes.begin(), m_nodes.end(), [](const Node &node) { return node.valid; });
+    }
+
+    int main_position_size() const {
+        int ret = 0;
+        for (int i = 0; i < m_nodes.size(); i++) {
+            if (m_nodes[i].valid && mainposition(m_nodes[i].key) == i) {
+                ret++;
+            }
+        }
+        return ret;
+    }
+
+    std::map<int, int> chain_status() const {
+        std::map<int, int> ret;
+        for (int i = 0; i < m_nodes.size(); i++) {
+            if (m_nodes[i].valid) {
+                // check is head?
+                bool is_head = true;
+                for (int j = 0; j < m_nodes.size(); j++) {
+                    if (m_nodes[j].next == i) {
+                        is_head = false;
+                        break;
+                    }
+                }
+
+                if (is_head) {
+                    int count = 0;
+                    int next = i;
+                    while (next != -1) {
+                        count++;
+                        next = m_nodes[next].next;
+                    }
+                    ret[count]++;
+                }
+            }
+        }
+        return ret;
+    }
+
+private:
+    struct Node {
+        Key key;
+        Value value;
+        bool valid = false;
+        int next = -1;
+    };
+
+    int mainposition(const Key &key) const {
+        return Hash()(key) % m_nodes.size();
+    }
+
+    int getfreeposition() {
+        while (m_lastfree >= 0) {
+            if (!m_nodes[m_lastfree].valid) {
+                return m_lastfree;
+            }
+            m_lastfree--;
+        }
+        return -1;
+    }
+
+    int findNext(int n) {
+        int size = sizeof(primes) / sizeof(primes[0]);
+        int left = 0;
+        int right = size - 1;
+        while (left <= right) {
+            int mid = left + (right - left) / 2;
+            if (primes[mid] == n) {
+                return primes[mid];
+            } else if (primes[mid] < n) {
+                left = mid + 1;
+            } else {
+                right = mid - 1;
+            }
+        }
+        return (left < size) ? primes[left] : -1;  // 如果n大于数组中的所有质数，返回-1
+    }
+
+    int rehash() {
+        auto size = findNext(m_nodes.size() + 1);
+        if (size == -1) {
+            return -1;
+        }
+        std::vector<Node> oldnodes = std::move(m_nodes);
+        m_nodes = std::vector<Node>(size);
+        m_lastfree = size - 1;
+        for (auto &node: oldnodes) {
+            if (node.valid) {
+                insert(node.key, node.value);
+            }
+        }
+        return 0;
+    }
+
+private:
+    int m_lastfree = 0;
+    std::vector<Node> m_nodes;
+};
+
 class Map : public RefCntObj {
 public:
     Map(Layout::MemberPtr layout_member);
