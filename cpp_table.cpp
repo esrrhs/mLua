@@ -104,7 +104,7 @@ void Array::ReleaseAllSharedObj() {
         bool is_nil = false;
         auto ret = GetSharedObj<RefCntObj>(i, out, is_nil);
         if (!ret) {
-            LERR("Array::ReleaseAllSharedObj: %s invalid pos %d", m_layout_member->name->data(), i);
+            LERR("Array::ReleaseAllSh1aredObj: %s invalid pos %d", m_layout_member->name->data(), i);
             return;
         }
         if (!is_nil) {
@@ -208,27 +208,27 @@ void Map::ReleaseAllSharedObj() {
                 case mt_uint32:
                 case mt_float:
                 case mt_bool: {
-                    delete m_map.m_64_32;
-                    m_map.m_64_32 = 0;
+                    delete m_map.m_string_32;
+                    m_map.m_string_32 = 0;
                     break;
                 }
                 case mt_int64:
                 case mt_uint64:
                 case mt_double: {
-                    delete m_map.m_64_64;
-                    m_map.m_64_64 = 0;
+                    delete m_map.m_string_64;
+                    m_map.m_string_64 = 0;
                     break;
                 }
                 case mt_string: {
                     ReleaseStrByString();
-                    delete m_map.m_64_64;
-                    m_map.m_64_64 = 0;
+                    delete m_map.m_string_64;
+                    m_map.m_string_64 = 0;
                     break;
                 }
                 default: {
                     ReleaseObjByString();
-                    delete m_map.m_64_64;
-                    m_map.m_64_64 = 0;
+                    delete m_map.m_string_64;
+                    m_map.m_string_64 = 0;
                     break;
                 }
             }
