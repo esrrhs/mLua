@@ -2,9 +2,9 @@
 Lua的内存优化管理工具
 
 ## 特性
-* 将Lua的内存如配置表固化到C++中，并无需修改Lua使用的代码，以减少Lua的内存占用提高Lua的GC效率（参考自云风的[lua-conf](https://github.com/cloudwu/lua-conf)）
+* 使用Protobuf定义数据结构，将Lua的Table结构固化到C++中，减少内存占用和GC压力
 * 分析Lua的内存占用，输出gperftools格式图片或者火焰图，分为静态分析和动态分析
-* 序列化和反序列化Lua的Table
+* 快速序列化和反序列化Lua的Table
 
 ## 使用方法
 #### 编译源码
@@ -23,22 +23,24 @@ Lua的内存优化管理工具
 # go build plua.go
 ```
 
-#### Lua表固化C++
+#### Lua内存固化C++
 1. 执行将Lua的内存如配置表固化到C++中的测试脚本
 ```shell
 # cd test
 # lua test_cpp_table.lua
 ```
-2. 查看测试结果，可以看到Lua的内存占用从161479降到了34，即便在使用C++的table后，Lua的内存占用有所回升，但也停留在1150
+2. 输入选项查看测试结果，可以在操作系统看不同benchmark下的内存占用对比
 ```shell
-...
-before lua table to cpp, lua memory is 161479.23925781
-...
-after lua table to cpp, lua memory is 34.1533203125
-...
-after use cpp table, lua memory is 1150.0283203125
+  1: test_get_set
+  2: test_benchmark_lua_simple
+  3: test_benchmark_cpp_simple
+  4: test_benchmark_lua_map
+  5: test_benchmark_cpp_map
+  6: test_benchmark_lua_array
+  7: test_benchmark_cpp_array
 ```
-#### 静态分析Lua的内存占用
+
+#### 静态内存占用分析
 1. 执行静态分析的测试脚本
 ```shell
 # cd test
@@ -51,7 +53,7 @@ after use cpp table, lua memory is 1150.0283203125
 3. 查看生成的图片
 ![image](test/static_mem.png)
 
-#### 动态分析Lua的内存占用
+#### 动态内存占用分析
 1. 执行分析Lua全局内存分布的测试
 ```shell
 # cd test
@@ -62,9 +64,9 @@ after use cpp table, lua memory is 1150.0283203125
 # ./show.sh ../test/
 ```
 3. 查看生成的图片
-   ![image](test/dynamic_mem.png)
+![image](test/dynamic_mem.png)
 
-#### 序列化和反序列化Lua的Table
+#### 序列化和反序列化
 1. 执行序列化和反序列化Lua的Table的测试
 ```shell
 # cd test
