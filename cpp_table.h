@@ -659,6 +659,35 @@ private:
 static_assert(sizeof(Array) == 24, "Array size must be 24");
 typedef SharedPtr<Array> ArrayPtr;
 
+class BitMap {
+public:
+    BitMap(int bit_size) {
+        m_size = (bit_size + 7) / 8;
+        m_data = new char[m_size];
+        memset(m_data, 0, m_size);
+    }
+
+    ~BitMap() {
+        delete[] m_data;
+    }
+
+    void Set(int index) {
+        m_data[index / 8] |= (1 << (index % 8));
+    }
+
+    void Clear(int index) {
+        m_data[index / 8] &= ~(1 << (index % 8));
+    }
+
+    bool Test(int index) const {
+        return m_data[index / 8] & (1 << (index % 8));
+    }
+
+private:
+    char *m_data;
+    int m_size;
+};
+
 static const int primes[] = {2, 5, 7, 11, 17, 23, 37, 53, 79, 113, 167, 251, 373, 557, 839, 1259, 1889,
                              2833, 4243, 6361, 9533, 14249, 21373, 32059, 48089, 72131, 108197, 162293,
                              243439, 365159, 547739, 821609, 1232413, 1848619, 2772929, 4159393, 6239089,
@@ -666,15 +695,20 @@ static const int primes[] = {2, 5, 7, 11, 17, 23, 37, 53, 79, 113, 167, 251, 373
                              159901019, 239851529, 359777293, 539665939, 809498909, 1214247359,
                              1821371039};
 
-template<typename Key, typename Value, typename Hash, typename Equal>
+template<typename Key, typename Value, typename Hash = std::hash<Key>, typename Equal = std::equal_to<Key>>
 class CoalescedHashMap {
 public:
     CoalescedHashMap(int size = 1) {
-        m_nodes.resize(size);
-        m_lastfree = size - 1;
+        m_nodes = new Node[size];
+        m_size = size;
+        InitFreeList();
+        m_bitmap = new BitMap(size);
     }
 
-    ~CoalescedHashMap() {}
+    ~CoalescedHashMap() {
+        delete m_bitmap;
+        delete[] m_nodes;
+    }
 
     /*
     ** inserts a new key into a hash table; first, check whether key's main
@@ -683,9 +717,9 @@ public:
     ** put new key in its main position; otherwise (colliding node is in its main
     ** position), new key goes to an empty position.
     */
-    void insert(const Key &key, const Value &value) {
-        auto mp = mainposition(key);
-        if (m_nodes[mp].valid) { /* main position is taken? */
+    void Insert(const Key &key, const Value &value) {
+        auto mp = MainPosition(key);
+        if (Valid(mp)) { /* main position is taken? */
             // try to find key first
             auto cur = mp;
             while (cur != -1) {
@@ -696,39 +730,60 @@ public:
                 cur = m_nodes[cur].next;
             }
 
-            auto f = getfreeposition(); /* get a free place */
+            auto f = GetFreePosition(); /* get a free place */
             if (f < 0) { /* cannot find a free place? */
-                auto b = rehash();  /* grow table */
+                auto b = Rehash();  /* grow table */
                 if (b < 0) {
                     return;  /* grow failed */
                 }
-                return insert(key, value);  /* insert key into grown table */
+                return Insert(key, value);  /* insert key into grown table */
             }
-            auto othern = mainposition(m_nodes[mp].key); /* other node's main position */
+            auto othern = MainPosition(m_nodes[mp].key); /* other node's main position */
             if (othern != mp) {  /* is colliding node out of its main position? */
                 /* yes; move colliding node into free position */
-                while (m_nodes[othern].next != mp) { /* find previous */
-                    othern = m_nodes[othern].next;
+                auto pre = m_nodes[mp].pre; /* find previous */
+                assert(pre != -1);
+                auto next = m_nodes[mp].next; /* find next */
+                m_nodes[pre].next = f; /* rechain to point to 'f' */
+                if (next != -1) {
+                    m_nodes[next].pre = f;
                 }
-                m_nodes[othern].next = f; /* rechain to point to 'f' */
-                m_nodes[f] = m_nodes[mp]; /* copy colliding node into free pos. (mp->next also goes)*/
-                m_nodes[mp].next = -1; /* now 'mp' is free */
+                m_nodes[f] = m_nodes[mp]; /* copy colliding node into free pos. */
+                m_bitmap->Set(f);
+                m_nodes[mp].Clear(); /* now 'mp' is free */
             } else { /* colliding node is in its own main position */
                 /* new node will go into free position */
-                if (m_nodes[mp].next != -1) {
-                    m_nodes[f].next = m_nodes[mp].next; /* chain new position */
+                auto next = m_nodes[mp].next;
+                if (next != -1) {
+                    m_nodes[f].next = next; /* chain new position */
+                    m_nodes[next].pre = f;
                 }
                 m_nodes[mp].next = f;
+                m_nodes[f].pre = mp;
                 mp = f;
             }
+        } else {
+            // remove from free list
+            auto pre = m_nodes[mp].pre;
+            auto next = m_nodes[mp].next;
+            if (pre != -1) {
+                m_nodes[pre].next = next;
+            }
+            if (next != -1) {
+                m_nodes[next].pre = pre;
+            }
+            if (m_free == mp) {
+                m_free = next;
+            }
+            m_nodes[mp].Clear();
         }
         m_nodes[mp].key = key;
         m_nodes[mp].value = value;
-        m_nodes[mp].valid = true;
+        m_bitmap->Set(mp);
     }
 
-    bool find(const Key &key, Value &value) {
-        auto mp = mainposition(key);
+    bool Find(const Key &key, Value &value) {
+        auto mp = MainPosition(key);
         while (mp != -1) {
             if (m_nodes[mp].key == key) {
                 value = m_nodes[mp].value;
@@ -739,14 +794,43 @@ public:
         return false;
     }
 
-    bool erase(const Key &key) {
-        auto mp = mainposition(key);
+    bool Erase(const Key &key) {
+        auto mp = MainPosition(key);
         auto cur = mp;
         while (cur != -1) {
             if (Equal()(m_nodes[cur].key, key)) {
-                m_nodes[cur].key = Key();
-                m_nodes[cur].value = Value();
-                m_nodes[cur].valid = false;
+                auto clear_pos = cur;
+
+                // remove node from chain
+                auto pre = m_nodes[cur].pre;
+                auto next = m_nodes[cur].next;
+                if (pre != -1) {
+                    m_nodes[pre].next = next;
+                }
+                if (next != -1) {
+                    m_nodes[next].pre = pre;
+                    // if is head, we should move next to main position
+                    if (mp == cur) {
+                        auto next_next = m_nodes[next].next;
+                        m_nodes[cur] = m_nodes[next];
+                        m_nodes[cur].pre = -1;
+                        if (next_next != -1) {
+                            m_nodes[next_next].pre = cur;
+                        }
+                        clear_pos = next;
+                    }
+                }
+
+                m_bitmap->Clear(clear_pos);
+
+                // add to free list
+                m_nodes[clear_pos].Clear();
+                m_nodes[clear_pos].next = m_free;
+                m_nodes[clear_pos].pre = -1;
+                if (m_free != -1) {
+                    m_nodes[m_free].pre = clear_pos;
+                }
+                m_free = clear_pos;
                 return true;
             }
             cur = m_nodes[cur].next;
@@ -754,31 +838,37 @@ public:
         return false;
     }
 
-    int capacity() const {
-        return m_nodes.size();
+    int Capacity() const {
+        return m_size;
     }
 
-    int size() const {
-        return std::count_if(m_nodes.begin(), m_nodes.end(), [](const Node &node) { return node.valid; });
-    }
-
-    int main_position_size() const {
+    int Size() const {
         int ret = 0;
-        for (int i = 0; i < m_nodes.size(); i++) {
-            if (m_nodes[i].valid && mainposition(m_nodes[i].key) == i) {
+        for (int i = 0; i < m_size; i++) {
+            if (Valid(i)) {
                 ret++;
             }
         }
         return ret;
     }
 
-    std::map<int, int> chain_status() const {
+    int MainPositionSize() const {
+        int ret = 0;
+        for (int i = 0; i < m_size; i++) {
+            if (Valid(i) && MainPosition(m_nodes[i].key) == i) {
+                ret++;
+            }
+        }
+        return ret;
+    }
+
+    std::map<int, int> ChainStatus() const {
         std::map<int, int> ret;
-        for (int i = 0; i < m_nodes.size(); i++) {
-            if (m_nodes[i].valid) {
+        for (int i = 0; i < m_size; i++) {
+            if (Valid(i)) {
                 // check is head?
                 bool is_head = true;
-                for (int j = 0; j < m_nodes.size(); j++) {
+                for (int j = 0; j < m_size; j++) {
                     if (m_nodes[j].next == i) {
                         is_head = false;
                         break;
@@ -799,29 +889,56 @@ public:
         return ret;
     }
 
+    std::string Dump() {
+        std::stringstream ss;
+        for (int i = 0; i < m_size; i++) {
+            if (Valid(i)) {
+                ss << "i:" << i << " key:" << m_nodes[i].key << " value:" << m_nodes[i].value << " pre:"
+                   << m_nodes[i].pre << " next:" << m_nodes[i].next << " mp:" << bool(MainPosition(m_nodes[i].key) == i)
+                   << std::endl;
+            }
+        }
+        return ss.str();
+    }
+
 private:
     struct Node {
         Key key;
         Value value;
-        bool valid = false;
+        int pre = -1;
         int next = -1;
+
+        void Clear() {
+            key = Key();
+            value = Value();
+            pre = -1;
+            next = -1;
+        }
     };
 
-    int mainposition(const Key &key) const {
-        return Hash()(key) % m_nodes.size();
+    int MainPosition(const Key &key) const {
+        return Hash()(key) % m_size;
     }
 
-    int getfreeposition() {
-        while (m_lastfree >= 0) {
-            if (!m_nodes[m_lastfree].valid) {
-                return m_lastfree;
-            }
-            m_lastfree--;
+    bool Valid(int index) const {
+        return m_bitmap->Test(index);
+    }
+
+    int GetFreePosition() {
+        if (m_free == -1) {
+            return -1;
         }
-        return -1;
+        auto ret = m_free;
+        auto next = m_nodes[m_free].next;
+        if (next != -1) {
+            m_nodes[next].pre = -1;
+        }
+        m_free = next;
+        m_nodes[ret].Clear();
+        return ret;
     }
 
-    int findNext(int n) {
+    int FindNextCapacity(int n) {
         int size = sizeof(primes) / sizeof(primes[0]);
         int left = 0;
         int right = size - 1;
@@ -838,25 +955,41 @@ private:
         return (left < size) ? primes[left] : -1;  // 如果n大于数组中的所有质数，返回-1
     }
 
-    int rehash() {
-        auto size = findNext(m_nodes.size() + 1);
+    void InitFreeList() {
+        for (int i = 0; i < m_size - 1; i++) {
+            m_nodes[i + 1].pre = i;
+            m_nodes[i].next = i + 1;
+        }
+        m_nodes[0].pre = -1;
+        m_nodes[m_size - 1].next = -1;
+        m_free = 0;
+    }
+
+    int Rehash() {
+        auto size = FindNextCapacity(Capacity() + 1);
         if (size == -1) {
             return -1;
         }
-        std::vector<Node> oldnodes = std::move(m_nodes);
-        m_nodes = std::vector<Node>(size);
-        m_lastfree = size - 1;
-        for (auto &node: oldnodes) {
-            if (node.valid) {
-                insert(node.key, node.value);
-            }
+        auto oldnodes = m_nodes;
+        auto oldsize = m_size;
+        auto oldbitmap = m_bitmap;
+        m_nodes = new Node[size];
+        m_size = size;
+        InitFreeList();
+        m_bitmap = new BitMap(size);
+        for (int i = 0; i < oldsize; i++) {
+            Insert(oldnodes[i].key, oldnodes[i].value);
         }
+        delete oldbitmap;
+        delete[] oldnodes;
         return 0;
     }
 
 private:
-    int m_lastfree = 0;
-    std::vector<Node> m_nodes;
+    int m_free = 0; // free list head
+    int m_size = 0;
+    Node *m_nodes;
+    BitMap *m_bitmap;
 };
 
 class Map : public RefCntObj {
