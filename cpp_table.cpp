@@ -535,6 +535,46 @@ static int cpp_table_delete_container(lua_State *L) {
     return 0;
 }
 
+template<typename T, typename V>
+void lua_push_helper(lua_State *L, V v, T value) {
+    static_assert(true, "lua_push_helper: invalid type");
+}
+
+template<typename V>
+void lua_push_helper(lua_State *L, V v, int32_t value) {
+    lua_pushinteger(L, value);
+}
+
+template<typename V>
+void lua_push_helper(lua_State *L, V v, uint32_t value) {
+    lua_pushinteger(L, value);
+}
+
+template<typename V>
+void lua_push_helper(lua_State *L, V v, int64_t value) {
+    lua_pushinteger(L, value);
+}
+
+template<typename V>
+void lua_push_helper(lua_State *L, V v, uint64_t value) {
+    lua_pushinteger(L, value);
+}
+
+template<typename V>
+void lua_push_helper(lua_State *L, V v, bool value) {
+    lua_pushboolean(L, value);
+}
+
+template<typename V>
+void lua_push_helper(lua_State *L, V v, float value) {
+    lua_pushnumber(L, value);
+}
+
+template<typename V>
+void lua_push_helper(lua_State *L, V v, double value) {
+    lua_pushnumber(L, value);
+}
+
 template<typename T>
 int cpp_table_container_get_normal(lua_State *L) {
     auto pointer = lua_touserdata(L, 1);
@@ -559,6 +599,7 @@ int cpp_table_container_get_normal(lua_State *L) {
         lua_pushnil(L);
         return 1;
     }
+#if ((defined(_MSVC_LANG) && _MSVC_LANG >= 201703L) || __cplusplus >= 201703L)
     if constexpr (std::is_same<T, int32_t>::value || std::is_same<T, uint32_t>::value ||
                   std::is_same<T, int64_t>::value || std::is_same<T, uint64_t>::value) {
         lua_pushinteger(L, value);
@@ -571,7 +612,93 @@ int cpp_table_container_get_normal(lua_State *L) {
                    typeid(T).name());
         return 0;
     }
+#else
+    lua_push_helper(L, container, value);
+#endif
     return 1;
+}
+
+
+template<typename T>
+int lua_get_type(lua_State *L) {
+    static_assert(true, "lua_get_type: invalid type");
+    return LUA_TNIL;
+}
+
+template<>
+int lua_get_type<int32_t>(lua_State *L) {
+    return LUA_TNUMBER;
+}
+
+template<>
+int lua_get_type<uint32_t>(lua_State *L) {
+    return LUA_TNUMBER;
+}
+
+template<>
+int lua_get_type<int64_t>(lua_State *L) {
+    return LUA_TNUMBER;
+}
+
+template<>
+int lua_get_type<uint64_t>(lua_State *L) {
+    return LUA_TNUMBER;
+}
+
+template<>
+int lua_get_type<bool>(lua_State *L) {
+    return LUA_TBOOLEAN;
+}
+
+template<>
+int lua_get_type<float>(lua_State *L) {
+    return LUA_TNUMBER;
+}
+
+template<>
+int lua_get_type<double>(lua_State *L) {
+    return LUA_TNUMBER;
+}
+
+template<typename T, typename V>
+T lua_get_helper(lua_State *L, V v, int pos) {
+    static_assert(true, "lua_get_helper: invalid type");
+    return T();
+}
+
+template<typename V>
+int32_t lua_get_helper(lua_State *L, V v, int pos) {
+    return lua_tointeger(L, pos);
+}
+
+template<typename V>
+uint32_t lua_get_helper(lua_State *L, V v, int pos) {
+    return lua_tointeger(L, pos);
+}
+
+template<typename V>
+int64_t lua_get_helper(lua_State *L, V v, int pos) {
+    return lua_tointeger(L, pos);
+}
+
+template<typename V>
+uint64_t lua_get_helper(lua_State *L, V v, int pos) {
+    return lua_tointeger(L, pos);
+}
+
+template<typename V>
+bool lua_get_helper(lua_State *L, V v, int pos) {
+    return lua_toboolean(L, pos);
+}
+
+template<typename V>
+float lua_get_helper(lua_State *L, V v, int pos) {
+    return lua_tonumber(L, pos);
+}
+
+template<typename V>
+double lua_get_helper(lua_State *L, V v, int pos) {
+    return lua_tonumber(L, pos);
 }
 
 template<typename T>
@@ -589,6 +716,7 @@ int cpp_table_container_set_normal(lua_State *L) {
         return 0;
     }
     bool ret = false;
+#if ((defined(_MSVC_LANG) && _MSVC_LANG >= 201703L) || __cplusplus >= 201703L)
     if constexpr (std::is_same<T, int32_t>::value || std::is_same<T, uint32_t>::value ||
                   std::is_same<T, int64_t>::value || std::is_same<T, uint64_t>::value) {
         if (lua_type(L, 3) != LUA_TNUMBER && lua_type(L, 3) != LUA_TNIL) {
@@ -616,6 +744,14 @@ int cpp_table_container_set_normal(lua_State *L) {
                    typeid(T).name());
         return 0;
     }
+#else
+    if (lua_type(L, 3) != lua_get_type<T>(L) && lua_type(L, 3) != LUA_TNIL) {
+        luaL_error(L, "cpp_table_container_set_normal: invalid value type %d", lua_type(L, 3));
+        return 0;
+    }
+    T value = lua_get_helper<T>(L, container, 3);
+    ret = container->Set<T>(idx, value, is_nil);
+#endif
     if (!ret) {
         luaL_error(L, "cpp_table_container_set_normal: %s invalid idx %d", container->GetName().data(), idx);
         return 0;
@@ -971,6 +1107,7 @@ int cpp_table_array_container_get_normal(lua_State *L) {
         lua_pushnil(L);
         return 1;
     }
+#if ((defined(_MSVC_LANG) && _MSVC_LANG >= 201703L) || __cplusplus >= 201703L)
     if constexpr (std::is_same<T, int32_t>::value || std::is_same<T, uint32_t>::value ||
                   std::is_same<T, int64_t>::value || std::is_same<T, uint64_t>::value) {
         lua_pushinteger(L, value);
@@ -983,6 +1120,9 @@ int cpp_table_array_container_get_normal(lua_State *L) {
                    typeid(T).name());
         return 0;
     }
+#else
+    lua_push_helper(L, array, value);
+#endif
     return 1;
 }
 
@@ -1001,6 +1141,7 @@ int cpp_table_array_container_set_normal(lua_State *L) {
         return 0;
     }
     bool ret = false;
+#if ((defined(_MSVC_LANG) && _MSVC_LANG >= 201703L) || __cplusplus >= 201703L)
     if constexpr (std::is_same<T, int32_t>::value || std::is_same<T, uint32_t>::value ||
                   std::is_same<T, int64_t>::value || std::is_same<T, uint64_t>::value) {
         if (lua_type(L, 3) != LUA_TNUMBER && lua_type(L, 3) != LUA_TNIL) {
@@ -1028,6 +1169,14 @@ int cpp_table_array_container_set_normal(lua_State *L) {
                    typeid(T).name());
         return 0;
     }
+#else
+    if (lua_type(L, 3) != lua_get_type<T>(L) && lua_type(L, 3) != LUA_TNIL) {
+        luaL_error(L, "cpp_table_array_container_set_normal: invalid value type %d", lua_type(L, 3));
+        return 0;
+    }
+    T value = lua_get_helper<T>(L, array, 3);
+    ret = array->Set<T>(idx, value, is_nil);
+#endif
     if (!ret) {
         luaL_error(L, "cpp_table_array_container_set_normal: %s invalid idx %d", array->GetName().data(), idx);
         return 0;
@@ -1197,6 +1346,27 @@ static int cpp_table_create_map_container(lua_State *L) {
 }
 
 template<typename K>
+Map::MapValue32 map_get_32(MapPtr map, K key, bool &is_nil) {
+    static_assert(true, "map_get_32: invalid type");
+    return Map::MapValue32();
+}
+
+template<>
+Map::MapValue32 map_get_32<int32_t>(MapPtr map, int32_t key, bool &is_nil) {
+    return map->Get32by32(key, is_nil);
+}
+
+template<>
+Map::MapValue32 map_get_32<int64_t>(MapPtr map, int64_t key, bool &is_nil) {
+    return map->Get32by64(key, is_nil);
+}
+
+template<>
+Map::MapValue32 map_get_32<StringPtr>(MapPtr map, StringPtr key, bool &is_nil) {
+    return map->Get32byString(key, is_nil);
+}
+
+template<typename K>
 Map::MapValue32 cpp_table_map_container_get_map_value32(MapPtr map, K key, bool &is_nil) {// no data, just return nil
     if (!map->GetMap().m_void) {
         is_nil = true;
@@ -1204,6 +1374,7 @@ Map::MapValue32 cpp_table_map_container_get_map_value32(MapPtr map, K key, bool 
     }
 
     Map::MapValue32 ret;
+#if ((defined(_MSVC_LANG) && _MSVC_LANG >= 201703L) || __cplusplus >= 201703L)
     if constexpr (std::is_same<K, int32_t>::value) {
         ret = map->Get32by32(key, is_nil);
     } else if constexpr (std::is_same<K, int64_t>::value) {
@@ -1211,7 +1382,31 @@ Map::MapValue32 cpp_table_map_container_get_map_value32(MapPtr map, K key, bool 
     } else {
         ret = map->Get32byString(key, is_nil);
     }
+#else
+    ret = map_get_32<K>(map, key, is_nil);
+#endif
     return ret;
+}
+
+template<typename K>
+Map::MapValue64 map_get_64(MapPtr map, K key, bool &is_nil) {
+    static_assert(true, "map_get_64: invalid type");
+    return Map::MapValue64();
+}
+
+template<>
+Map::MapValue64 map_get_64<int32_t>(MapPtr map, int32_t key, bool &is_nil) {
+    return map->Get64by32(key, is_nil);
+}
+
+template<>
+Map::MapValue64 map_get_64<int64_t>(MapPtr map, int64_t key, bool &is_nil) {
+    return map->Get64by64(key, is_nil);
+}
+
+template<>
+Map::MapValue64 map_get_64<StringPtr>(MapPtr map, StringPtr key, bool &is_nil) {
+    return map->Get64byString(key, is_nil);
 }
 
 template<typename K>
@@ -1222,6 +1417,7 @@ Map::MapValue64 cpp_table_map_container_get_map_value64(MapPtr map, K key, bool 
     }
 
     Map::MapValue64 ret;
+#if ((defined(_MSVC_LANG) && _MSVC_LANG >= 201703L) || __cplusplus >= 201703L)
     if constexpr (std::is_same<K, int32_t>::value) {
         ret = map->Get64by32(key, is_nil);
     } else if constexpr (std::is_same<K, int64_t>::value) {
@@ -1229,6 +1425,9 @@ Map::MapValue64 cpp_table_map_container_get_map_value64(MapPtr map, K key, bool 
     } else {
         ret = map->Get64byString(key, is_nil);
     }
+#else
+    ret = map_get_64<K>(map, key, is_nil);
+#endif
     return ret;
 }
 
@@ -1377,7 +1576,28 @@ static int cpp_table_map_container_get(lua_State *L) {
 }
 
 template<typename K>
+void map_set_32(MapPtr map, K key, Map::MapValue32 value) {
+    static_assert(true, "map_set_32: invalid type");
+}
+
+template<>
+void map_set_32<int32_t>(MapPtr map, int32_t key, Map::MapValue32 value) {
+    map->Set32by32(key, value);
+}
+
+template<>
+void map_set_32<int64_t>(MapPtr map, int64_t key, Map::MapValue32 value) {
+    map->Set32by64(key, value);
+}
+
+template<>
+void map_set_32<StringPtr>(MapPtr map, StringPtr key, Map::MapValue32 value) {
+    map->Set32byString(key, value);
+}
+
+template<typename K>
 void cpp_table_map_container_set_map_value32(MapPtr map, K key, Map::MapValue32 value) {
+#if ((defined(_MSVC_LANG) && _MSVC_LANG >= 201703L) || __cplusplus >= 201703L)
     if constexpr (std::is_same<K, int32_t>::value) {
         map->Set32by32(key, value);
     } else if constexpr (std::is_same<K, int64_t>::value) {
@@ -1385,10 +1605,34 @@ void cpp_table_map_container_set_map_value32(MapPtr map, K key, Map::MapValue32 
     } else {
         map->Set32byString(key, value);
     }
+#else
+    map_set_32<K>(map, key, value);
+#endif
+}
+
+template<typename K>
+void map_set_64(MapPtr map, K key, Map::MapValue64 value) {
+    static_assert(true, "map_set_64: invalid type");
+}
+
+template<>
+void map_set_64<int32_t>(MapPtr map, int32_t key, Map::MapValue64 value) {
+    map->Set64by32(key, value);
+}
+
+template<>
+void map_set_64<int64_t>(MapPtr map, int64_t key, Map::MapValue64 value) {
+    map->Set64by64(key, value);
+}
+
+template<>
+void map_set_64<StringPtr>(MapPtr map, StringPtr key, Map::MapValue64 value) {
+    map->Set64byString(key, value);
 }
 
 template<typename K>
 void cpp_table_map_container_set_map_value64(MapPtr map, K key, Map::MapValue64 value) {
+#if ((defined(_MSVC_LANG) && _MSVC_LANG >= 201703L) || __cplusplus >= 201703L)
     if constexpr (std::is_same<K, int32_t>::value) {
         map->Set64by32(key, value);
     } else if constexpr (std::is_same<K, int64_t>::value) {
@@ -1396,6 +1640,29 @@ void cpp_table_map_container_set_map_value64(MapPtr map, K key, Map::MapValue64 
     } else {
         map->Set64byString(key, value);
     }
+#else
+    map_set_64<K>(map, key, value);
+#endif
+}
+
+template<typename K>
+void map_del_32(MapPtr map, K key) {
+    static_assert(true, "map_del_32: invalid type");
+}
+
+template<>
+void map_del_32<int32_t>(MapPtr map, int32_t key) {
+    map->Remove32by32(key);
+}
+
+template<>
+void map_del_32<int64_t>(MapPtr map, int64_t key) {
+    map->Remove32by64(key);
+}
+
+template<>
+void map_del_32<StringPtr>(MapPtr map, StringPtr key) {
+    map->Remove32byString(key);
 }
 
 template<typename K>
@@ -1403,6 +1670,7 @@ void cpp_table_map_container_remove_map_value32(MapPtr map, K key) {
     if (!map->GetMap().m_void) {
         return;
     }
+#if ((defined(_MSVC_LANG) && _MSVC_LANG >= 201703L) || __cplusplus >= 201703L)
     if constexpr (std::is_same<K, int32_t>::value) {
         map->Remove32by32(key);
     } else if constexpr (std::is_same<K, int64_t>::value) {
@@ -1410,6 +1678,29 @@ void cpp_table_map_container_remove_map_value32(MapPtr map, K key) {
     } else {
         map->Remove32byString(key);
     }
+#else
+    map_del_32<K>(map, key);
+#endif
+}
+
+template<typename K>
+void map_del_64(MapPtr map, K key) {
+    static_assert(true, "map_del_64: invalid type");
+}
+
+template<>
+void map_del_64<int32_t>(MapPtr map, int32_t key) {
+    map->Remove64by32(key);
+}
+
+template<>
+void map_del_64<int64_t>(MapPtr map, int64_t key) {
+    map->Remove64by64(key);
+}
+
+template<>
+void map_del_64<StringPtr>(MapPtr map, StringPtr key) {
+    map->Remove64byString(key);
 }
 
 template<typename K>
@@ -1417,6 +1708,7 @@ void cpp_table_map_container_remove_map_value64(MapPtr map, K key) {
     if (!map->GetMap().m_void) {
         return;
     }
+#if ((defined(_MSVC_LANG) && _MSVC_LANG >= 201703L) || __cplusplus >= 201703L)
     if constexpr (std::is_same<K, int32_t>::value) {
         map->Remove64by32(key);
     } else if constexpr (std::is_same<K, int64_t>::value) {
@@ -1424,6 +1716,9 @@ void cpp_table_map_container_remove_map_value64(MapPtr map, K key) {
     } else {
         map->Remove64byString(key);
     }
+#else
+    map_del_64<K>(map, key);
+#endif
 }
 
 template<typename K>
