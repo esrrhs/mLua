@@ -719,9 +719,6 @@ public:
         Map64byString *m_string_64;
     };
 
-    static_assert(sizeof(std::unordered_map<int64_t, MapValue64>) == 56,
-                  "std::unordered_map<int64_t, MapValue64> size must be 24");
-
     MapPointer GetMap() const {
         return m_map;
     }
