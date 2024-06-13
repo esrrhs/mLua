@@ -222,6 +222,33 @@ local function test_benchmark_cpp_simple_string()
     pause()
 end
 
+local function test_benchmark_lua_array_string()
+    print("start test_benchmark_lua_array_string")
+    local player = {
+        emails = { },
+    }
+    for i = 1, 1000000 do
+        table.insert(player.emails, "s" .. i)
+    end
+    gc()
+    print("lua memory " .. collectgarbage("count") / 1024 .. "MB")
+    pause()
+end
+
+local function test_benchmark_cpp_array_string()
+    print("start test_benchmark_cpp_array_string")
+    local player = {
+        emails = { },
+    }
+    for i = 1, 1000000 do
+        table.insert(player.emails, "s" .. i)
+    end
+    player = _G.cpp_table_sink("Player", player)
+    gc()
+    print("cpp memory " .. collectgarbage("count") / 1024 .. "MB")
+    pause()
+end
+
 _G.cpp_table_load_proto(_G.CPP_TABLE_PROTO)
 
 print("Please input test type: ")
@@ -234,6 +261,8 @@ print("  6: test_benchmark_lua_array")
 print("  7: test_benchmark_cpp_array")
 print("  8: test_benchmark_lua_simple_string")
 print("  9: test_benchmark_cpp_simple_string")
+print(" 10: test_benchmark_lua_array_string")
+print(" 11: test_benchmark_cpp_array_string")
 
 local type = io.read()
 while true do
@@ -257,6 +286,10 @@ while true do
         test_benchmark_lua_simple_string()
     elseif type == "9" then
         test_benchmark_cpp_simple_string()
+    elseif type == "10" then
+        test_benchmark_lua_array_string()
+    elseif type == "11" then
+        test_benchmark_cpp_array_string()
     else
         print("Invalid test type")
         break

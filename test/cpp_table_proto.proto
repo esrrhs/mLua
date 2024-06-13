@@ -14,6 +14,7 @@ message Player {
   Pet pet = 7;
   map<string, Friend> friends = 8;
   map<int32, int32> params = 9;
+  repeated string emails = 10;
 }
 
 message Item {

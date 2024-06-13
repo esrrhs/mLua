@@ -10,6 +10,7 @@ _G.CPP_TABLE_PROTO.Player = {
     pet = { type = "normal", key = "Pet", tag = 7, size = 9, shared = 1 },
     friends = { type = "map", key = "string", value = "Friend", tag = 8, size = 9, shared = 1 },
     params = { type = "map", key = "int32", value = "int32", tag = 9, size = 9, shared = 1 },
+    emails = { type = "array", key = "string", tag = 10, size = 9, shared = 1, key_size = 9, key_shared = 1 },
 }
 _G.CPP_TABLE_PROTO.Item = {
     id = { type = "normal", key = "int64", tag = 1, size = 9, shared = 0 },
