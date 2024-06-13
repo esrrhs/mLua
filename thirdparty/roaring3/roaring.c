@@ -1,5 +1,5 @@
 // !!! DO NOT EDIT - THIS IS AN AUTO-GENERATED FILE !!!
-// Created by amalgamation.sh on 2024-05-13T21:29:25Z
+// Created by amalgamation.sh on 2024-03-20T03:56:45Z
 
 /*
  * The CRoaring project is under a dual license (Apache/MIT).
@@ -259,8 +259,8 @@ PPDerived movable_CAST_HELPER(Base **ptr_to_ptr) {
 #endif /* INCLUDE_CONTAINERS_CONTAINER_DEFS_H_ */
 /* end file include/roaring/containers/container_defs.h */
 /* begin file include/roaring/array_util.h */
-#ifndef CROARING_ARRAY_UTIL_H
-#define CROARING_ARRAY_UTIL_H
+#ifndef ARRAY_UTIL_H
+#define ARRAY_UTIL_H
 
 #include <stddef.h>  // for size_t
 #include <stdint.h>
@@ -615,8 +615,8 @@ namespace roaring {
 #endif /* INCLUDE_UTILASM_H_ */
 /* end file include/roaring/utilasm.h */
 /* begin file include/roaring/bitset_util.h */
-#ifndef CROARING_BITSET_UTIL_H
-#define CROARING_BITSET_UTIL_H
+#ifndef BITSET_UTIL_H
+#define BITSET_UTIL_H
 
 #include <stdint.h>
 
@@ -668,16 +668,16 @@ static inline int bitset_lenrange_cardinality(const uint64_t *words,
     if (firstword == endword) {
         return roaring_hamming(words[firstword] &
                                ((~UINT64_C(0)) >> ((63 - lenminusone) % 64))
-                                   << (start % 64));
+                                       << (start % 64));
     }
     int answer =
-        roaring_hamming(words[firstword] & ((~UINT64_C(0)) << (start % 64)));
+            roaring_hamming(words[firstword] & ((~UINT64_C(0)) << (start % 64)));
     for (uint32_t i = firstword + 1; i < endword; i++) {
         answer += roaring_hamming(words[i]);
     }
     answer += roaring_hamming(words[endword] &
                               (~UINT64_C(0)) >>
-                                  (((~start + 1) - lenminusone - 1) % 64));
+                                             (((~start + 1) - lenminusone - 1) % 64));
     return answer;
 }
 
@@ -690,7 +690,7 @@ static inline bool bitset_lenrange_empty(const uint64_t *words, uint32_t start,
     uint32_t endword = (start + lenminusone) / 64;
     if (firstword == endword) {
         return (words[firstword] & ((~UINT64_C(0)) >> ((63 - lenminusone) % 64))
-                                       << (start % 64)) == 0;
+                << (start % 64)) == 0;
     }
     if (((words[firstword] & ((~UINT64_C(0)) << (start % 64)))) != 0) {
         return false;
@@ -716,7 +716,7 @@ static inline void bitset_set_lenrange(uint64_t *words, uint32_t start,
     uint32_t endword = (start + lenminusone) / 64;
     if (firstword == endword) {
         words[firstword] |= ((~UINT64_C(0)) >> ((63 - lenminusone) % 64))
-                            << (start % 64);
+                << (start % 64);
         return;
     }
     uint64_t temp = words[endword];
@@ -724,7 +724,7 @@ static inline void bitset_set_lenrange(uint64_t *words, uint32_t start,
     for (uint32_t i = firstword + 1; i < endword; i += 2)
         words[i] = words[i + 1] = ~UINT64_C(0);
     words[endword] =
-        temp | (~UINT64_C(0)) >> (((~start + 1) - lenminusone - 1) % 64);
+            temp | (~UINT64_C(0)) >> (((~start + 1) - lenminusone - 1) % 64);
 }
 
 /*
@@ -844,8 +844,8 @@ size_t bitset_extract_setbits_uint16(const uint64_t *words, size_t length,
  * Returns how many values were actually decoded.
  */
 size_t bitset_extract_intersection_setbits_uint16(
-    const uint64_t *__restrict__ words1, const uint64_t *__restrict__ words2,
-    size_t length, uint16_t *out, uint16_t base);
+        const uint64_t *__restrict__ words1, const uint64_t *__restrict__ words2,
+        size_t length, uint16_t *out, uint16_t base);
 
 /*
  * Given a bitset having cardinality card, set all bit values in the list (there
@@ -893,25 +893,25 @@ CROARING_TARGET_AVX2
  */
 static inline __m256i popcount256(__m256i v) {
     const __m256i lookuppos = _mm256_setr_epi8(
-        /* 0 */ 4 + 0, /* 1 */ 4 + 1, /* 2 */ 4 + 1, /* 3 */ 4 + 2,
-        /* 4 */ 4 + 1, /* 5 */ 4 + 2, /* 6 */ 4 + 2, /* 7 */ 4 + 3,
-        /* 8 */ 4 + 1, /* 9 */ 4 + 2, /* a */ 4 + 2, /* b */ 4 + 3,
-        /* c */ 4 + 2, /* d */ 4 + 3, /* e */ 4 + 3, /* f */ 4 + 4,
+            /* 0 */ 4 + 0, /* 1 */ 4 + 1, /* 2 */ 4 + 1, /* 3 */ 4 + 2,
+            /* 4 */ 4 + 1, /* 5 */ 4 + 2, /* 6 */ 4 + 2, /* 7 */ 4 + 3,
+            /* 8 */ 4 + 1, /* 9 */ 4 + 2, /* a */ 4 + 2, /* b */ 4 + 3,
+            /* c */ 4 + 2, /* d */ 4 + 3, /* e */ 4 + 3, /* f */ 4 + 4,
 
-        /* 0 */ 4 + 0, /* 1 */ 4 + 1, /* 2 */ 4 + 1, /* 3 */ 4 + 2,
-        /* 4 */ 4 + 1, /* 5 */ 4 + 2, /* 6 */ 4 + 2, /* 7 */ 4 + 3,
-        /* 8 */ 4 + 1, /* 9 */ 4 + 2, /* a */ 4 + 2, /* b */ 4 + 3,
-        /* c */ 4 + 2, /* d */ 4 + 3, /* e */ 4 + 3, /* f */ 4 + 4);
+            /* 0 */ 4 + 0, /* 1 */ 4 + 1, /* 2 */ 4 + 1, /* 3 */ 4 + 2,
+            /* 4 */ 4 + 1, /* 5 */ 4 + 2, /* 6 */ 4 + 2, /* 7 */ 4 + 3,
+            /* 8 */ 4 + 1, /* 9 */ 4 + 2, /* a */ 4 + 2, /* b */ 4 + 3,
+            /* c */ 4 + 2, /* d */ 4 + 3, /* e */ 4 + 3, /* f */ 4 + 4);
     const __m256i lookupneg = _mm256_setr_epi8(
-        /* 0 */ 4 - 0, /* 1 */ 4 - 1, /* 2 */ 4 - 1, /* 3 */ 4 - 2,
-        /* 4 */ 4 - 1, /* 5 */ 4 - 2, /* 6 */ 4 - 2, /* 7 */ 4 - 3,
-        /* 8 */ 4 - 1, /* 9 */ 4 - 2, /* a */ 4 - 2, /* b */ 4 - 3,
-        /* c */ 4 - 2, /* d */ 4 - 3, /* e */ 4 - 3, /* f */ 4 - 4,
+            /* 0 */ 4 - 0, /* 1 */ 4 - 1, /* 2 */ 4 - 1, /* 3 */ 4 - 2,
+            /* 4 */ 4 - 1, /* 5 */ 4 - 2, /* 6 */ 4 - 2, /* 7 */ 4 - 3,
+            /* 8 */ 4 - 1, /* 9 */ 4 - 2, /* a */ 4 - 2, /* b */ 4 - 3,
+            /* c */ 4 - 2, /* d */ 4 - 3, /* e */ 4 - 3, /* f */ 4 - 4,
 
-        /* 0 */ 4 - 0, /* 1 */ 4 - 1, /* 2 */ 4 - 1, /* 3 */ 4 - 2,
-        /* 4 */ 4 - 1, /* 5 */ 4 - 2, /* 6 */ 4 - 2, /* 7 */ 4 - 3,
-        /* 8 */ 4 - 1, /* 9 */ 4 - 2, /* a */ 4 - 2, /* b */ 4 - 3,
-        /* c */ 4 - 2, /* d */ 4 - 3, /* e */ 4 - 3, /* f */ 4 - 4);
+            /* 0 */ 4 - 0, /* 1 */ 4 - 1, /* 2 */ 4 - 1, /* 3 */ 4 - 2,
+            /* 4 */ 4 - 1, /* 5 */ 4 - 2, /* 6 */ 4 - 2, /* 7 */ 4 - 3,
+            /* 8 */ 4 - 1, /* 9 */ 4 - 2, /* a */ 4 - 2, /* b */ 4 - 3,
+            /* c */ 4 - 2, /* d */ 4 - 3, /* e */ 4 - 3, /* f */ 4 - 4);
     const __m256i low_mask = _mm256_set1_epi8(0x0f);
 
     const __m256i lo = _mm256_and_si256(v, low_mask);
@@ -981,15 +981,15 @@ inline static uint64_t avx2_harley_seal_popcount256(const __m256i *data,
 
     total = _mm256_slli_epi64(total, 4);  // * 16
     total = _mm256_add_epi64(
-        total, _mm256_slli_epi64(popcount256(eights), 3));  // += 8 * ...
+            total, _mm256_slli_epi64(popcount256(eights), 3));  // += 8 * ...
     total = _mm256_add_epi64(
-        total, _mm256_slli_epi64(popcount256(fours), 2));  // += 4 * ...
+            total, _mm256_slli_epi64(popcount256(fours), 2));  // += 4 * ...
     total = _mm256_add_epi64(
-        total, _mm256_slli_epi64(popcount256(twos), 1));  // += 2 * ...
+            total, _mm256_slli_epi64(popcount256(twos), 1));  // += 2 * ...
     total = _mm256_add_epi64(total, popcount256(ones));
     for (; i < size; i++)
         total =
-            _mm256_add_epi64(total, popcount256(_mm256_lddqu_si256(data + i)));
+                _mm256_add_epi64(total, popcount256(_mm256_lddqu_si256(data + i)));
 
     return (uint64_t)(_mm256_extract_epi64(total, 0)) +
            (uint64_t)(_mm256_extract_epi64(total, 1)) +
@@ -998,7 +998,7 @@ inline static uint64_t avx2_harley_seal_popcount256(const __m256i *data,
 }
 CROARING_UNTARGET_AVX2
 
-#define CROARING_AVXPOPCNTFNC(opname, avx_intrinsic)                           \
+#define AVXPOPCNTFNC(opname, avx_intrinsic)                                    \
     static inline uint64_t avx2_harley_seal_popcount256_##opname(              \
         const __m256i *data1, const __m256i *data2, const uint64_t size) {     \
         __m256i total = _mm256_setzero_si256();                                \
@@ -1179,27 +1179,27 @@ CROARING_UNTARGET_AVX2
     }
 
 CROARING_TARGET_AVX2
-CROARING_AVXPOPCNTFNC(or, _mm256_or_si256)
+AVXPOPCNTFNC(or, _mm256_or_si256)
 CROARING_UNTARGET_AVX2
 
 CROARING_TARGET_AVX2
-CROARING_AVXPOPCNTFNC(union, _mm256_or_si256)
+AVXPOPCNTFNC(union, _mm256_or_si256)
 CROARING_UNTARGET_AVX2
 
 CROARING_TARGET_AVX2
-CROARING_AVXPOPCNTFNC(and, _mm256_and_si256)
+AVXPOPCNTFNC(and, _mm256_and_si256)
 CROARING_UNTARGET_AVX2
 
 CROARING_TARGET_AVX2
-CROARING_AVXPOPCNTFNC(intersection, _mm256_and_si256)
+AVXPOPCNTFNC(intersection, _mm256_and_si256)
 CROARING_UNTARGET_AVX2
 
 CROARING_TARGET_AVX2
-CROARING_AVXPOPCNTFNC(xor, _mm256_xor_si256)
+AVXPOPCNTFNC(xor, _mm256_xor_si256)
 CROARING_UNTARGET_AVX2
 
 CROARING_TARGET_AVX2
-CROARING_AVXPOPCNTFNC(andnot, _mm256_andnot_si256)
+AVXPOPCNTFNC(andnot, _mm256_andnot_si256)
 CROARING_UNTARGET_AVX2
 
 #define VPOPCNT_AND_ADD(ptr, i, accu)                                  \
@@ -1238,7 +1238,7 @@ static inline uint64_t avx512_vpopcount(const __m512i *data,
 
     for (; i < size; i++) {
         total = _mm512_add_epi64(
-            total, _mm512_popcnt_epi64(_mm512_loadu_si512(data + i)));
+                total, _mm512_popcnt_epi64(_mm512_loadu_si512(data + i)));
     }
 
     return simd_sum_epu64(total);
@@ -1246,7 +1246,7 @@ static inline uint64_t avx512_vpopcount(const __m512i *data,
 CROARING_UNTARGET_AVX512
 #endif
 
-#define CROARING_AVXPOPCNTFNC512(opname, avx_intrinsic)                       \
+#define AVXPOPCNTFNC512(opname, avx_intrinsic)                                \
     static inline uint64_t avx512_harley_seal_popcount512_##opname(           \
         const __m512i *data1, const __m512i *data2, const uint64_t size) {    \
         __m512i total = _mm512_setzero_si512();                               \
@@ -1308,12 +1308,12 @@ CROARING_UNTARGET_AVX512
 
 #if CROARING_COMPILER_SUPPORTS_AVX512
 CROARING_TARGET_AVX512
-CROARING_AVXPOPCNTFNC512(or, _mm512_or_si512)
-CROARING_AVXPOPCNTFNC512(union, _mm512_or_si512)
-CROARING_AVXPOPCNTFNC512(and, _mm512_and_si512)
-CROARING_AVXPOPCNTFNC512(intersection, _mm512_and_si512)
-CROARING_AVXPOPCNTFNC512(xor, _mm512_xor_si512)
-CROARING_AVXPOPCNTFNC512(andnot, _mm512_andnot_si512)
+AVXPOPCNTFNC512(or, _mm512_or_si512)
+AVXPOPCNTFNC512(union, _mm512_or_si512)
+AVXPOPCNTFNC512(and, _mm512_and_si512)
+AVXPOPCNTFNC512(intersection, _mm512_and_si512)
+AVXPOPCNTFNC512(xor, _mm512_xor_si512)
+AVXPOPCNTFNC512(andnot, _mm512_andnot_si512)
 CROARING_UNTARGET_AVX512
 #endif
 /***
@@ -1407,7 +1407,7 @@ static inline int array_container_cardinality(const array_container_t *array) {
 }
 
 static inline bool array_container_nonzero_cardinality(
-    const array_container_t *array) {
+        const array_container_t *array) {
     return array->cardinality > 0;
 }
 
@@ -1541,7 +1541,7 @@ int32_t array_container_read(int32_t cardinality, array_container_t *container,
  */
 ALLOW_UNALIGNED
 static inline int32_t array_container_size_in_bytes(
-    const array_container_t *container) {
+        const array_container_t *container) {
     return container->cardinality * sizeof(uint16_t);
 }
 
@@ -1713,7 +1713,7 @@ static inline bool array_container_contains_range(const array_container_t *arr,
     }
 
     const int32_t start =
-        binarySearch(arr->array, arr->cardinality, rs_included);
+            binarySearch(arr->array, arr->cardinality, rs_included);
     // If this sorted array contains all items in the range:
     // * the start item must be found
     // * the last item in range range_count must exist, and be the expected end
@@ -1760,7 +1760,7 @@ inline uint32_t array_container_rank_many(const array_container_t *arr,
         if (xhigh != high) return iter - begin;  // stop at next container
 
         const int32_t idx =
-            binarySearch(arr->array + pos, arr->cardinality - pos, (uint16_t)x);
+                binarySearch(arr->array + pos, arr->cardinality - pos, (uint16_t)x);
         const bool is_present = idx >= 0;
         if (is_present) {
             *(ans++) = start_rank + pos + (idx + 1);
@@ -2078,14 +2078,14 @@ inline bool bitset_container_contains(const bitset_container_t *bitset,
  * `pos_end' (excluded) is present in `bitset'.  Calls bitset_container_get_all.
  */
 static inline bool bitset_container_contains_range(
-    const bitset_container_t *bitset, uint32_t pos_start, uint32_t pos_end) {
+        const bitset_container_t *bitset, uint32_t pos_start, uint32_t pos_end) {
     return bitset_container_get_range(bitset, pos_start, pos_end);
 }
 
 /* Get the number of bits set */
 ALLOW_UNALIGNED
 static inline int bitset_container_cardinality(
-    const bitset_container_t *bitset) {
+        const bitset_container_t *bitset) {
     return bitset->cardinality;
 }
 
@@ -2118,7 +2118,7 @@ static inline bool bitset_container_empty(const bitset_container_t *bitset) {
 /* Get whether there is at least one bit set  (see bitset_container_empty for
    the reverse), the bitset is never modified */
 static inline bool bitset_container_const_nonzero_cardinality(
-    const bitset_container_t *bitset) {
+        const bitset_container_t *bitset) {
     return !bitset_container_empty(bitset);
 }
 
@@ -2305,7 +2305,7 @@ int32_t bitset_container_read(int32_t cardinality,
  * that the cardinality of the container is already known or can be computed.
  */
 static inline int32_t bitset_container_size_in_bytes(
-    const bitset_container_t *container) {
+        const bitset_container_t *container) {
     (void)container;
     return BITSET_CONTAINER_SIZE_IN_WORDS * sizeof(uint64_t);
 }
@@ -2406,10 +2406,10 @@ struct rle16_s {
 typedef struct rle16_s rle16_t;
 
 #ifdef __cplusplus
-#define CROARING_MAKE_RLE16(val, len) \
+#define MAKE_RLE16(val, len) \
     { (uint16_t)(val), (uint16_t)(len) }  // no tagged structs until c++20
 #else
-#define CROARING_MAKE_RLE16(val, len) \
+#define MAKE_RLE16(val, len) \
     (rle16_t) { .value = (uint16_t)(val), .length = (uint16_t)(len) }
 #endif
 
@@ -2515,7 +2515,7 @@ static inline int32_t rle16_count_less(const rle16_t *array, int32_t lenarray,
         int32_t middleIndex = (low + high) >> 1;
         uint16_t min_value = array[middleIndex].value;
         uint16_t max_value =
-            array[middleIndex].value + array[middleIndex].length;
+                array[middleIndex].value + array[middleIndex].length;
         if (max_value + UINT32_C(1) < key) {  // uint32 arithmetic
             low = middleIndex + 1;
         } else if (key < min_value) {
@@ -2536,7 +2536,7 @@ static inline int32_t rle16_count_greater(const rle16_t *array,
         int32_t middleIndex = (low + high) >> 1;
         uint16_t min_value = array[middleIndex].value;
         uint16_t max_value =
-            array[middleIndex].value + array[middleIndex].length;
+                array[middleIndex].value + array[middleIndex].length;
         if (max_value < key) {
             low = middleIndex + 1;
         } else if (key + UINT32_C(1) < min_value) {  // uint32 arithmetic
@@ -2631,7 +2631,7 @@ static inline bool run_container_contains_range(const run_container_t *run,
                                                 uint32_t pos_end) {
     uint32_t count = 0;
     int32_t index =
-        interleavedBinarySearch(run->runs, run->n_runs, (uint16_t)pos_start);
+            interleavedBinarySearch(run->runs, run->n_runs, (uint16_t)pos_start);
     if (index < 0) {
         index = -index - 2;
         if ((index == -1) ||
@@ -2644,8 +2644,8 @@ static inline bool run_container_contains_range(const run_container_t *run,
         if (run->runs[i].value >= pos_end) break;
         if (stop >= pos_end) {
             count += (((pos_end - run->runs[i].value) > 0)
-                          ? (pos_end - run->runs[i].value)
-                          : 0);
+                      ? (pos_end - run->runs[i].value)
+                      : 0);
             break;
         }
         const uint32_t min = (stop - pos_start) > 0 ? (stop - pos_start) : 0;
@@ -2659,7 +2659,7 @@ int run_container_cardinality(const run_container_t *run);
 
 /* Card > 0?, see run_container_empty for the reverse */
 static inline bool run_container_nonzero_cardinality(
-    const run_container_t *run) {
+        const run_container_t *run) {
     return run->n_runs > 0;  // runs never empty
 }
 
@@ -2721,7 +2721,7 @@ static inline void run_container_append_value(run_container_t *run,
                                               rle16_t *previousrl) {
     const uint32_t previousend = previousrl->value + previousrl->length;
     if (val > previousend + 1) {  // we add a new one
-        *previousrl = CROARING_MAKE_RLE16(val, 0);
+        *previousrl = MAKE_RLE16(val, 0);
         run->runs[run->n_runs] = *previousrl;
         run->n_runs++;
     } else if (val == previousend + 1) {  // we merge
@@ -2736,7 +2736,7 @@ static inline void run_container_append_value(run_container_t *run,
  */
 static inline rle16_t run_container_append_value_first(run_container_t *run,
                                                        uint16_t val) {
-    rle16_t newrle = CROARING_MAKE_RLE16(val, 0);
+    rle16_t newrle = MAKE_RLE16(val, 0);
     run->runs[run->n_runs] = newrle;
     run->n_runs++;
     return newrle;
@@ -2843,7 +2843,7 @@ int32_t run_container_read(int32_t cardinality, run_container_t *container,
  */
 ALLOW_UNALIGNED
 static inline int32_t run_container_size_in_bytes(
-    const run_container_t *container) {
+        const run_container_t *container) {
     return run_container_serialized_size_in_bytes(container->n_runs);
 }
 
@@ -3030,12 +3030,12 @@ static inline void run_container_remove_range(run_container_t *run,
         makeRoomAtIndex(run, (uint16_t)(first + 1));
         run->runs[first + 1].value = (uint16_t)(max + 1);
         run->runs[first + 1].length =
-            (uint16_t)((run->runs[first].value + run->runs[first].length) -
-                       (max + 1));
+                (uint16_t)((run->runs[first].value + run->runs[first].length) -
+                           (max + 1));
 
         // left subinterval
         run->runs[first].length =
-            (uint16_t)((min - 1) - run->runs[first].value);
+                (uint16_t)((min - 1) - run->runs[first].value);
 
         return;
     }
@@ -3044,7 +3044,7 @@ static inline void run_container_remove_range(run_container_t *run,
     if (first >= 0) {
         if (min > run->runs[first].value) {
             run->runs[first].length =
-                (uint16_t)((min - 1) - run->runs[first].value);
+                    (uint16_t)((min - 1) - run->runs[first].value);
             first++;
         }
     } else {
@@ -3133,7 +3133,7 @@ container_t *convert_run_to_efficient_container(run_container_t *c,
 
 // like convert_run_to_efficient_container but frees the old result if needed
 container_t *convert_run_to_efficient_container_and_free(
-    run_container_t *c, uint8_t *typecode_after);
+        run_container_t *c, uint8_t *typecode_after);
 
 /**
  * Create new container which is a union of run container and
@@ -3455,7 +3455,7 @@ void array_bitset_container_intersection(const array_container_t *src_1,
 
 /* Compute the size of the intersection of src_1 and src_2. */
 int array_bitset_container_intersection_cardinality(
-    const array_container_t *src_1, const bitset_container_t *src_2);
+        const array_container_t *src_1, const bitset_container_t *src_2);
 
 /* Checking whether src_1 and src_2 intersect. */
 bool array_bitset_container_intersect(const array_container_t *src_1,
@@ -3494,7 +3494,7 @@ int array_run_container_intersection_cardinality(const array_container_t *src_1,
 /* Compute the size of the intersection  between src_1 and src_2
  **/
 int run_bitset_container_intersection_cardinality(
-    const run_container_t *src_1, const bitset_container_t *src_2);
+        const run_container_t *src_1, const bitset_container_t *src_2);
 
 /* Check that src_1 and src_2 intersect. */
 bool array_run_container_intersect(const array_container_t *src_1,
@@ -3514,8 +3514,8 @@ bool run_bitset_container_intersect(const run_container_t *src_1,
  * In all cases, the result is in *dst.
  */
 bool bitset_bitset_container_intersection_inplace(
-    bitset_container_t *src_1, const bitset_container_t *src_2,
-    container_t **dst);
+        bitset_container_t *src_1, const bitset_container_t *src_2,
+        container_t **dst);
 
 #ifdef __cplusplus
 }
@@ -4037,7 +4037,7 @@ container_t *shared_container_extract_copy(shared_container_t *container,
 
 /* access to container underneath */
 static inline const container_t *container_unwrap_shared(
-    const container_t *candidate_shared_container, uint8_t *type) {
+        const container_t *candidate_shared_container, uint8_t *type) {
     if (*type == SHARED_CONTAINER_TYPE) {
         *type = const_CAST_shared(candidate_shared_container)->typecode;
         assert(*type != SHARED_CONTAINER_TYPE);
@@ -4091,7 +4091,7 @@ static inline container_t *get_writable_copy_if_shared(container_t *c,
 
 static const char *container_names[] = {"bitset", "array", "run", "shared"};
 static const char *shared_container_names[] = {
-    "bitset (shared)", "array (shared)", "run (shared)"};
+        "bitset (shared)", "array (shared)", "run (shared)"};
 
 // no matter what the initial container was, convert it to a bitset
 // if a new container is produced, caller responsible for freeing the previous
@@ -4373,7 +4373,7 @@ static inline bool container_nonzero_cardinality(const container_t *c,
     switch (typecode) {
         case BITSET_CONTAINER_TYPE:
             return bitset_container_const_nonzero_cardinality(
-                const_CAST_bitset(c));
+                    const_CAST_bitset(c));
         case ARRAY_CONTAINER_TYPE:
             return array_container_nonzero_cardinality(const_CAST_array(c));
         case RUN_CONTAINER_TYPE:
@@ -4421,9 +4421,9 @@ static inline int container_to_uint32_array(uint32_t *output,
  * memory deallocation
  */
 static inline container_t *container_add(
-    container_t *c, uint16_t val,
-    uint8_t typecode,  // !!! should be second argument?
-    uint8_t *new_typecode) {
+        container_t *c, uint16_t val,
+        uint8_t typecode,  // !!! should be second argument?
+        uint8_t *new_typecode) {
     c = get_writable_copy_if_shared(c, &typecode);
     switch (typecode) {
         case BITSET_CONTAINER_TYPE:
@@ -4462,9 +4462,9 @@ static inline container_t *container_add(
  * memory deallocation
  */
 static inline container_t *container_remove(
-    container_t *c, uint16_t val,
-    uint8_t typecode,  // !!! should be second argument?
-    uint8_t *new_typecode) {
+        container_t *c, uint16_t val,
+        uint8_t typecode,  // !!! should be second argument?
+        uint8_t *new_typecode) {
     c = get_writable_copy_if_shared(c, &typecode);
     switch (typecode) {
         case BITSET_CONTAINER_TYPE:
@@ -4497,8 +4497,8 @@ static inline container_t *container_remove(
  * Check whether a value is in a container, requires a  typecode
  */
 static inline bool container_contains(
-    const container_t *c, uint16_t val,
-    uint8_t typecode  // !!! should be second argument?
+        const container_t *c, uint16_t val,
+        uint8_t typecode  // !!! should be second argument?
 ) {
     c = container_unwrap_shared(c, &typecode);
     switch (typecode) {
@@ -4520,8 +4520,8 @@ static inline bool container_contains(
  * (excluded) is in a container, requires a typecode
  */
 static inline bool container_contains_range(
-    const container_t *c, uint32_t range_start, uint32_t range_end,
-    uint8_t typecode  // !!! should be second argument?
+        const container_t *c, uint32_t range_start, uint32_t range_end,
+        uint8_t typecode  // !!! should be second argument?
 ) {
     c = container_unwrap_shared(c, &typecode);
     switch (typecode) {
@@ -4661,8 +4661,8 @@ static inline container_t *container_and(const container_t *c1, uint8_t type1,
     switch (PAIR_CONTAINER_TYPES(type1, type2)) {
         case CONTAINER_PAIR(BITSET, BITSET):
             *result_type =
-                bitset_bitset_container_intersection(
-                    const_CAST_bitset(c1), const_CAST_bitset(c2), &result)
+                    bitset_bitset_container_intersection(
+                            const_CAST_bitset(c1), const_CAST_bitset(c2), &result)
                     ? BITSET_CONTAINER_TYPE
                     : ARRAY_CONTAINER_TYPE;
             return result;
@@ -4670,7 +4670,7 @@ static inline container_t *container_and(const container_t *c1, uint8_t type1,
         case CONTAINER_PAIR(ARRAY, ARRAY):
             result = array_container_create();
             array_container_intersection(
-                const_CAST_array(c1), const_CAST_array(c2), CAST_array(result));
+                    const_CAST_array(c1), const_CAST_array(c2), CAST_array(result));
             *result_type = ARRAY_CONTAINER_TYPE;  // never bitset
             return result;
 
@@ -4699,16 +4699,16 @@ static inline container_t *container_and(const container_t *c1, uint8_t type1,
 
         case CONTAINER_PAIR(BITSET, RUN):
             *result_type =
-                run_bitset_container_intersection(
-                    const_CAST_run(c2), const_CAST_bitset(c1), &result)
+                    run_bitset_container_intersection(
+                            const_CAST_run(c2), const_CAST_bitset(c1), &result)
                     ? BITSET_CONTAINER_TYPE
                     : ARRAY_CONTAINER_TYPE;
             return result;
 
         case CONTAINER_PAIR(RUN, BITSET):
             *result_type =
-                run_bitset_container_intersection(
-                    const_CAST_run(c1), const_CAST_bitset(c2), &result)
+                    run_bitset_container_intersection(
+                            const_CAST_run(c1), const_CAST_bitset(c2), &result)
                     ? BITSET_CONTAINER_TYPE
                     : ARRAY_CONTAINER_TYPE;
             return result;
@@ -4717,14 +4717,14 @@ static inline container_t *container_and(const container_t *c1, uint8_t type1,
             result = array_container_create();
             *result_type = ARRAY_CONTAINER_TYPE;  // never bitset
             array_run_container_intersection(
-                const_CAST_array(c1), const_CAST_run(c2), CAST_array(result));
+                    const_CAST_array(c1), const_CAST_run(c2), CAST_array(result));
             return result;
 
         case CONTAINER_PAIR(RUN, ARRAY):
             result = array_container_create();
             *result_type = ARRAY_CONTAINER_TYPE;  // never bitset
             array_run_container_intersection(
-                const_CAST_array(c2), const_CAST_run(c1), CAST_array(result));
+                    const_CAST_array(c2), const_CAST_run(c1), CAST_array(result));
             return result;
 
         default:
@@ -4750,7 +4750,7 @@ static inline int container_and_cardinality(const container_t *c1,
 
         case CONTAINER_PAIR(ARRAY, ARRAY):
             return array_container_intersection_cardinality(
-                const_CAST_array(c1), const_CAST_array(c2));
+                    const_CAST_array(c1), const_CAST_array(c2));
 
         case CONTAINER_PAIR(RUN, RUN):
             return run_container_intersection_cardinality(const_CAST_run(c1),
@@ -4758,27 +4758,27 @@ static inline int container_and_cardinality(const container_t *c1,
 
         case CONTAINER_PAIR(BITSET, ARRAY):
             return array_bitset_container_intersection_cardinality(
-                const_CAST_array(c2), const_CAST_bitset(c1));
+                    const_CAST_array(c2), const_CAST_bitset(c1));
 
         case CONTAINER_PAIR(ARRAY, BITSET):
             return array_bitset_container_intersection_cardinality(
-                const_CAST_array(c1), const_CAST_bitset(c2));
+                    const_CAST_array(c1), const_CAST_bitset(c2));
 
         case CONTAINER_PAIR(BITSET, RUN):
             return run_bitset_container_intersection_cardinality(
-                const_CAST_run(c2), const_CAST_bitset(c1));
+                    const_CAST_run(c2), const_CAST_bitset(c1));
 
         case CONTAINER_PAIR(RUN, BITSET):
             return run_bitset_container_intersection_cardinality(
-                const_CAST_run(c1), const_CAST_bitset(c2));
+                    const_CAST_run(c1), const_CAST_bitset(c2));
 
         case CONTAINER_PAIR(ARRAY, RUN):
             return array_run_container_intersection_cardinality(
-                const_CAST_array(c1), const_CAST_run(c2));
+                    const_CAST_array(c1), const_CAST_run(c2));
 
         case CONTAINER_PAIR(RUN, ARRAY):
             return array_run_container_intersection_cardinality(
-                const_CAST_array(c2), const_CAST_run(c1));
+                    const_CAST_array(c2), const_CAST_run(c1));
 
         default:
             assert(false);
@@ -4856,9 +4856,9 @@ static inline container_t *container_iand(container_t *c1, uint8_t type1,
     switch (PAIR_CONTAINER_TYPES(type1, type2)) {
         case CONTAINER_PAIR(BITSET, BITSET):
             *result_type = bitset_bitset_container_intersection_inplace(
-                               CAST_bitset(c1), const_CAST_bitset(c2), &result)
-                               ? BITSET_CONTAINER_TYPE
-                               : ARRAY_CONTAINER_TYPE;
+                    CAST_bitset(c1), const_CAST_bitset(c2), &result)
+                           ? BITSET_CONTAINER_TYPE
+                           : ARRAY_CONTAINER_TYPE;
             return result;
 
         case CONTAINER_PAIR(ARRAY, ARRAY):
@@ -4888,22 +4888,22 @@ static inline container_t *container_iand(container_t *c1, uint8_t type1,
         case CONTAINER_PAIR(ARRAY, BITSET):
             *result_type = ARRAY_CONTAINER_TYPE;  // never bitset
             array_bitset_container_intersection(
-                const_CAST_array(c1), const_CAST_bitset(c2),
-                CAST_array(c1));  // result is allowed to be same as c1
+                    const_CAST_array(c1), const_CAST_bitset(c2),
+                    CAST_array(c1));  // result is allowed to be same as c1
             return c1;
 
         case CONTAINER_PAIR(BITSET, RUN):
             // will attempt in-place computation
             *result_type = run_bitset_container_intersection(
-                               const_CAST_run(c2), const_CAST_bitset(c1), &c1)
-                               ? BITSET_CONTAINER_TYPE
-                               : ARRAY_CONTAINER_TYPE;
+                    const_CAST_run(c2), const_CAST_bitset(c1), &c1)
+                           ? BITSET_CONTAINER_TYPE
+                           : ARRAY_CONTAINER_TYPE;
             return c1;
 
         case CONTAINER_PAIR(RUN, BITSET):
             *result_type =
-                run_bitset_container_intersection(
-                    const_CAST_run(c1), const_CAST_bitset(c2), &result)
+                    run_bitset_container_intersection(
+                            const_CAST_run(c1), const_CAST_bitset(c2), &result)
                     ? BITSET_CONTAINER_TYPE
                     : ARRAY_CONTAINER_TYPE;
             return result;
@@ -4912,14 +4912,14 @@ static inline container_t *container_iand(container_t *c1, uint8_t type1,
             result = array_container_create();
             *result_type = ARRAY_CONTAINER_TYPE;  // never bitset
             array_run_container_intersection(
-                const_CAST_array(c1), const_CAST_run(c2), CAST_array(result));
+                    const_CAST_array(c1), const_CAST_run(c2), CAST_array(result));
             return result;
 
         case CONTAINER_PAIR(RUN, ARRAY):
             result = array_container_create();
             *result_type = ARRAY_CONTAINER_TYPE;  // never bitset
             array_run_container_intersection(
-                const_CAST_array(c2), const_CAST_run(c1), CAST_array(result));
+                    const_CAST_array(c2), const_CAST_run(c1), CAST_array(result));
             return result;
 
         default:
@@ -4950,8 +4950,8 @@ static inline container_t *container_or(const container_t *c1, uint8_t type1,
 
         case CONTAINER_PAIR(ARRAY, ARRAY):
             *result_type =
-                array_array_container_union(const_CAST_array(c1),
-                                            const_CAST_array(c2), &result)
+                    array_array_container_union(const_CAST_array(c1),
+                                                const_CAST_array(c2), &result)
                     ? BITSET_CONTAINER_TYPE
                     : ARRAY_CONTAINER_TYPE;
             return result;
@@ -4963,7 +4963,7 @@ static inline container_t *container_or(const container_t *c1, uint8_t type1,
             *result_type = RUN_CONTAINER_TYPE;
             // todo: could be optimized since will never convert to array
             result = convert_run_to_efficient_container_and_free(
-                CAST_run(result), result_type);
+                    CAST_run(result), result_type);
             return result;
 
         case CONTAINER_PAIR(BITSET, ARRAY):
@@ -4991,7 +4991,7 @@ static inline container_t *container_or(const container_t *c1, uint8_t type1,
             }
             result = bitset_container_create();
             run_bitset_container_union(
-                const_CAST_run(c2), const_CAST_bitset(c1), CAST_bitset(result));
+                    const_CAST_run(c2), const_CAST_bitset(c1), CAST_bitset(result));
             *result_type = BITSET_CONTAINER_TYPE;
             return result;
 
@@ -5004,7 +5004,7 @@ static inline container_t *container_or(const container_t *c1, uint8_t type1,
             }
             result = bitset_container_create();
             run_bitset_container_union(
-                const_CAST_run(c1), const_CAST_bitset(c2), CAST_bitset(result));
+                    const_CAST_run(c1), const_CAST_bitset(c2), CAST_bitset(result));
             *result_type = BITSET_CONTAINER_TYPE;
             return result;
 
@@ -5013,7 +5013,7 @@ static inline container_t *container_or(const container_t *c1, uint8_t type1,
             array_run_container_union(const_CAST_array(c1), const_CAST_run(c2),
                                       CAST_run(result));
             result = convert_run_to_efficient_container_and_free(
-                CAST_run(result), result_type);
+                    CAST_run(result), result_type);
             return result;
 
         case CONTAINER_PAIR(RUN, ARRAY):
@@ -5021,7 +5021,7 @@ static inline container_t *container_or(const container_t *c1, uint8_t type1,
             array_run_container_union(const_CAST_array(c2), const_CAST_run(c1),
                                       CAST_run(result));
             result = convert_run_to_efficient_container_and_free(
-                CAST_run(result), result_type);
+                    CAST_run(result), result_type);
             return result;
 
         default:
@@ -5058,8 +5058,8 @@ static inline container_t *container_lazy_or(const container_t *c1,
 
         case CONTAINER_PAIR(ARRAY, ARRAY):
             *result_type =
-                array_array_container_lazy_union(const_CAST_array(c1),
-                                                 const_CAST_array(c2), &result)
+                    array_array_container_lazy_union(const_CAST_array(c1),
+                                                     const_CAST_array(c2), &result)
                     ? BITSET_CONTAINER_TYPE
                     : ARRAY_CONTAINER_TYPE;
             return result;
@@ -5071,7 +5071,7 @@ static inline container_t *container_lazy_or(const container_t *c1,
             *result_type = RUN_CONTAINER_TYPE;
             // we are being lazy
             result = convert_run_to_efficient_container_and_free(
-                CAST_run(result), result_type);
+                    CAST_run(result), result_type);
             return result;
 
         case CONTAINER_PAIR(BITSET, ARRAY):
@@ -5174,9 +5174,9 @@ static inline container_t *container_ior(container_t *c1, uint8_t type1,
 
         case CONTAINER_PAIR(ARRAY, ARRAY):
             *result_type = array_array_container_inplace_union(
-                               CAST_array(c1), const_CAST_array(c2), &result)
-                               ? BITSET_CONTAINER_TYPE
-                               : ARRAY_CONTAINER_TYPE;
+                    CAST_array(c1), const_CAST_array(c2), &result)
+                           ? BITSET_CONTAINER_TYPE
+                           : ARRAY_CONTAINER_TYPE;
             if ((result == NULL) && (*result_type == ARRAY_CONTAINER_TYPE)) {
                 return c1;  // the computation was done in-place!
             }
@@ -5189,7 +5189,7 @@ static inline container_t *container_ior(container_t *c1, uint8_t type1,
 
         case CONTAINER_PAIR(BITSET, ARRAY):
             array_bitset_container_union(
-                const_CAST_array(c2), const_CAST_bitset(c1), CAST_bitset(c1));
+                    const_CAST_array(c2), const_CAST_bitset(c1), CAST_bitset(c1));
             *result_type = BITSET_CONTAINER_TYPE;  // never array
             return c1;
 
@@ -5222,7 +5222,7 @@ static inline container_t *container_ior(container_t *c1, uint8_t type1,
             }
             result = bitset_container_create();
             run_bitset_container_union(
-                const_CAST_run(c1), const_CAST_bitset(c2), CAST_bitset(result));
+                    const_CAST_run(c1), const_CAST_bitset(c2), CAST_bitset(result));
             *result_type = BITSET_CONTAINER_TYPE;
             return result;
 
@@ -5231,7 +5231,7 @@ static inline container_t *container_ior(container_t *c1, uint8_t type1,
             array_run_container_union(const_CAST_array(c1), const_CAST_run(c2),
                                       CAST_run(result));
             result = convert_run_to_efficient_container_and_free(
-                CAST_run(result), result_type);
+                    CAST_run(result), result_type);
             return result;
 
         case CONTAINER_PAIR(RUN, ARRAY):
@@ -5289,9 +5289,9 @@ static inline container_t *container_lazy_ior(container_t *c1, uint8_t type1,
 
         case CONTAINER_PAIR(ARRAY, ARRAY):
             *result_type = array_array_container_lazy_inplace_union(
-                               CAST_array(c1), const_CAST_array(c2), &result)
-                               ? BITSET_CONTAINER_TYPE
-                               : ARRAY_CONTAINER_TYPE;
+                    CAST_array(c1), const_CAST_array(c2), &result)
+                           ? BITSET_CONTAINER_TYPE
+                           : ARRAY_CONTAINER_TYPE;
             if ((result == NULL) && (*result_type == ARRAY_CONTAINER_TYPE)) {
                 return c1;  // the computation was done in-place!
             }
@@ -5327,8 +5327,8 @@ static inline container_t *container_lazy_ior(container_t *c1, uint8_t type1,
                 return result;
             }
             run_bitset_container_lazy_union(
-                const_CAST_run(c2), const_CAST_bitset(c1),
-                CAST_bitset(c1));  // allowed //  lazy
+                    const_CAST_run(c2), const_CAST_bitset(c1),
+                    CAST_bitset(c1));  // allowed //  lazy
             *result_type = BITSET_CONTAINER_TYPE;
             return c1;
 
@@ -5384,65 +5384,65 @@ static inline container_t *container_xor(const container_t *c1, uint8_t type1,
     switch (PAIR_CONTAINER_TYPES(type1, type2)) {
         case CONTAINER_PAIR(BITSET, BITSET):
             *result_type =
-                bitset_bitset_container_xor(const_CAST_bitset(c1),
-                                            const_CAST_bitset(c2), &result)
+                    bitset_bitset_container_xor(const_CAST_bitset(c1),
+                                                const_CAST_bitset(c2), &result)
                     ? BITSET_CONTAINER_TYPE
                     : ARRAY_CONTAINER_TYPE;
             return result;
 
         case CONTAINER_PAIR(ARRAY, ARRAY):
             *result_type =
-                array_array_container_xor(const_CAST_array(c1),
-                                          const_CAST_array(c2), &result)
+                    array_array_container_xor(const_CAST_array(c1),
+                                              const_CAST_array(c2), &result)
                     ? BITSET_CONTAINER_TYPE
                     : ARRAY_CONTAINER_TYPE;
             return result;
 
         case CONTAINER_PAIR(RUN, RUN):
             *result_type = (uint8_t)run_run_container_xor(
-                const_CAST_run(c1), const_CAST_run(c2), &result);
+                    const_CAST_run(c1), const_CAST_run(c2), &result);
             return result;
 
         case CONTAINER_PAIR(BITSET, ARRAY):
             *result_type =
-                array_bitset_container_xor(const_CAST_array(c2),
-                                           const_CAST_bitset(c1), &result)
+                    array_bitset_container_xor(const_CAST_array(c2),
+                                               const_CAST_bitset(c1), &result)
                     ? BITSET_CONTAINER_TYPE
                     : ARRAY_CONTAINER_TYPE;
             return result;
 
         case CONTAINER_PAIR(ARRAY, BITSET):
             *result_type =
-                array_bitset_container_xor(const_CAST_array(c1),
-                                           const_CAST_bitset(c2), &result)
+                    array_bitset_container_xor(const_CAST_array(c1),
+                                               const_CAST_bitset(c2), &result)
                     ? BITSET_CONTAINER_TYPE
                     : ARRAY_CONTAINER_TYPE;
             return result;
 
         case CONTAINER_PAIR(BITSET, RUN):
             *result_type =
-                run_bitset_container_xor(const_CAST_run(c2),
-                                         const_CAST_bitset(c1), &result)
+                    run_bitset_container_xor(const_CAST_run(c2),
+                                             const_CAST_bitset(c1), &result)
                     ? BITSET_CONTAINER_TYPE
                     : ARRAY_CONTAINER_TYPE;
             return result;
 
         case CONTAINER_PAIR(RUN, BITSET):
             *result_type =
-                run_bitset_container_xor(const_CAST_run(c1),
-                                         const_CAST_bitset(c2), &result)
+                    run_bitset_container_xor(const_CAST_run(c1),
+                                             const_CAST_bitset(c2), &result)
                     ? BITSET_CONTAINER_TYPE
                     : ARRAY_CONTAINER_TYPE;
             return result;
 
         case CONTAINER_PAIR(ARRAY, RUN):
             *result_type = (uint8_t)array_run_container_xor(
-                const_CAST_array(c1), const_CAST_run(c2), &result);
+                    const_CAST_array(c1), const_CAST_run(c2), &result);
             return result;
 
         case CONTAINER_PAIR(RUN, ARRAY):
             *result_type = (uint8_t)array_run_container_xor(
-                const_CAST_array(c2), const_CAST_run(c1), &result);
+                    const_CAST_array(c2), const_CAST_run(c1), &result);
             return result;
 
         default:
@@ -5515,8 +5515,8 @@ static inline container_t *container_lazy_xor(const container_t *c1,
 
         case CONTAINER_PAIR(ARRAY, ARRAY):
             *result_type =
-                array_array_container_lazy_xor(const_CAST_array(c1),
-                                               const_CAST_array(c2), &result)
+                    array_array_container_lazy_xor(const_CAST_array(c1),
+                                                   const_CAST_array(c2), &result)
                     ? BITSET_CONTAINER_TYPE
                     : ARRAY_CONTAINER_TYPE;
             return result;
@@ -5524,7 +5524,7 @@ static inline container_t *container_lazy_xor(const container_t *c1,
         case CONTAINER_PAIR(RUN, RUN):
             // nothing special done yet.
             *result_type = (uint8_t)run_run_container_xor(
-                const_CAST_run(c1), const_CAST_run(c2), &result);
+                    const_CAST_run(c1), const_CAST_run(c2), &result);
             return result;
 
         case CONTAINER_PAIR(BITSET, ARRAY):
@@ -5546,14 +5546,14 @@ static inline container_t *container_lazy_xor(const container_t *c1,
         case CONTAINER_PAIR(BITSET, RUN):
             result = bitset_container_create();
             run_bitset_container_lazy_xor(
-                const_CAST_run(c2), const_CAST_bitset(c1), CAST_bitset(result));
+                    const_CAST_run(c2), const_CAST_bitset(c1), CAST_bitset(result));
             *result_type = BITSET_CONTAINER_TYPE;
             return result;
 
         case CONTAINER_PAIR(RUN, BITSET):
             result = bitset_container_create();
             run_bitset_container_lazy_xor(
-                const_CAST_run(c1), const_CAST_bitset(c2), CAST_bitset(result));
+                    const_CAST_run(c1), const_CAST_bitset(c2), CAST_bitset(result));
             *result_type = BITSET_CONTAINER_TYPE;
             return result;
 
@@ -5600,60 +5600,60 @@ static inline container_t *container_ixor(container_t *c1, uint8_t type1,
     switch (PAIR_CONTAINER_TYPES(type1, type2)) {
         case CONTAINER_PAIR(BITSET, BITSET):
             *result_type = bitset_bitset_container_ixor(
-                               CAST_bitset(c1), const_CAST_bitset(c2), &result)
-                               ? BITSET_CONTAINER_TYPE
-                               : ARRAY_CONTAINER_TYPE;
+                    CAST_bitset(c1), const_CAST_bitset(c2), &result)
+                           ? BITSET_CONTAINER_TYPE
+                           : ARRAY_CONTAINER_TYPE;
             return result;
 
         case CONTAINER_PAIR(ARRAY, ARRAY):
             *result_type = array_array_container_ixor(
-                               CAST_array(c1), const_CAST_array(c2), &result)
-                               ? BITSET_CONTAINER_TYPE
-                               : ARRAY_CONTAINER_TYPE;
+                    CAST_array(c1), const_CAST_array(c2), &result)
+                           ? BITSET_CONTAINER_TYPE
+                           : ARRAY_CONTAINER_TYPE;
             return result;
 
         case CONTAINER_PAIR(RUN, RUN):
             *result_type = (uint8_t)run_run_container_ixor(
-                CAST_run(c1), const_CAST_run(c2), &result);
+                    CAST_run(c1), const_CAST_run(c2), &result);
             return result;
 
         case CONTAINER_PAIR(BITSET, ARRAY):
             *result_type = bitset_array_container_ixor(
-                               CAST_bitset(c1), const_CAST_array(c2), &result)
-                               ? BITSET_CONTAINER_TYPE
-                               : ARRAY_CONTAINER_TYPE;
+                    CAST_bitset(c1), const_CAST_array(c2), &result)
+                           ? BITSET_CONTAINER_TYPE
+                           : ARRAY_CONTAINER_TYPE;
             return result;
 
         case CONTAINER_PAIR(ARRAY, BITSET):
             *result_type = array_bitset_container_ixor(
-                               CAST_array(c1), const_CAST_bitset(c2), &result)
-                               ? BITSET_CONTAINER_TYPE
-                               : ARRAY_CONTAINER_TYPE;
+                    CAST_array(c1), const_CAST_bitset(c2), &result)
+                           ? BITSET_CONTAINER_TYPE
+                           : ARRAY_CONTAINER_TYPE;
             return result;
 
         case CONTAINER_PAIR(BITSET, RUN):
             *result_type = bitset_run_container_ixor(
-                               CAST_bitset(c1), const_CAST_run(c2), &result)
-                               ? BITSET_CONTAINER_TYPE
-                               : ARRAY_CONTAINER_TYPE;
+                    CAST_bitset(c1), const_CAST_run(c2), &result)
+                           ? BITSET_CONTAINER_TYPE
+                           : ARRAY_CONTAINER_TYPE;
 
             return result;
 
         case CONTAINER_PAIR(RUN, BITSET):
             *result_type = run_bitset_container_ixor(
-                               CAST_run(c1), const_CAST_bitset(c2), &result)
-                               ? BITSET_CONTAINER_TYPE
-                               : ARRAY_CONTAINER_TYPE;
+                    CAST_run(c1), const_CAST_bitset(c2), &result)
+                           ? BITSET_CONTAINER_TYPE
+                           : ARRAY_CONTAINER_TYPE;
             return result;
 
         case CONTAINER_PAIR(ARRAY, RUN):
             *result_type = (uint8_t)array_run_container_ixor(
-                CAST_array(c1), const_CAST_run(c2), &result);
+                    CAST_array(c1), const_CAST_run(c2), &result);
             return result;
 
         case CONTAINER_PAIR(RUN, ARRAY):
             *result_type = (uint8_t)run_array_container_ixor(
-                CAST_run(c1), const_CAST_array(c2), &result);
+                    CAST_run(c1), const_CAST_array(c2), &result);
             return result;
 
         default:
@@ -5689,8 +5689,8 @@ static inline container_t *container_lazy_ixor(container_t *c1, uint8_t type1,
             *result_type = BITSET_CONTAINER_TYPE;
             return c1;
 
-        // TODO: other cases being lazy, esp. when we know inplace not likely
-        // could see the corresponding code for union
+            // TODO: other cases being lazy, esp. when we know inplace not likely
+            // could see the corresponding code for union
         default:
             // we may have a dirty bitset (without a precomputed cardinality)
             // and calling container_ixor on it might be unsafe.
@@ -5720,8 +5720,8 @@ static inline container_t *container_andnot(const container_t *c1,
     switch (PAIR_CONTAINER_TYPES(type1, type2)) {
         case CONTAINER_PAIR(BITSET, BITSET):
             *result_type =
-                bitset_bitset_container_andnot(const_CAST_bitset(c1),
-                                               const_CAST_bitset(c2), &result)
+                    bitset_bitset_container_andnot(const_CAST_bitset(c1),
+                                                   const_CAST_bitset(c2), &result)
                     ? BITSET_CONTAINER_TYPE
                     : ARRAY_CONTAINER_TYPE;
             return result;
@@ -5729,7 +5729,7 @@ static inline container_t *container_andnot(const container_t *c1,
         case CONTAINER_PAIR(ARRAY, ARRAY):
             result = array_container_create();
             array_array_container_andnot(
-                const_CAST_array(c1), const_CAST_array(c2), CAST_array(result));
+                    const_CAST_array(c1), const_CAST_array(c2), CAST_array(result));
             *result_type = ARRAY_CONTAINER_TYPE;
             return result;
 
@@ -5740,13 +5740,13 @@ static inline container_t *container_andnot(const container_t *c1,
                 return result;
             }
             *result_type = (uint8_t)run_run_container_andnot(
-                const_CAST_run(c1), const_CAST_run(c2), &result);
+                    const_CAST_run(c1), const_CAST_run(c2), &result);
             return result;
 
         case CONTAINER_PAIR(BITSET, ARRAY):
             *result_type =
-                bitset_array_container_andnot(const_CAST_bitset(c1),
-                                              const_CAST_array(c2), &result)
+                    bitset_array_container_andnot(const_CAST_bitset(c1),
+                                                  const_CAST_array(c2), &result)
                     ? BITSET_CONTAINER_TYPE
                     : ARRAY_CONTAINER_TYPE;
             return result;
@@ -5766,16 +5766,16 @@ static inline container_t *container_andnot(const container_t *c1,
                 return result;
             }
             *result_type =
-                bitset_run_container_andnot(const_CAST_bitset(c1),
-                                            const_CAST_run(c2), &result)
+                    bitset_run_container_andnot(const_CAST_bitset(c1),
+                                                const_CAST_run(c2), &result)
                     ? BITSET_CONTAINER_TYPE
                     : ARRAY_CONTAINER_TYPE;
             return result;
 
         case CONTAINER_PAIR(RUN, BITSET):
             *result_type =
-                run_bitset_container_andnot(const_CAST_run(c1),
-                                            const_CAST_bitset(c2), &result)
+                    run_bitset_container_andnot(const_CAST_run(c1),
+                                                const_CAST_bitset(c2), &result)
                     ? BITSET_CONTAINER_TYPE
                     : ARRAY_CONTAINER_TYPE;
             return result;
@@ -5794,7 +5794,7 @@ static inline container_t *container_andnot(const container_t *c1,
 
         case CONTAINER_PAIR(RUN, ARRAY):
             *result_type = (uint8_t)run_array_container_andnot(
-                const_CAST_run(c1), const_CAST_array(c2), &result);
+                    const_CAST_run(c1), const_CAST_array(c2), &result);
             return result;
 
         default:
@@ -5824,9 +5824,9 @@ static inline container_t *container_iandnot(container_t *c1, uint8_t type1,
     switch (PAIR_CONTAINER_TYPES(type1, type2)) {
         case CONTAINER_PAIR(BITSET, BITSET):
             *result_type = bitset_bitset_container_iandnot(
-                               CAST_bitset(c1), const_CAST_bitset(c2), &result)
-                               ? BITSET_CONTAINER_TYPE
-                               : ARRAY_CONTAINER_TYPE;
+                    CAST_bitset(c1), const_CAST_bitset(c2), &result)
+                           ? BITSET_CONTAINER_TYPE
+                           : ARRAY_CONTAINER_TYPE;
             return result;
 
         case CONTAINER_PAIR(ARRAY, ARRAY):
@@ -5836,14 +5836,14 @@ static inline container_t *container_iandnot(container_t *c1, uint8_t type1,
 
         case CONTAINER_PAIR(RUN, RUN):
             *result_type = (uint8_t)run_run_container_iandnot(
-                CAST_run(c1), const_CAST_run(c2), &result);
+                    CAST_run(c1), const_CAST_run(c2), &result);
             return result;
 
         case CONTAINER_PAIR(BITSET, ARRAY):
             *result_type = bitset_array_container_iandnot(
-                               CAST_bitset(c1), const_CAST_array(c2), &result)
-                               ? BITSET_CONTAINER_TYPE
-                               : ARRAY_CONTAINER_TYPE;
+                    CAST_bitset(c1), const_CAST_array(c2), &result)
+                           ? BITSET_CONTAINER_TYPE
+                           : ARRAY_CONTAINER_TYPE;
             return result;
 
         case CONTAINER_PAIR(ARRAY, BITSET):
@@ -5854,16 +5854,16 @@ static inline container_t *container_iandnot(container_t *c1, uint8_t type1,
 
         case CONTAINER_PAIR(BITSET, RUN):
             *result_type = bitset_run_container_iandnot(
-                               CAST_bitset(c1), const_CAST_run(c2), &result)
-                               ? BITSET_CONTAINER_TYPE
-                               : ARRAY_CONTAINER_TYPE;
+                    CAST_bitset(c1), const_CAST_run(c2), &result)
+                           ? BITSET_CONTAINER_TYPE
+                           : ARRAY_CONTAINER_TYPE;
             return result;
 
         case CONTAINER_PAIR(RUN, BITSET):
             *result_type = run_bitset_container_iandnot(
-                               CAST_run(c1), const_CAST_bitset(c2), &result)
-                               ? BITSET_CONTAINER_TYPE
-                               : ARRAY_CONTAINER_TYPE;
+                    CAST_run(c1), const_CAST_bitset(c2), &result)
+                           ? BITSET_CONTAINER_TYPE
+                           : ARRAY_CONTAINER_TYPE;
             return result;
 
         case CONTAINER_PAIR(ARRAY, RUN):
@@ -5873,7 +5873,7 @@ static inline container_t *container_iandnot(container_t *c1, uint8_t type1,
 
         case CONTAINER_PAIR(RUN, ARRAY):
             *result_type = (uint8_t)run_array_container_iandnot(
-                CAST_run(c1), const_CAST_array(c2), &result);
+                    CAST_run(c1), const_CAST_array(c2), &result);
             return result;
 
         default:
@@ -5942,7 +5942,7 @@ static inline container_t *container_not(const container_t *c, uint8_t type,
     switch (type) {
         case BITSET_CONTAINER_TYPE:
             *result_type =
-                bitset_container_negation(const_CAST_bitset(c), &result)
+                    bitset_container_negation(const_CAST_bitset(c), &result)
                     ? BITSET_CONTAINER_TYPE
                     : ARRAY_CONTAINER_TYPE;
             return result;
@@ -5953,7 +5953,7 @@ static inline container_t *container_not(const container_t *c, uint8_t type,
             return result;
         case RUN_CONTAINER_TYPE:
             *result_type =
-                (uint8_t)run_container_negation(const_CAST_run(c), &result);
+                    (uint8_t)run_container_negation(const_CAST_run(c), &result);
             return result;
 
         default:
@@ -5975,21 +5975,21 @@ static inline container_t *container_not_range(const container_t *c,
     switch (type) {
         case BITSET_CONTAINER_TYPE:
             *result_type =
-                bitset_container_negation_range(const_CAST_bitset(c),
-                                                range_start, range_end, &result)
+                    bitset_container_negation_range(const_CAST_bitset(c),
+                                                    range_start, range_end, &result)
                     ? BITSET_CONTAINER_TYPE
                     : ARRAY_CONTAINER_TYPE;
             return result;
         case ARRAY_CONTAINER_TYPE:
             *result_type =
-                array_container_negation_range(const_CAST_array(c), range_start,
-                                               range_end, &result)
+                    array_container_negation_range(const_CAST_array(c), range_start,
+                                                   range_end, &result)
                     ? BITSET_CONTAINER_TYPE
                     : ARRAY_CONTAINER_TYPE;
             return result;
         case RUN_CONTAINER_TYPE:
             *result_type = (uint8_t)run_container_negation_range(
-                const_CAST_run(c), range_start, range_end, &result);
+                    const_CAST_run(c), range_start, range_end, &result);
             return result;
 
         default:
@@ -6008,7 +6008,7 @@ static inline container_t *container_inot(container_t *c, uint8_t type,
     switch (type) {
         case BITSET_CONTAINER_TYPE:
             *result_type =
-                bitset_container_negation_inplace(CAST_bitset(c), &result)
+                    bitset_container_negation_inplace(CAST_bitset(c), &result)
                     ? BITSET_CONTAINER_TYPE
                     : ARRAY_CONTAINER_TYPE;
             return result;
@@ -6021,7 +6021,7 @@ static inline container_t *container_inot(container_t *c, uint8_t type,
             return result;
         case RUN_CONTAINER_TYPE:
             *result_type =
-                (uint8_t)run_container_negation_inplace(CAST_run(c), &result);
+                    (uint8_t)run_container_negation_inplace(CAST_run(c), &result);
             return result;
 
         default:
@@ -6042,19 +6042,19 @@ static inline container_t *container_inot_range(container_t *c, uint8_t type,
     switch (type) {
         case BITSET_CONTAINER_TYPE:
             *result_type = bitset_container_negation_range_inplace(
-                               CAST_bitset(c), range_start, range_end, &result)
-                               ? BITSET_CONTAINER_TYPE
-                               : ARRAY_CONTAINER_TYPE;
+                    CAST_bitset(c), range_start, range_end, &result)
+                           ? BITSET_CONTAINER_TYPE
+                           : ARRAY_CONTAINER_TYPE;
             return result;
         case ARRAY_CONTAINER_TYPE:
             *result_type = array_container_negation_range_inplace(
-                               CAST_array(c), range_start, range_end, &result)
-                               ? BITSET_CONTAINER_TYPE
-                               : ARRAY_CONTAINER_TYPE;
+                    CAST_array(c), range_start, range_end, &result)
+                           ? BITSET_CONTAINER_TYPE
+                           : ARRAY_CONTAINER_TYPE;
             return result;
         case RUN_CONTAINER_TYPE:
             *result_type = (uint8_t)run_container_negation_range_inplace(
-                CAST_run(c), range_start, range_end, &result);
+                    CAST_run(c), range_start, range_end, &result);
             return result;
 
         default:
@@ -6218,7 +6218,7 @@ static inline container_t *container_add_range(container_t *c, uint8_t type,
             union_cardinality += bitset->cardinality;
             union_cardinality += max - min + 1;
             union_cardinality -=
-                bitset_lenrange_cardinality(bitset->words, min, max - min);
+                    bitset_lenrange_cardinality(bitset->words, min, max - min);
 
             if (union_cardinality == INT32_C(0x10000)) {
                 *result_type = RUN_CONTAINER_TYPE;
@@ -6234,12 +6234,12 @@ static inline container_t *container_add_range(container_t *c, uint8_t type,
             array_container_t *array = CAST_array(c);
 
             int32_t nvals_greater =
-                count_greater(array->array, array->cardinality, (uint16_t)max);
+                    count_greater(array->array, array->cardinality, (uint16_t)max);
             int32_t nvals_less =
-                count_less(array->array, array->cardinality - nvals_greater,
-                           (uint16_t)min);
+                    count_less(array->array, array->cardinality - nvals_greater,
+                               (uint16_t)min);
             int32_t union_cardinality =
-                nvals_less + (max - min + 1) + nvals_greater;
+                    nvals_less + (max - min + 1) + nvals_greater;
 
             if (union_cardinality == INT32_C(0x10000)) {
                 *result_type = RUN_CONTAINER_TYPE;
@@ -6261,14 +6261,14 @@ static inline container_t *container_add_range(container_t *c, uint8_t type,
             run_container_t *run = CAST_run(c);
 
             int32_t nruns_greater =
-                rle16_count_greater(run->runs, run->n_runs, (uint16_t)max);
+                    rle16_count_greater(run->runs, run->n_runs, (uint16_t)max);
             int32_t nruns_less = rle16_count_less(
-                run->runs, run->n_runs - nruns_greater, (uint16_t)min);
+                    run->runs, run->n_runs - nruns_greater, (uint16_t)min);
 
             int32_t run_size_bytes =
-                (nruns_less + 1 + nruns_greater) * sizeof(rle16_t);
+                    (nruns_less + 1 + nruns_greater) * sizeof(rle16_t);
             int32_t bitset_size_bytes =
-                BITSET_CONTAINER_SIZE_IN_WORDS * sizeof(uint64_t);
+                    BITSET_CONTAINER_SIZE_IN_WORDS * sizeof(uint64_t);
 
             if (run_size_bytes <= bitset_size_bytes) {
                 run_container_add_range_nruns(run, min, max, nruns_less,
@@ -6303,8 +6303,8 @@ static inline container_t *container_remove_range(container_t *c, uint8_t type,
             bitset_container_t *bitset = CAST_bitset(c);
 
             int32_t result_cardinality =
-                bitset->cardinality -
-                bitset_lenrange_cardinality(bitset->words, min, max - min);
+                    bitset->cardinality -
+                    bitset_lenrange_cardinality(bitset->words, min, max - min);
 
             if (result_cardinality == 0) {
                 return NULL;
@@ -6324,10 +6324,10 @@ static inline container_t *container_remove_range(container_t *c, uint8_t type,
             array_container_t *array = CAST_array(c);
 
             int32_t nvals_greater =
-                count_greater(array->array, array->cardinality, (uint16_t)max);
+                    count_greater(array->array, array->cardinality, (uint16_t)max);
             int32_t nvals_less =
-                count_less(array->array, array->cardinality - nvals_greater,
-                           (uint16_t)min);
+                    count_less(array->array, array->cardinality - nvals_greater,
+                               (uint16_t)min);
             int32_t result_cardinality = nvals_less + nvals_greater;
 
             if (result_cardinality == 0) {
@@ -6335,7 +6335,7 @@ static inline container_t *container_remove_range(container_t *c, uint8_t type,
             } else {
                 *result_type = ARRAY_CONTAINER_TYPE;
                 array_container_remove_range(
-                    array, nvals_less, array->cardinality - result_cardinality);
+                        array, nvals_less, array->cardinality - result_cardinality);
                 return array;
             }
         }
@@ -6689,7 +6689,7 @@ static inline void ra_unshare_container_at_index(roaring_array_t *ra,
                                                  uint16_t i) {
     assert(i < ra->size);
     ra->containers[i] =
-        get_writable_copy_if_shared(ra->containers[i], &ra->typecodes[i]);
+            get_writable_copy_if_shared(ra->containers[i], &ra->typecodes[i]);
 }
 
 /**
@@ -6964,348 +6964,348 @@ extern inline int32_t binarySearch(const uint16_t *array, int32_t lenarray,
 // used by intersect_vector16
 ALIGNED(0x1000)
 static const uint8_t shuffle_mask16[] = {
-    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 0,    1,    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 2,    3,    0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-    0,    1,    2,    3,    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 4,    5,    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0,    1,    4,    5,
-    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-    2,    3,    4,    5,    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 0,    1,    2,    3,    4,    5,    0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 6,    7,    0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-    0,    1,    6,    7,    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 2,    3,    6,    7,    0xFF, 0xFF, 0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0,    1,    2,    3,
-    6,    7,    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-    4,    5,    6,    7,    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 0,    1,    4,    5,    6,    7,    0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 2,    3,    4,    5,
-    6,    7,    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-    0,    1,    2,    3,    4,    5,    6,    7,    0xFF, 0xFF, 0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 8,    9,    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0,    1,    8,    9,
-    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-    2,    3,    8,    9,    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 0,    1,    2,    3,    8,    9,    0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 4,    5,    8,    9,
-    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-    0,    1,    4,    5,    8,    9,    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 2,    3,    4,    5,    8,    9,    0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0,    1,    2,    3,
-    4,    5,    8,    9,    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-    6,    7,    8,    9,    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 0,    1,    6,    7,    8,    9,    0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 2,    3,    6,    7,
-    8,    9,    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-    0,    1,    2,    3,    6,    7,    8,    9,    0xFF, 0xFF, 0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 4,    5,    6,    7,    8,    9,    0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0,    1,    4,    5,
-    6,    7,    8,    9,    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-    2,    3,    4,    5,    6,    7,    8,    9,    0xFF, 0xFF, 0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 0,    1,    2,    3,    4,    5,    6,    7,
-    8,    9,    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 10,   11,   0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-    0,    1,    10,   11,   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 2,    3,    10,   11,   0xFF, 0xFF, 0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0,    1,    2,    3,
-    10,   11,   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-    4,    5,    10,   11,   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 0,    1,    4,    5,    10,   11,   0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 2,    3,    4,    5,
-    10,   11,   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-    0,    1,    2,    3,    4,    5,    10,   11,   0xFF, 0xFF, 0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 6,    7,    10,   11,   0xFF, 0xFF, 0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0,    1,    6,    7,
-    10,   11,   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-    2,    3,    6,    7,    10,   11,   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 0,    1,    2,    3,    6,    7,    10,   11,
-    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 4,    5,    6,    7,
-    10,   11,   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-    0,    1,    4,    5,    6,    7,    10,   11,   0xFF, 0xFF, 0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 2,    3,    4,    5,    6,    7,    10,   11,
-    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0,    1,    2,    3,
-    4,    5,    6,    7,    10,   11,   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-    8,    9,    10,   11,   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 0,    1,    8,    9,    10,   11,   0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 2,    3,    8,    9,
-    10,   11,   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-    0,    1,    2,    3,    8,    9,    10,   11,   0xFF, 0xFF, 0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 4,    5,    8,    9,    10,   11,   0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0,    1,    4,    5,
-    8,    9,    10,   11,   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-    2,    3,    4,    5,    8,    9,    10,   11,   0xFF, 0xFF, 0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 0,    1,    2,    3,    4,    5,    8,    9,
-    10,   11,   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 6,    7,    8,    9,
-    10,   11,   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-    0,    1,    6,    7,    8,    9,    10,   11,   0xFF, 0xFF, 0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 2,    3,    6,    7,    8,    9,    10,   11,
-    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0,    1,    2,    3,
-    6,    7,    8,    9,    10,   11,   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-    4,    5,    6,    7,    8,    9,    10,   11,   0xFF, 0xFF, 0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 0,    1,    4,    5,    6,    7,    8,    9,
-    10,   11,   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 2,    3,    4,    5,
-    6,    7,    8,    9,    10,   11,   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-    0,    1,    2,    3,    4,    5,    6,    7,    8,    9,    10,   11,
-    0xFF, 0xFF, 0xFF, 0xFF, 12,   13,   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0,    1,    12,   13,
-    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-    2,    3,    12,   13,   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 0,    1,    2,    3,    12,   13,   0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 4,    5,    12,   13,
-    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-    0,    1,    4,    5,    12,   13,   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 2,    3,    4,    5,    12,   13,   0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0,    1,    2,    3,
-    4,    5,    12,   13,   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-    6,    7,    12,   13,   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 0,    1,    6,    7,    12,   13,   0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 2,    3,    6,    7,
-    12,   13,   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-    0,    1,    2,    3,    6,    7,    12,   13,   0xFF, 0xFF, 0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 4,    5,    6,    7,    12,   13,   0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0,    1,    4,    5,
-    6,    7,    12,   13,   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-    2,    3,    4,    5,    6,    7,    12,   13,   0xFF, 0xFF, 0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 0,    1,    2,    3,    4,    5,    6,    7,
-    12,   13,   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 8,    9,    12,   13,
-    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-    0,    1,    8,    9,    12,   13,   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 2,    3,    8,    9,    12,   13,   0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0,    1,    2,    3,
-    8,    9,    12,   13,   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-    4,    5,    8,    9,    12,   13,   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 0,    1,    4,    5,    8,    9,    12,   13,
-    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 2,    3,    4,    5,
-    8,    9,    12,   13,   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-    0,    1,    2,    3,    4,    5,    8,    9,    12,   13,   0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 6,    7,    8,    9,    12,   13,   0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0,    1,    6,    7,
-    8,    9,    12,   13,   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-    2,    3,    6,    7,    8,    9,    12,   13,   0xFF, 0xFF, 0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 0,    1,    2,    3,    6,    7,    8,    9,
-    12,   13,   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 4,    5,    6,    7,
-    8,    9,    12,   13,   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-    0,    1,    4,    5,    6,    7,    8,    9,    12,   13,   0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 2,    3,    4,    5,    6,    7,    8,    9,
-    12,   13,   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0,    1,    2,    3,
-    4,    5,    6,    7,    8,    9,    12,   13,   0xFF, 0xFF, 0xFF, 0xFF,
-    10,   11,   12,   13,   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 0,    1,    10,   11,   12,   13,   0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 2,    3,    10,   11,
-    12,   13,   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-    0,    1,    2,    3,    10,   11,   12,   13,   0xFF, 0xFF, 0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 4,    5,    10,   11,   12,   13,   0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0,    1,    4,    5,
-    10,   11,   12,   13,   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-    2,    3,    4,    5,    10,   11,   12,   13,   0xFF, 0xFF, 0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 0,    1,    2,    3,    4,    5,    10,   11,
-    12,   13,   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 6,    7,    10,   11,
-    12,   13,   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-    0,    1,    6,    7,    10,   11,   12,   13,   0xFF, 0xFF, 0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 2,    3,    6,    7,    10,   11,   12,   13,
-    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0,    1,    2,    3,
-    6,    7,    10,   11,   12,   13,   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-    4,    5,    6,    7,    10,   11,   12,   13,   0xFF, 0xFF, 0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 0,    1,    4,    5,    6,    7,    10,   11,
-    12,   13,   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 2,    3,    4,    5,
-    6,    7,    10,   11,   12,   13,   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-    0,    1,    2,    3,    4,    5,    6,    7,    10,   11,   12,   13,
-    0xFF, 0xFF, 0xFF, 0xFF, 8,    9,    10,   11,   12,   13,   0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0,    1,    8,    9,
-    10,   11,   12,   13,   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-    2,    3,    8,    9,    10,   11,   12,   13,   0xFF, 0xFF, 0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 0,    1,    2,    3,    8,    9,    10,   11,
-    12,   13,   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 4,    5,    8,    9,
-    10,   11,   12,   13,   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-    0,    1,    4,    5,    8,    9,    10,   11,   12,   13,   0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 2,    3,    4,    5,    8,    9,    10,   11,
-    12,   13,   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0,    1,    2,    3,
-    4,    5,    8,    9,    10,   11,   12,   13,   0xFF, 0xFF, 0xFF, 0xFF,
-    6,    7,    8,    9,    10,   11,   12,   13,   0xFF, 0xFF, 0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 0,    1,    6,    7,    8,    9,    10,   11,
-    12,   13,   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 2,    3,    6,    7,
-    8,    9,    10,   11,   12,   13,   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-    0,    1,    2,    3,    6,    7,    8,    9,    10,   11,   12,   13,
-    0xFF, 0xFF, 0xFF, 0xFF, 4,    5,    6,    7,    8,    9,    10,   11,
-    12,   13,   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0,    1,    4,    5,
-    6,    7,    8,    9,    10,   11,   12,   13,   0xFF, 0xFF, 0xFF, 0xFF,
-    2,    3,    4,    5,    6,    7,    8,    9,    10,   11,   12,   13,
-    0xFF, 0xFF, 0xFF, 0xFF, 0,    1,    2,    3,    4,    5,    6,    7,
-    8,    9,    10,   11,   12,   13,   0xFF, 0xFF, 14,   15,   0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-    0,    1,    14,   15,   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 2,    3,    14,   15,   0xFF, 0xFF, 0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0,    1,    2,    3,
-    14,   15,   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-    4,    5,    14,   15,   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 0,    1,    4,    5,    14,   15,   0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 2,    3,    4,    5,
-    14,   15,   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-    0,    1,    2,    3,    4,    5,    14,   15,   0xFF, 0xFF, 0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 6,    7,    14,   15,   0xFF, 0xFF, 0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0,    1,    6,    7,
-    14,   15,   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-    2,    3,    6,    7,    14,   15,   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 0,    1,    2,    3,    6,    7,    14,   15,
-    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 4,    5,    6,    7,
-    14,   15,   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-    0,    1,    4,    5,    6,    7,    14,   15,   0xFF, 0xFF, 0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 2,    3,    4,    5,    6,    7,    14,   15,
-    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0,    1,    2,    3,
-    4,    5,    6,    7,    14,   15,   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-    8,    9,    14,   15,   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 0,    1,    8,    9,    14,   15,   0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 2,    3,    8,    9,
-    14,   15,   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-    0,    1,    2,    3,    8,    9,    14,   15,   0xFF, 0xFF, 0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 4,    5,    8,    9,    14,   15,   0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0,    1,    4,    5,
-    8,    9,    14,   15,   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-    2,    3,    4,    5,    8,    9,    14,   15,   0xFF, 0xFF, 0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 0,    1,    2,    3,    4,    5,    8,    9,
-    14,   15,   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 6,    7,    8,    9,
-    14,   15,   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-    0,    1,    6,    7,    8,    9,    14,   15,   0xFF, 0xFF, 0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 2,    3,    6,    7,    8,    9,    14,   15,
-    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0,    1,    2,    3,
-    6,    7,    8,    9,    14,   15,   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-    4,    5,    6,    7,    8,    9,    14,   15,   0xFF, 0xFF, 0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 0,    1,    4,    5,    6,    7,    8,    9,
-    14,   15,   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 2,    3,    4,    5,
-    6,    7,    8,    9,    14,   15,   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-    0,    1,    2,    3,    4,    5,    6,    7,    8,    9,    14,   15,
-    0xFF, 0xFF, 0xFF, 0xFF, 10,   11,   14,   15,   0xFF, 0xFF, 0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0,    1,    10,   11,
-    14,   15,   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-    2,    3,    10,   11,   14,   15,   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 0,    1,    2,    3,    10,   11,   14,   15,
-    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 4,    5,    10,   11,
-    14,   15,   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-    0,    1,    4,    5,    10,   11,   14,   15,   0xFF, 0xFF, 0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 2,    3,    4,    5,    10,   11,   14,   15,
-    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0,    1,    2,    3,
-    4,    5,    10,   11,   14,   15,   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-    6,    7,    10,   11,   14,   15,   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 0,    1,    6,    7,    10,   11,   14,   15,
-    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 2,    3,    6,    7,
-    10,   11,   14,   15,   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-    0,    1,    2,    3,    6,    7,    10,   11,   14,   15,   0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 4,    5,    6,    7,    10,   11,   14,   15,
-    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0,    1,    4,    5,
-    6,    7,    10,   11,   14,   15,   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-    2,    3,    4,    5,    6,    7,    10,   11,   14,   15,   0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 0,    1,    2,    3,    4,    5,    6,    7,
-    10,   11,   14,   15,   0xFF, 0xFF, 0xFF, 0xFF, 8,    9,    10,   11,
-    14,   15,   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-    0,    1,    8,    9,    10,   11,   14,   15,   0xFF, 0xFF, 0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 2,    3,    8,    9,    10,   11,   14,   15,
-    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0,    1,    2,    3,
-    8,    9,    10,   11,   14,   15,   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-    4,    5,    8,    9,    10,   11,   14,   15,   0xFF, 0xFF, 0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 0,    1,    4,    5,    8,    9,    10,   11,
-    14,   15,   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 2,    3,    4,    5,
-    8,    9,    10,   11,   14,   15,   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-    0,    1,    2,    3,    4,    5,    8,    9,    10,   11,   14,   15,
-    0xFF, 0xFF, 0xFF, 0xFF, 6,    7,    8,    9,    10,   11,   14,   15,
-    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0,    1,    6,    7,
-    8,    9,    10,   11,   14,   15,   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-    2,    3,    6,    7,    8,    9,    10,   11,   14,   15,   0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 0,    1,    2,    3,    6,    7,    8,    9,
-    10,   11,   14,   15,   0xFF, 0xFF, 0xFF, 0xFF, 4,    5,    6,    7,
-    8,    9,    10,   11,   14,   15,   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-    0,    1,    4,    5,    6,    7,    8,    9,    10,   11,   14,   15,
-    0xFF, 0xFF, 0xFF, 0xFF, 2,    3,    4,    5,    6,    7,    8,    9,
-    10,   11,   14,   15,   0xFF, 0xFF, 0xFF, 0xFF, 0,    1,    2,    3,
-    4,    5,    6,    7,    8,    9,    10,   11,   14,   15,   0xFF, 0xFF,
-    12,   13,   14,   15,   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 0,    1,    12,   13,   14,   15,   0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 2,    3,    12,   13,
-    14,   15,   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-    0,    1,    2,    3,    12,   13,   14,   15,   0xFF, 0xFF, 0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 4,    5,    12,   13,   14,   15,   0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0,    1,    4,    5,
-    12,   13,   14,   15,   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-    2,    3,    4,    5,    12,   13,   14,   15,   0xFF, 0xFF, 0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 0,    1,    2,    3,    4,    5,    12,   13,
-    14,   15,   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 6,    7,    12,   13,
-    14,   15,   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-    0,    1,    6,    7,    12,   13,   14,   15,   0xFF, 0xFF, 0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 2,    3,    6,    7,    12,   13,   14,   15,
-    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0,    1,    2,    3,
-    6,    7,    12,   13,   14,   15,   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-    4,    5,    6,    7,    12,   13,   14,   15,   0xFF, 0xFF, 0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 0,    1,    4,    5,    6,    7,    12,   13,
-    14,   15,   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 2,    3,    4,    5,
-    6,    7,    12,   13,   14,   15,   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-    0,    1,    2,    3,    4,    5,    6,    7,    12,   13,   14,   15,
-    0xFF, 0xFF, 0xFF, 0xFF, 8,    9,    12,   13,   14,   15,   0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0,    1,    8,    9,
-    12,   13,   14,   15,   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-    2,    3,    8,    9,    12,   13,   14,   15,   0xFF, 0xFF, 0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 0,    1,    2,    3,    8,    9,    12,   13,
-    14,   15,   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 4,    5,    8,    9,
-    12,   13,   14,   15,   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-    0,    1,    4,    5,    8,    9,    12,   13,   14,   15,   0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 2,    3,    4,    5,    8,    9,    12,   13,
-    14,   15,   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0,    1,    2,    3,
-    4,    5,    8,    9,    12,   13,   14,   15,   0xFF, 0xFF, 0xFF, 0xFF,
-    6,    7,    8,    9,    12,   13,   14,   15,   0xFF, 0xFF, 0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 0,    1,    6,    7,    8,    9,    12,   13,
-    14,   15,   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 2,    3,    6,    7,
-    8,    9,    12,   13,   14,   15,   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-    0,    1,    2,    3,    6,    7,    8,    9,    12,   13,   14,   15,
-    0xFF, 0xFF, 0xFF, 0xFF, 4,    5,    6,    7,    8,    9,    12,   13,
-    14,   15,   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0,    1,    4,    5,
-    6,    7,    8,    9,    12,   13,   14,   15,   0xFF, 0xFF, 0xFF, 0xFF,
-    2,    3,    4,    5,    6,    7,    8,    9,    12,   13,   14,   15,
-    0xFF, 0xFF, 0xFF, 0xFF, 0,    1,    2,    3,    4,    5,    6,    7,
-    8,    9,    12,   13,   14,   15,   0xFF, 0xFF, 10,   11,   12,   13,
-    14,   15,   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-    0,    1,    10,   11,   12,   13,   14,   15,   0xFF, 0xFF, 0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 2,    3,    10,   11,   12,   13,   14,   15,
-    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0,    1,    2,    3,
-    10,   11,   12,   13,   14,   15,   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-    4,    5,    10,   11,   12,   13,   14,   15,   0xFF, 0xFF, 0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 0,    1,    4,    5,    10,   11,   12,   13,
-    14,   15,   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 2,    3,    4,    5,
-    10,   11,   12,   13,   14,   15,   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-    0,    1,    2,    3,    4,    5,    10,   11,   12,   13,   14,   15,
-    0xFF, 0xFF, 0xFF, 0xFF, 6,    7,    10,   11,   12,   13,   14,   15,
-    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0,    1,    6,    7,
-    10,   11,   12,   13,   14,   15,   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-    2,    3,    6,    7,    10,   11,   12,   13,   14,   15,   0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 0,    1,    2,    3,    6,    7,    10,   11,
-    12,   13,   14,   15,   0xFF, 0xFF, 0xFF, 0xFF, 4,    5,    6,    7,
-    10,   11,   12,   13,   14,   15,   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-    0,    1,    4,    5,    6,    7,    10,   11,   12,   13,   14,   15,
-    0xFF, 0xFF, 0xFF, 0xFF, 2,    3,    4,    5,    6,    7,    10,   11,
-    12,   13,   14,   15,   0xFF, 0xFF, 0xFF, 0xFF, 0,    1,    2,    3,
-    4,    5,    6,    7,    10,   11,   12,   13,   14,   15,   0xFF, 0xFF,
-    8,    9,    10,   11,   12,   13,   14,   15,   0xFF, 0xFF, 0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 0,    1,    8,    9,    10,   11,   12,   13,
-    14,   15,   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 2,    3,    8,    9,
-    10,   11,   12,   13,   14,   15,   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-    0,    1,    2,    3,    8,    9,    10,   11,   12,   13,   14,   15,
-    0xFF, 0xFF, 0xFF, 0xFF, 4,    5,    8,    9,    10,   11,   12,   13,
-    14,   15,   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0,    1,    4,    5,
-    8,    9,    10,   11,   12,   13,   14,   15,   0xFF, 0xFF, 0xFF, 0xFF,
-    2,    3,    4,    5,    8,    9,    10,   11,   12,   13,   14,   15,
-    0xFF, 0xFF, 0xFF, 0xFF, 0,    1,    2,    3,    4,    5,    8,    9,
-    10,   11,   12,   13,   14,   15,   0xFF, 0xFF, 6,    7,    8,    9,
-    10,   11,   12,   13,   14,   15,   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-    0,    1,    6,    7,    8,    9,    10,   11,   12,   13,   14,   15,
-    0xFF, 0xFF, 0xFF, 0xFF, 2,    3,    6,    7,    8,    9,    10,   11,
-    12,   13,   14,   15,   0xFF, 0xFF, 0xFF, 0xFF, 0,    1,    2,    3,
-    6,    7,    8,    9,    10,   11,   12,   13,   14,   15,   0xFF, 0xFF,
-    4,    5,    6,    7,    8,    9,    10,   11,   12,   13,   14,   15,
-    0xFF, 0xFF, 0xFF, 0xFF, 0,    1,    4,    5,    6,    7,    8,    9,
-    10,   11,   12,   13,   14,   15,   0xFF, 0xFF, 2,    3,    4,    5,
-    6,    7,    8,    9,    10,   11,   12,   13,   14,   15,   0xFF, 0xFF,
-    0,    1,    2,    3,    4,    5,    6,    7,    8,    9,    10,   11,
-    12,   13,   14,   15};
+        0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0xFF, 0,    1,    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 2,    3,    0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+        0,    1,    2,    3,    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0xFF, 4,    5,    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0,    1,    4,    5,
+        0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+        2,    3,    4,    5,    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0xFF, 0,    1,    2,    3,    4,    5,    0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 6,    7,    0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+        0,    1,    6,    7,    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0xFF, 2,    3,    6,    7,    0xFF, 0xFF, 0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0,    1,    2,    3,
+        6,    7,    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+        4,    5,    6,    7,    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0xFF, 0,    1,    4,    5,    6,    7,    0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 2,    3,    4,    5,
+        6,    7,    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+        0,    1,    2,    3,    4,    5,    6,    7,    0xFF, 0xFF, 0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0xFF, 8,    9,    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0,    1,    8,    9,
+        0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+        2,    3,    8,    9,    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0xFF, 0,    1,    2,    3,    8,    9,    0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 4,    5,    8,    9,
+        0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+        0,    1,    4,    5,    8,    9,    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0xFF, 2,    3,    4,    5,    8,    9,    0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0,    1,    2,    3,
+        4,    5,    8,    9,    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+        6,    7,    8,    9,    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0xFF, 0,    1,    6,    7,    8,    9,    0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 2,    3,    6,    7,
+        8,    9,    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+        0,    1,    2,    3,    6,    7,    8,    9,    0xFF, 0xFF, 0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0xFF, 4,    5,    6,    7,    8,    9,    0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0,    1,    4,    5,
+        6,    7,    8,    9,    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+        2,    3,    4,    5,    6,    7,    8,    9,    0xFF, 0xFF, 0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0xFF, 0,    1,    2,    3,    4,    5,    6,    7,
+        8,    9,    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 10,   11,   0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+        0,    1,    10,   11,   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0xFF, 2,    3,    10,   11,   0xFF, 0xFF, 0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0,    1,    2,    3,
+        10,   11,   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+        4,    5,    10,   11,   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0xFF, 0,    1,    4,    5,    10,   11,   0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 2,    3,    4,    5,
+        10,   11,   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+        0,    1,    2,    3,    4,    5,    10,   11,   0xFF, 0xFF, 0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0xFF, 6,    7,    10,   11,   0xFF, 0xFF, 0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0,    1,    6,    7,
+        10,   11,   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+        2,    3,    6,    7,    10,   11,   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0xFF, 0,    1,    2,    3,    6,    7,    10,   11,
+        0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 4,    5,    6,    7,
+        10,   11,   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+        0,    1,    4,    5,    6,    7,    10,   11,   0xFF, 0xFF, 0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0xFF, 2,    3,    4,    5,    6,    7,    10,   11,
+        0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0,    1,    2,    3,
+        4,    5,    6,    7,    10,   11,   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+        8,    9,    10,   11,   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0xFF, 0,    1,    8,    9,    10,   11,   0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 2,    3,    8,    9,
+        10,   11,   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+        0,    1,    2,    3,    8,    9,    10,   11,   0xFF, 0xFF, 0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0xFF, 4,    5,    8,    9,    10,   11,   0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0,    1,    4,    5,
+        8,    9,    10,   11,   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+        2,    3,    4,    5,    8,    9,    10,   11,   0xFF, 0xFF, 0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0xFF, 0,    1,    2,    3,    4,    5,    8,    9,
+        10,   11,   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 6,    7,    8,    9,
+        10,   11,   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+        0,    1,    6,    7,    8,    9,    10,   11,   0xFF, 0xFF, 0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0xFF, 2,    3,    6,    7,    8,    9,    10,   11,
+        0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0,    1,    2,    3,
+        6,    7,    8,    9,    10,   11,   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+        4,    5,    6,    7,    8,    9,    10,   11,   0xFF, 0xFF, 0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0xFF, 0,    1,    4,    5,    6,    7,    8,    9,
+        10,   11,   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 2,    3,    4,    5,
+        6,    7,    8,    9,    10,   11,   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+        0,    1,    2,    3,    4,    5,    6,    7,    8,    9,    10,   11,
+        0xFF, 0xFF, 0xFF, 0xFF, 12,   13,   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0,    1,    12,   13,
+        0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+        2,    3,    12,   13,   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0xFF, 0,    1,    2,    3,    12,   13,   0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 4,    5,    12,   13,
+        0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+        0,    1,    4,    5,    12,   13,   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0xFF, 2,    3,    4,    5,    12,   13,   0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0,    1,    2,    3,
+        4,    5,    12,   13,   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+        6,    7,    12,   13,   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0xFF, 0,    1,    6,    7,    12,   13,   0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 2,    3,    6,    7,
+        12,   13,   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+        0,    1,    2,    3,    6,    7,    12,   13,   0xFF, 0xFF, 0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0xFF, 4,    5,    6,    7,    12,   13,   0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0,    1,    4,    5,
+        6,    7,    12,   13,   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+        2,    3,    4,    5,    6,    7,    12,   13,   0xFF, 0xFF, 0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0xFF, 0,    1,    2,    3,    4,    5,    6,    7,
+        12,   13,   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 8,    9,    12,   13,
+        0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+        0,    1,    8,    9,    12,   13,   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0xFF, 2,    3,    8,    9,    12,   13,   0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0,    1,    2,    3,
+        8,    9,    12,   13,   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+        4,    5,    8,    9,    12,   13,   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0xFF, 0,    1,    4,    5,    8,    9,    12,   13,
+        0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 2,    3,    4,    5,
+        8,    9,    12,   13,   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+        0,    1,    2,    3,    4,    5,    8,    9,    12,   13,   0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0xFF, 6,    7,    8,    9,    12,   13,   0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0,    1,    6,    7,
+        8,    9,    12,   13,   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+        2,    3,    6,    7,    8,    9,    12,   13,   0xFF, 0xFF, 0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0xFF, 0,    1,    2,    3,    6,    7,    8,    9,
+        12,   13,   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 4,    5,    6,    7,
+        8,    9,    12,   13,   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+        0,    1,    4,    5,    6,    7,    8,    9,    12,   13,   0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0xFF, 2,    3,    4,    5,    6,    7,    8,    9,
+        12,   13,   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0,    1,    2,    3,
+        4,    5,    6,    7,    8,    9,    12,   13,   0xFF, 0xFF, 0xFF, 0xFF,
+        10,   11,   12,   13,   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0xFF, 0,    1,    10,   11,   12,   13,   0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 2,    3,    10,   11,
+        12,   13,   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+        0,    1,    2,    3,    10,   11,   12,   13,   0xFF, 0xFF, 0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0xFF, 4,    5,    10,   11,   12,   13,   0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0,    1,    4,    5,
+        10,   11,   12,   13,   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+        2,    3,    4,    5,    10,   11,   12,   13,   0xFF, 0xFF, 0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0xFF, 0,    1,    2,    3,    4,    5,    10,   11,
+        12,   13,   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 6,    7,    10,   11,
+        12,   13,   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+        0,    1,    6,    7,    10,   11,   12,   13,   0xFF, 0xFF, 0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0xFF, 2,    3,    6,    7,    10,   11,   12,   13,
+        0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0,    1,    2,    3,
+        6,    7,    10,   11,   12,   13,   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+        4,    5,    6,    7,    10,   11,   12,   13,   0xFF, 0xFF, 0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0xFF, 0,    1,    4,    5,    6,    7,    10,   11,
+        12,   13,   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 2,    3,    4,    5,
+        6,    7,    10,   11,   12,   13,   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+        0,    1,    2,    3,    4,    5,    6,    7,    10,   11,   12,   13,
+        0xFF, 0xFF, 0xFF, 0xFF, 8,    9,    10,   11,   12,   13,   0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0,    1,    8,    9,
+        10,   11,   12,   13,   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+        2,    3,    8,    9,    10,   11,   12,   13,   0xFF, 0xFF, 0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0xFF, 0,    1,    2,    3,    8,    9,    10,   11,
+        12,   13,   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 4,    5,    8,    9,
+        10,   11,   12,   13,   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+        0,    1,    4,    5,    8,    9,    10,   11,   12,   13,   0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0xFF, 2,    3,    4,    5,    8,    9,    10,   11,
+        12,   13,   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0,    1,    2,    3,
+        4,    5,    8,    9,    10,   11,   12,   13,   0xFF, 0xFF, 0xFF, 0xFF,
+        6,    7,    8,    9,    10,   11,   12,   13,   0xFF, 0xFF, 0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0xFF, 0,    1,    6,    7,    8,    9,    10,   11,
+        12,   13,   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 2,    3,    6,    7,
+        8,    9,    10,   11,   12,   13,   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+        0,    1,    2,    3,    6,    7,    8,    9,    10,   11,   12,   13,
+        0xFF, 0xFF, 0xFF, 0xFF, 4,    5,    6,    7,    8,    9,    10,   11,
+        12,   13,   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0,    1,    4,    5,
+        6,    7,    8,    9,    10,   11,   12,   13,   0xFF, 0xFF, 0xFF, 0xFF,
+        2,    3,    4,    5,    6,    7,    8,    9,    10,   11,   12,   13,
+        0xFF, 0xFF, 0xFF, 0xFF, 0,    1,    2,    3,    4,    5,    6,    7,
+        8,    9,    10,   11,   12,   13,   0xFF, 0xFF, 14,   15,   0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+        0,    1,    14,   15,   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0xFF, 2,    3,    14,   15,   0xFF, 0xFF, 0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0,    1,    2,    3,
+        14,   15,   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+        4,    5,    14,   15,   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0xFF, 0,    1,    4,    5,    14,   15,   0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 2,    3,    4,    5,
+        14,   15,   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+        0,    1,    2,    3,    4,    5,    14,   15,   0xFF, 0xFF, 0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0xFF, 6,    7,    14,   15,   0xFF, 0xFF, 0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0,    1,    6,    7,
+        14,   15,   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+        2,    3,    6,    7,    14,   15,   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0xFF, 0,    1,    2,    3,    6,    7,    14,   15,
+        0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 4,    5,    6,    7,
+        14,   15,   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+        0,    1,    4,    5,    6,    7,    14,   15,   0xFF, 0xFF, 0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0xFF, 2,    3,    4,    5,    6,    7,    14,   15,
+        0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0,    1,    2,    3,
+        4,    5,    6,    7,    14,   15,   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+        8,    9,    14,   15,   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0xFF, 0,    1,    8,    9,    14,   15,   0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 2,    3,    8,    9,
+        14,   15,   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+        0,    1,    2,    3,    8,    9,    14,   15,   0xFF, 0xFF, 0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0xFF, 4,    5,    8,    9,    14,   15,   0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0,    1,    4,    5,
+        8,    9,    14,   15,   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+        2,    3,    4,    5,    8,    9,    14,   15,   0xFF, 0xFF, 0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0xFF, 0,    1,    2,    3,    4,    5,    8,    9,
+        14,   15,   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 6,    7,    8,    9,
+        14,   15,   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+        0,    1,    6,    7,    8,    9,    14,   15,   0xFF, 0xFF, 0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0xFF, 2,    3,    6,    7,    8,    9,    14,   15,
+        0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0,    1,    2,    3,
+        6,    7,    8,    9,    14,   15,   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+        4,    5,    6,    7,    8,    9,    14,   15,   0xFF, 0xFF, 0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0xFF, 0,    1,    4,    5,    6,    7,    8,    9,
+        14,   15,   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 2,    3,    4,    5,
+        6,    7,    8,    9,    14,   15,   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+        0,    1,    2,    3,    4,    5,    6,    7,    8,    9,    14,   15,
+        0xFF, 0xFF, 0xFF, 0xFF, 10,   11,   14,   15,   0xFF, 0xFF, 0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0,    1,    10,   11,
+        14,   15,   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+        2,    3,    10,   11,   14,   15,   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0xFF, 0,    1,    2,    3,    10,   11,   14,   15,
+        0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 4,    5,    10,   11,
+        14,   15,   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+        0,    1,    4,    5,    10,   11,   14,   15,   0xFF, 0xFF, 0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0xFF, 2,    3,    4,    5,    10,   11,   14,   15,
+        0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0,    1,    2,    3,
+        4,    5,    10,   11,   14,   15,   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+        6,    7,    10,   11,   14,   15,   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0xFF, 0,    1,    6,    7,    10,   11,   14,   15,
+        0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 2,    3,    6,    7,
+        10,   11,   14,   15,   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+        0,    1,    2,    3,    6,    7,    10,   11,   14,   15,   0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0xFF, 4,    5,    6,    7,    10,   11,   14,   15,
+        0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0,    1,    4,    5,
+        6,    7,    10,   11,   14,   15,   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+        2,    3,    4,    5,    6,    7,    10,   11,   14,   15,   0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0xFF, 0,    1,    2,    3,    4,    5,    6,    7,
+        10,   11,   14,   15,   0xFF, 0xFF, 0xFF, 0xFF, 8,    9,    10,   11,
+        14,   15,   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+        0,    1,    8,    9,    10,   11,   14,   15,   0xFF, 0xFF, 0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0xFF, 2,    3,    8,    9,    10,   11,   14,   15,
+        0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0,    1,    2,    3,
+        8,    9,    10,   11,   14,   15,   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+        4,    5,    8,    9,    10,   11,   14,   15,   0xFF, 0xFF, 0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0xFF, 0,    1,    4,    5,    8,    9,    10,   11,
+        14,   15,   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 2,    3,    4,    5,
+        8,    9,    10,   11,   14,   15,   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+        0,    1,    2,    3,    4,    5,    8,    9,    10,   11,   14,   15,
+        0xFF, 0xFF, 0xFF, 0xFF, 6,    7,    8,    9,    10,   11,   14,   15,
+        0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0,    1,    6,    7,
+        8,    9,    10,   11,   14,   15,   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+        2,    3,    6,    7,    8,    9,    10,   11,   14,   15,   0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0xFF, 0,    1,    2,    3,    6,    7,    8,    9,
+        10,   11,   14,   15,   0xFF, 0xFF, 0xFF, 0xFF, 4,    5,    6,    7,
+        8,    9,    10,   11,   14,   15,   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+        0,    1,    4,    5,    6,    7,    8,    9,    10,   11,   14,   15,
+        0xFF, 0xFF, 0xFF, 0xFF, 2,    3,    4,    5,    6,    7,    8,    9,
+        10,   11,   14,   15,   0xFF, 0xFF, 0xFF, 0xFF, 0,    1,    2,    3,
+        4,    5,    6,    7,    8,    9,    10,   11,   14,   15,   0xFF, 0xFF,
+        12,   13,   14,   15,   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0xFF, 0,    1,    12,   13,   14,   15,   0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 2,    3,    12,   13,
+        14,   15,   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+        0,    1,    2,    3,    12,   13,   14,   15,   0xFF, 0xFF, 0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0xFF, 4,    5,    12,   13,   14,   15,   0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0,    1,    4,    5,
+        12,   13,   14,   15,   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+        2,    3,    4,    5,    12,   13,   14,   15,   0xFF, 0xFF, 0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0xFF, 0,    1,    2,    3,    4,    5,    12,   13,
+        14,   15,   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 6,    7,    12,   13,
+        14,   15,   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+        0,    1,    6,    7,    12,   13,   14,   15,   0xFF, 0xFF, 0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0xFF, 2,    3,    6,    7,    12,   13,   14,   15,
+        0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0,    1,    2,    3,
+        6,    7,    12,   13,   14,   15,   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+        4,    5,    6,    7,    12,   13,   14,   15,   0xFF, 0xFF, 0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0xFF, 0,    1,    4,    5,    6,    7,    12,   13,
+        14,   15,   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 2,    3,    4,    5,
+        6,    7,    12,   13,   14,   15,   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+        0,    1,    2,    3,    4,    5,    6,    7,    12,   13,   14,   15,
+        0xFF, 0xFF, 0xFF, 0xFF, 8,    9,    12,   13,   14,   15,   0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0,    1,    8,    9,
+        12,   13,   14,   15,   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+        2,    3,    8,    9,    12,   13,   14,   15,   0xFF, 0xFF, 0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0xFF, 0,    1,    2,    3,    8,    9,    12,   13,
+        14,   15,   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 4,    5,    8,    9,
+        12,   13,   14,   15,   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+        0,    1,    4,    5,    8,    9,    12,   13,   14,   15,   0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0xFF, 2,    3,    4,    5,    8,    9,    12,   13,
+        14,   15,   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0,    1,    2,    3,
+        4,    5,    8,    9,    12,   13,   14,   15,   0xFF, 0xFF, 0xFF, 0xFF,
+        6,    7,    8,    9,    12,   13,   14,   15,   0xFF, 0xFF, 0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0xFF, 0,    1,    6,    7,    8,    9,    12,   13,
+        14,   15,   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 2,    3,    6,    7,
+        8,    9,    12,   13,   14,   15,   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+        0,    1,    2,    3,    6,    7,    8,    9,    12,   13,   14,   15,
+        0xFF, 0xFF, 0xFF, 0xFF, 4,    5,    6,    7,    8,    9,    12,   13,
+        14,   15,   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0,    1,    4,    5,
+        6,    7,    8,    9,    12,   13,   14,   15,   0xFF, 0xFF, 0xFF, 0xFF,
+        2,    3,    4,    5,    6,    7,    8,    9,    12,   13,   14,   15,
+        0xFF, 0xFF, 0xFF, 0xFF, 0,    1,    2,    3,    4,    5,    6,    7,
+        8,    9,    12,   13,   14,   15,   0xFF, 0xFF, 10,   11,   12,   13,
+        14,   15,   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+        0,    1,    10,   11,   12,   13,   14,   15,   0xFF, 0xFF, 0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0xFF, 2,    3,    10,   11,   12,   13,   14,   15,
+        0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0,    1,    2,    3,
+        10,   11,   12,   13,   14,   15,   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+        4,    5,    10,   11,   12,   13,   14,   15,   0xFF, 0xFF, 0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0xFF, 0,    1,    4,    5,    10,   11,   12,   13,
+        14,   15,   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 2,    3,    4,    5,
+        10,   11,   12,   13,   14,   15,   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+        0,    1,    2,    3,    4,    5,    10,   11,   12,   13,   14,   15,
+        0xFF, 0xFF, 0xFF, 0xFF, 6,    7,    10,   11,   12,   13,   14,   15,
+        0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0,    1,    6,    7,
+        10,   11,   12,   13,   14,   15,   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+        2,    3,    6,    7,    10,   11,   12,   13,   14,   15,   0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0xFF, 0,    1,    2,    3,    6,    7,    10,   11,
+        12,   13,   14,   15,   0xFF, 0xFF, 0xFF, 0xFF, 4,    5,    6,    7,
+        10,   11,   12,   13,   14,   15,   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+        0,    1,    4,    5,    6,    7,    10,   11,   12,   13,   14,   15,
+        0xFF, 0xFF, 0xFF, 0xFF, 2,    3,    4,    5,    6,    7,    10,   11,
+        12,   13,   14,   15,   0xFF, 0xFF, 0xFF, 0xFF, 0,    1,    2,    3,
+        4,    5,    6,    7,    10,   11,   12,   13,   14,   15,   0xFF, 0xFF,
+        8,    9,    10,   11,   12,   13,   14,   15,   0xFF, 0xFF, 0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0xFF, 0,    1,    8,    9,    10,   11,   12,   13,
+        14,   15,   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 2,    3,    8,    9,
+        10,   11,   12,   13,   14,   15,   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+        0,    1,    2,    3,    8,    9,    10,   11,   12,   13,   14,   15,
+        0xFF, 0xFF, 0xFF, 0xFF, 4,    5,    8,    9,    10,   11,   12,   13,
+        14,   15,   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0,    1,    4,    5,
+        8,    9,    10,   11,   12,   13,   14,   15,   0xFF, 0xFF, 0xFF, 0xFF,
+        2,    3,    4,    5,    8,    9,    10,   11,   12,   13,   14,   15,
+        0xFF, 0xFF, 0xFF, 0xFF, 0,    1,    2,    3,    4,    5,    8,    9,
+        10,   11,   12,   13,   14,   15,   0xFF, 0xFF, 6,    7,    8,    9,
+        10,   11,   12,   13,   14,   15,   0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+        0,    1,    6,    7,    8,    9,    10,   11,   12,   13,   14,   15,
+        0xFF, 0xFF, 0xFF, 0xFF, 2,    3,    6,    7,    8,    9,    10,   11,
+        12,   13,   14,   15,   0xFF, 0xFF, 0xFF, 0xFF, 0,    1,    2,    3,
+        6,    7,    8,    9,    10,   11,   12,   13,   14,   15,   0xFF, 0xFF,
+        4,    5,    6,    7,    8,    9,    10,   11,   12,   13,   14,   15,
+        0xFF, 0xFF, 0xFF, 0xFF, 0,    1,    4,    5,    6,    7,    8,    9,
+        10,   11,   12,   13,   14,   15,   0xFF, 0xFF, 2,    3,    4,    5,
+        6,    7,    8,    9,    10,   11,   12,   13,   14,   15,   0xFF, 0xFF,
+        0,    1,    2,    3,    4,    5,    6,    7,    8,    9,    10,   11,
+        12,   13,   14,   15};
 
 /**
  * From Schlegel et al., Fast Sorted-Set Intersection using SIMD Instructions
@@ -7326,8 +7326,8 @@ int32_t intersect_vector16(const uint16_t *__restrict__ A, size_t s_a,
         v_b = _mm_lddqu_si128((__m128i *)&B[i_b]);
         while ((A[i_a] == 0) || (B[i_b] == 0)) {
             const __m128i res_v = _mm_cmpestrm(
-                v_b, vectorlength, v_a, vectorlength,
-                _SIDD_UWORD_OPS | _SIDD_CMP_EQUAL_ANY | _SIDD_BIT_MASK);
+                    v_b, vectorlength, v_a, vectorlength,
+                    _SIDD_UWORD_OPS | _SIDD_CMP_EQUAL_ANY | _SIDD_BIT_MASK);
             const int r = _mm_extract_epi32(res_v, 0);
             __m128i sm16 = _mm_loadu_si128((const __m128i *)shuffle_mask16 + r);
             __m128i p = _mm_shuffle_epi8(v_a, sm16);
@@ -7349,11 +7349,11 @@ int32_t intersect_vector16(const uint16_t *__restrict__ A, size_t s_a,
         if ((i_a < st_a) && (i_b < st_b))
             while (true) {
                 const __m128i res_v = _mm_cmpistrm(
-                    v_b, v_a,
-                    _SIDD_UWORD_OPS | _SIDD_CMP_EQUAL_ANY | _SIDD_BIT_MASK);
+                        v_b, v_a,
+                        _SIDD_UWORD_OPS | _SIDD_CMP_EQUAL_ANY | _SIDD_BIT_MASK);
                 const int r = _mm_extract_epi32(res_v, 0);
                 __m128i sm16 =
-                    _mm_loadu_si128((const __m128i *)shuffle_mask16 + r);
+                        _mm_loadu_si128((const __m128i *)shuffle_mask16 + r);
                 __m128i p = _mm_shuffle_epi8(v_a, sm16);
                 _mm_storeu_si128((__m128i *)&C[count], p);  // can overflow
                 count += _mm_popcnt_u32(r);
@@ -7397,7 +7397,7 @@ int array_container_to_uint32_array_vector16(void *vout, const uint16_t *array,
     uint32_t *out = (uint32_t *)vout;
     size_t i = 0;
     for (; i + sizeof(__m128i) / sizeof(uint16_t) <= cardinality;
-         i += sizeof(__m128i) / sizeof(uint16_t)) {
+           i += sizeof(__m128i) / sizeof(uint16_t)) {
         __m128i vinput = _mm_loadu_si128((const __m128i *)(array + i));
         __m256i voutput = _mm256_add_epi32(_mm256_cvtepu16_epi32(vinput),
                                            _mm256_set1_epi32(base));
@@ -7428,8 +7428,8 @@ int32_t intersect_vector16_inplace(uint16_t *__restrict__ A, size_t s_a,
         size_t tmp_count = 0;
         while ((A[i_a] == 0) || (B[i_b] == 0)) {
             const __m128i res_v = _mm_cmpestrm(
-                v_b, vectorlength, v_a, vectorlength,
-                _SIDD_UWORD_OPS | _SIDD_CMP_EQUAL_ANY | _SIDD_BIT_MASK);
+                    v_b, vectorlength, v_a, vectorlength,
+                    _SIDD_UWORD_OPS | _SIDD_CMP_EQUAL_ANY | _SIDD_BIT_MASK);
             const int r = _mm_extract_epi32(res_v, 0);
             __m128i sm16 = _mm_loadu_si128((const __m128i *)shuffle_mask16 + r);
             __m128i p = _mm_shuffle_epi8(v_a, sm16);
@@ -7455,11 +7455,11 @@ int32_t intersect_vector16_inplace(uint16_t *__restrict__ A, size_t s_a,
         if ((i_a < st_a) && (i_b < st_b)) {
             while (true) {
                 const __m128i res_v = _mm_cmpistrm(
-                    v_b, v_a,
-                    _SIDD_UWORD_OPS | _SIDD_CMP_EQUAL_ANY | _SIDD_BIT_MASK);
+                        v_b, v_a,
+                        _SIDD_UWORD_OPS | _SIDD_CMP_EQUAL_ANY | _SIDD_BIT_MASK);
                 const int r = _mm_extract_epi32(res_v, 0);
                 __m128i sm16 =
-                    _mm_loadu_si128((const __m128i *)shuffle_mask16 + r);
+                        _mm_loadu_si128((const __m128i *)shuffle_mask16 + r);
                 __m128i p = _mm_shuffle_epi8(v_a, sm16);
                 _mm_storeu_si128((__m128i *)&((uint16_t *)tmp)[tmp_count], p);
                 tmp_count += _mm_popcnt_u32(r);
@@ -7523,8 +7523,8 @@ int32_t intersect_vector16_cardinality(const uint16_t *__restrict__ A,
         v_b = _mm_lddqu_si128((__m128i *)&B[i_b]);
         while ((A[i_a] == 0) || (B[i_b] == 0)) {
             const __m128i res_v = _mm_cmpestrm(
-                v_b, vectorlength, v_a, vectorlength,
-                _SIDD_UWORD_OPS | _SIDD_CMP_EQUAL_ANY | _SIDD_BIT_MASK);
+                    v_b, vectorlength, v_a, vectorlength,
+                    _SIDD_UWORD_OPS | _SIDD_CMP_EQUAL_ANY | _SIDD_BIT_MASK);
             const int r = _mm_extract_epi32(res_v, 0);
             count += _mm_popcnt_u32(r);
             const uint16_t a_max = A[i_a + vectorlength - 1];
@@ -7543,8 +7543,8 @@ int32_t intersect_vector16_cardinality(const uint16_t *__restrict__ A,
         if ((i_a < st_a) && (i_b < st_b))
             while (true) {
                 const __m128i res_v = _mm_cmpistrm(
-                    v_b, v_a,
-                    _SIDD_UWORD_OPS | _SIDD_CMP_EQUAL_ANY | _SIDD_BIT_MASK);
+                        v_b, v_a,
+                        _SIDD_UWORD_OPS | _SIDD_CMP_EQUAL_ANY | _SIDD_BIT_MASK);
                 const int r = _mm_extract_epi32(res_v, 0);
                 count += _mm_popcnt_u32(r);
                 const uint16_t a_max = A[i_a + vectorlength - 1];
@@ -7633,10 +7633,10 @@ int32_t difference_vector16(const uint16_t *__restrict__ A, size_t s_a,
             // whether it is seen
             // in B
             const __m128i a_found_in_b = _mm_cmpistrm(
-                v_b, v_a,
-                _SIDD_UWORD_OPS | _SIDD_CMP_EQUAL_ANY | _SIDD_BIT_MASK);
+                    v_b, v_a,
+                    _SIDD_UWORD_OPS | _SIDD_CMP_EQUAL_ANY | _SIDD_BIT_MASK);
             runningmask_a_found_in_b =
-                _mm_or_si128(runningmask_a_found_in_b, a_found_in_b);
+                    _mm_or_si128(runningmask_a_found_in_b, a_found_in_b);
             // we always compare the last values of A and B
             const uint16_t a_max = A[i_a + vectorlength - 1];
             const uint16_t b_max = B[i_b + vectorlength - 1];
@@ -7645,7 +7645,7 @@ int32_t difference_vector16(const uint16_t *__restrict__ A, size_t s_a,
                 // because there is no need to read more from B, they will
                 // all be large values.
                 const int bitmask_belongs_to_difference =
-                    _mm_extract_epi32(runningmask_a_found_in_b, 0) ^ 0xFF;
+                        _mm_extract_epi32(runningmask_a_found_in_b, 0) ^ 0xFF;
                 /*** next few lines are probably expensive *****/
                 __m128i sm16 = _mm_loadu_si128((const __m128i *)shuffle_mask16 +
                                                bitmask_belongs_to_difference);
@@ -7676,12 +7676,12 @@ int32_t difference_vector16(const uint16_t *__restrict__ A, size_t s_a,
             memcpy(buffer, B + i_b, (s_b - i_b) * sizeof(uint16_t));
             v_b = _mm_lddqu_si128((__m128i *)buffer);
             const __m128i a_found_in_b = _mm_cmpistrm(
-                v_b, v_a,
-                _SIDD_UWORD_OPS | _SIDD_CMP_EQUAL_ANY | _SIDD_BIT_MASK);
+                    v_b, v_a,
+                    _SIDD_UWORD_OPS | _SIDD_CMP_EQUAL_ANY | _SIDD_BIT_MASK);
             runningmask_a_found_in_b =
-                _mm_or_si128(runningmask_a_found_in_b, a_found_in_b);
+                    _mm_or_si128(runningmask_a_found_in_b, a_found_in_b);
             const int bitmask_belongs_to_difference =
-                _mm_extract_epi32(runningmask_a_found_in_b, 0) ^ 0xFF;
+                    _mm_extract_epi32(runningmask_a_found_in_b, 0) ^ 0xFF;
             __m128i sm16 = _mm_loadu_si128((const __m128i *)shuffle_mask16 +
                                            bitmask_belongs_to_difference);
             __m128i p = _mm_shuffle_epi8(v_a, sm16);
@@ -7833,7 +7833,7 @@ int32_t intersect_skewed_uint16(const uint16_t *small, size_t size_s,
     if ((idx_s < size_s) && (idx_l < size_l)) {
         uint16_t val_s = small[idx_s];
         int32_t index =
-            binarySearch(large + idx_l, (int32_t)(size_l - idx_l), val_s);
+                binarySearch(large + idx_l, (int32_t)(size_l - idx_l), val_s);
         if (index >= 0) buffer[pos++] = val_s;
     }
     return (int32_t)pos;
@@ -7914,7 +7914,7 @@ int32_t intersect_uint16(const uint16_t *A, const size_t lenA,
 
     while (1) {
         while (*A < *B) {
-        SKIP_FIRST_COMPARE:
+            SKIP_FIRST_COMPARE:
             if (++A == endA) return (int32_t)(out - initout);
         }
         while (*A > *B) {
@@ -7939,7 +7939,7 @@ int32_t intersect_uint16_cardinality(const uint16_t *A, const size_t lenA,
 
     while (1) {
         while (*A < *B) {
-        SKIP_FIRST_COMPARE:
+            SKIP_FIRST_COMPARE:
             if (++A == endA) return answer;
         }
         while (*A > *B) {
@@ -7963,7 +7963,7 @@ bool intersect_uint16_nonempty(const uint16_t *A, const size_t lenA,
 
     while (1) {
         while (*A < *B) {
-        SKIP_FIRST_COMPARE:
+            SKIP_FIRST_COMPARE:
             if (++A == endA) return false;
         }
         while (*A > *B) {
@@ -7991,7 +7991,7 @@ size_t intersection_uint32(const uint32_t *A, const size_t lenA,
 
     while (1) {
         while (*A < *B) {
-        SKIP_FIRST_COMPARE:
+            SKIP_FIRST_COMPARE:
             if (++A == endA) return (out - initout);
         }
         while (*A > *B) {
@@ -8016,7 +8016,7 @@ size_t intersection_uint32_card(const uint32_t *A, const size_t lenA,
 
     while (1) {
         while (*A < *B) {
-        SKIP_FIRST_COMPARE:
+            SKIP_FIRST_COMPARE:
             if (++A == endA) return card;
         }
         while (*A > *B) {
@@ -8205,348 +8205,348 @@ static inline void sse_merge(const __m128i *vInput1,
 CROARING_UNTARGET_AVX2
 // used by store_unique, generated by simdunion.py
 static uint8_t uniqshuf[] = {
-    0x0,  0x1,  0x2,  0x3,  0x4,  0x5,  0x6,  0x7,  0x8,  0x9,  0xa,  0xb,
-    0xc,  0xd,  0xe,  0xf,  0x2,  0x3,  0x4,  0x5,  0x6,  0x7,  0x8,  0x9,
-    0xa,  0xb,  0xc,  0xd,  0xe,  0xf,  0xFF, 0xFF, 0x0,  0x1,  0x4,  0x5,
-    0x6,  0x7,  0x8,  0x9,  0xa,  0xb,  0xc,  0xd,  0xe,  0xf,  0xFF, 0xFF,
-    0x4,  0x5,  0x6,  0x7,  0x8,  0x9,  0xa,  0xb,  0xc,  0xd,  0xe,  0xf,
-    0xFF, 0xFF, 0xFF, 0xFF, 0x0,  0x1,  0x2,  0x3,  0x6,  0x7,  0x8,  0x9,
-    0xa,  0xb,  0xc,  0xd,  0xe,  0xf,  0xFF, 0xFF, 0x2,  0x3,  0x6,  0x7,
-    0x8,  0x9,  0xa,  0xb,  0xc,  0xd,  0xe,  0xf,  0xFF, 0xFF, 0xFF, 0xFF,
-    0x0,  0x1,  0x6,  0x7,  0x8,  0x9,  0xa,  0xb,  0xc,  0xd,  0xe,  0xf,
-    0xFF, 0xFF, 0xFF, 0xFF, 0x6,  0x7,  0x8,  0x9,  0xa,  0xb,  0xc,  0xd,
-    0xe,  0xf,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x0,  0x1,  0x2,  0x3,
-    0x4,  0x5,  0x8,  0x9,  0xa,  0xb,  0xc,  0xd,  0xe,  0xf,  0xFF, 0xFF,
-    0x2,  0x3,  0x4,  0x5,  0x8,  0x9,  0xa,  0xb,  0xc,  0xd,  0xe,  0xf,
-    0xFF, 0xFF, 0xFF, 0xFF, 0x0,  0x1,  0x4,  0x5,  0x8,  0x9,  0xa,  0xb,
-    0xc,  0xd,  0xe,  0xf,  0xFF, 0xFF, 0xFF, 0xFF, 0x4,  0x5,  0x8,  0x9,
-    0xa,  0xb,  0xc,  0xd,  0xe,  0xf,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-    0x0,  0x1,  0x2,  0x3,  0x8,  0x9,  0xa,  0xb,  0xc,  0xd,  0xe,  0xf,
-    0xFF, 0xFF, 0xFF, 0xFF, 0x2,  0x3,  0x8,  0x9,  0xa,  0xb,  0xc,  0xd,
-    0xe,  0xf,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x0,  0x1,  0x8,  0x9,
-    0xa,  0xb,  0xc,  0xd,  0xe,  0xf,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-    0x8,  0x9,  0xa,  0xb,  0xc,  0xd,  0xe,  0xf,  0xFF, 0xFF, 0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 0x0,  0x1,  0x2,  0x3,  0x4,  0x5,  0x6,  0x7,
-    0xa,  0xb,  0xc,  0xd,  0xe,  0xf,  0xFF, 0xFF, 0x2,  0x3,  0x4,  0x5,
-    0x6,  0x7,  0xa,  0xb,  0xc,  0xd,  0xe,  0xf,  0xFF, 0xFF, 0xFF, 0xFF,
-    0x0,  0x1,  0x4,  0x5,  0x6,  0x7,  0xa,  0xb,  0xc,  0xd,  0xe,  0xf,
-    0xFF, 0xFF, 0xFF, 0xFF, 0x4,  0x5,  0x6,  0x7,  0xa,  0xb,  0xc,  0xd,
-    0xe,  0xf,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x0,  0x1,  0x2,  0x3,
-    0x6,  0x7,  0xa,  0xb,  0xc,  0xd,  0xe,  0xf,  0xFF, 0xFF, 0xFF, 0xFF,
-    0x2,  0x3,  0x6,  0x7,  0xa,  0xb,  0xc,  0xd,  0xe,  0xf,  0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 0x0,  0x1,  0x6,  0x7,  0xa,  0xb,  0xc,  0xd,
-    0xe,  0xf,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x6,  0x7,  0xa,  0xb,
-    0xc,  0xd,  0xe,  0xf,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-    0x0,  0x1,  0x2,  0x3,  0x4,  0x5,  0xa,  0xb,  0xc,  0xd,  0xe,  0xf,
-    0xFF, 0xFF, 0xFF, 0xFF, 0x2,  0x3,  0x4,  0x5,  0xa,  0xb,  0xc,  0xd,
-    0xe,  0xf,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x0,  0x1,  0x4,  0x5,
-    0xa,  0xb,  0xc,  0xd,  0xe,  0xf,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-    0x4,  0x5,  0xa,  0xb,  0xc,  0xd,  0xe,  0xf,  0xFF, 0xFF, 0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 0x0,  0x1,  0x2,  0x3,  0xa,  0xb,  0xc,  0xd,
-    0xe,  0xf,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x2,  0x3,  0xa,  0xb,
-    0xc,  0xd,  0xe,  0xf,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-    0x0,  0x1,  0xa,  0xb,  0xc,  0xd,  0xe,  0xf,  0xFF, 0xFF, 0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 0xa,  0xb,  0xc,  0xd,  0xe,  0xf,  0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x0,  0x1,  0x2,  0x3,
-    0x4,  0x5,  0x6,  0x7,  0x8,  0x9,  0xc,  0xd,  0xe,  0xf,  0xFF, 0xFF,
-    0x2,  0x3,  0x4,  0x5,  0x6,  0x7,  0x8,  0x9,  0xc,  0xd,  0xe,  0xf,
-    0xFF, 0xFF, 0xFF, 0xFF, 0x0,  0x1,  0x4,  0x5,  0x6,  0x7,  0x8,  0x9,
-    0xc,  0xd,  0xe,  0xf,  0xFF, 0xFF, 0xFF, 0xFF, 0x4,  0x5,  0x6,  0x7,
-    0x8,  0x9,  0xc,  0xd,  0xe,  0xf,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-    0x0,  0x1,  0x2,  0x3,  0x6,  0x7,  0x8,  0x9,  0xc,  0xd,  0xe,  0xf,
-    0xFF, 0xFF, 0xFF, 0xFF, 0x2,  0x3,  0x6,  0x7,  0x8,  0x9,  0xc,  0xd,
-    0xe,  0xf,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x0,  0x1,  0x6,  0x7,
-    0x8,  0x9,  0xc,  0xd,  0xe,  0xf,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-    0x6,  0x7,  0x8,  0x9,  0xc,  0xd,  0xe,  0xf,  0xFF, 0xFF, 0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 0x0,  0x1,  0x2,  0x3,  0x4,  0x5,  0x8,  0x9,
-    0xc,  0xd,  0xe,  0xf,  0xFF, 0xFF, 0xFF, 0xFF, 0x2,  0x3,  0x4,  0x5,
-    0x8,  0x9,  0xc,  0xd,  0xe,  0xf,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-    0x0,  0x1,  0x4,  0x5,  0x8,  0x9,  0xc,  0xd,  0xe,  0xf,  0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 0x4,  0x5,  0x8,  0x9,  0xc,  0xd,  0xe,  0xf,
-    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x0,  0x1,  0x2,  0x3,
-    0x8,  0x9,  0xc,  0xd,  0xe,  0xf,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-    0x2,  0x3,  0x8,  0x9,  0xc,  0xd,  0xe,  0xf,  0xFF, 0xFF, 0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 0x0,  0x1,  0x8,  0x9,  0xc,  0xd,  0xe,  0xf,
-    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x8,  0x9,  0xc,  0xd,
-    0xe,  0xf,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-    0x0,  0x1,  0x2,  0x3,  0x4,  0x5,  0x6,  0x7,  0xc,  0xd,  0xe,  0xf,
-    0xFF, 0xFF, 0xFF, 0xFF, 0x2,  0x3,  0x4,  0x5,  0x6,  0x7,  0xc,  0xd,
-    0xe,  0xf,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x0,  0x1,  0x4,  0x5,
-    0x6,  0x7,  0xc,  0xd,  0xe,  0xf,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-    0x4,  0x5,  0x6,  0x7,  0xc,  0xd,  0xe,  0xf,  0xFF, 0xFF, 0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 0x0,  0x1,  0x2,  0x3,  0x6,  0x7,  0xc,  0xd,
-    0xe,  0xf,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x2,  0x3,  0x6,  0x7,
-    0xc,  0xd,  0xe,  0xf,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-    0x0,  0x1,  0x6,  0x7,  0xc,  0xd,  0xe,  0xf,  0xFF, 0xFF, 0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 0x6,  0x7,  0xc,  0xd,  0xe,  0xf,  0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x0,  0x1,  0x2,  0x3,
-    0x4,  0x5,  0xc,  0xd,  0xe,  0xf,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-    0x2,  0x3,  0x4,  0x5,  0xc,  0xd,  0xe,  0xf,  0xFF, 0xFF, 0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 0x0,  0x1,  0x4,  0x5,  0xc,  0xd,  0xe,  0xf,
-    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x4,  0x5,  0xc,  0xd,
-    0xe,  0xf,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-    0x0,  0x1,  0x2,  0x3,  0xc,  0xd,  0xe,  0xf,  0xFF, 0xFF, 0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 0x2,  0x3,  0xc,  0xd,  0xe,  0xf,  0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x0,  0x1,  0xc,  0xd,
-    0xe,  0xf,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-    0xc,  0xd,  0xe,  0xf,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 0x0,  0x1,  0x2,  0x3,  0x4,  0x5,  0x6,  0x7,
-    0x8,  0x9,  0xa,  0xb,  0xe,  0xf,  0xFF, 0xFF, 0x2,  0x3,  0x4,  0x5,
-    0x6,  0x7,  0x8,  0x9,  0xa,  0xb,  0xe,  0xf,  0xFF, 0xFF, 0xFF, 0xFF,
-    0x0,  0x1,  0x4,  0x5,  0x6,  0x7,  0x8,  0x9,  0xa,  0xb,  0xe,  0xf,
-    0xFF, 0xFF, 0xFF, 0xFF, 0x4,  0x5,  0x6,  0x7,  0x8,  0x9,  0xa,  0xb,
-    0xe,  0xf,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x0,  0x1,  0x2,  0x3,
-    0x6,  0x7,  0x8,  0x9,  0xa,  0xb,  0xe,  0xf,  0xFF, 0xFF, 0xFF, 0xFF,
-    0x2,  0x3,  0x6,  0x7,  0x8,  0x9,  0xa,  0xb,  0xe,  0xf,  0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 0x0,  0x1,  0x6,  0x7,  0x8,  0x9,  0xa,  0xb,
-    0xe,  0xf,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x6,  0x7,  0x8,  0x9,
-    0xa,  0xb,  0xe,  0xf,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-    0x0,  0x1,  0x2,  0x3,  0x4,  0x5,  0x8,  0x9,  0xa,  0xb,  0xe,  0xf,
-    0xFF, 0xFF, 0xFF, 0xFF, 0x2,  0x3,  0x4,  0x5,  0x8,  0x9,  0xa,  0xb,
-    0xe,  0xf,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x0,  0x1,  0x4,  0x5,
-    0x8,  0x9,  0xa,  0xb,  0xe,  0xf,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-    0x4,  0x5,  0x8,  0x9,  0xa,  0xb,  0xe,  0xf,  0xFF, 0xFF, 0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 0x0,  0x1,  0x2,  0x3,  0x8,  0x9,  0xa,  0xb,
-    0xe,  0xf,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x2,  0x3,  0x8,  0x9,
-    0xa,  0xb,  0xe,  0xf,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-    0x0,  0x1,  0x8,  0x9,  0xa,  0xb,  0xe,  0xf,  0xFF, 0xFF, 0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 0x8,  0x9,  0xa,  0xb,  0xe,  0xf,  0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x0,  0x1,  0x2,  0x3,
-    0x4,  0x5,  0x6,  0x7,  0xa,  0xb,  0xe,  0xf,  0xFF, 0xFF, 0xFF, 0xFF,
-    0x2,  0x3,  0x4,  0x5,  0x6,  0x7,  0xa,  0xb,  0xe,  0xf,  0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 0x0,  0x1,  0x4,  0x5,  0x6,  0x7,  0xa,  0xb,
-    0xe,  0xf,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x4,  0x5,  0x6,  0x7,
-    0xa,  0xb,  0xe,  0xf,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-    0x0,  0x1,  0x2,  0x3,  0x6,  0x7,  0xa,  0xb,  0xe,  0xf,  0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 0x2,  0x3,  0x6,  0x7,  0xa,  0xb,  0xe,  0xf,
-    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x0,  0x1,  0x6,  0x7,
-    0xa,  0xb,  0xe,  0xf,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-    0x6,  0x7,  0xa,  0xb,  0xe,  0xf,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 0x0,  0x1,  0x2,  0x3,  0x4,  0x5,  0xa,  0xb,
-    0xe,  0xf,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x2,  0x3,  0x4,  0x5,
-    0xa,  0xb,  0xe,  0xf,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-    0x0,  0x1,  0x4,  0x5,  0xa,  0xb,  0xe,  0xf,  0xFF, 0xFF, 0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 0x4,  0x5,  0xa,  0xb,  0xe,  0xf,  0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x0,  0x1,  0x2,  0x3,
-    0xa,  0xb,  0xe,  0xf,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-    0x2,  0x3,  0xa,  0xb,  0xe,  0xf,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 0x0,  0x1,  0xa,  0xb,  0xe,  0xf,  0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xa,  0xb,  0xe,  0xf,
-    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-    0x0,  0x1,  0x2,  0x3,  0x4,  0x5,  0x6,  0x7,  0x8,  0x9,  0xe,  0xf,
-    0xFF, 0xFF, 0xFF, 0xFF, 0x2,  0x3,  0x4,  0x5,  0x6,  0x7,  0x8,  0x9,
-    0xe,  0xf,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x0,  0x1,  0x4,  0x5,
-    0x6,  0x7,  0x8,  0x9,  0xe,  0xf,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-    0x4,  0x5,  0x6,  0x7,  0x8,  0x9,  0xe,  0xf,  0xFF, 0xFF, 0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 0x0,  0x1,  0x2,  0x3,  0x6,  0x7,  0x8,  0x9,
-    0xe,  0xf,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x2,  0x3,  0x6,  0x7,
-    0x8,  0x9,  0xe,  0xf,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-    0x0,  0x1,  0x6,  0x7,  0x8,  0x9,  0xe,  0xf,  0xFF, 0xFF, 0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 0x6,  0x7,  0x8,  0x9,  0xe,  0xf,  0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x0,  0x1,  0x2,  0x3,
-    0x4,  0x5,  0x8,  0x9,  0xe,  0xf,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-    0x2,  0x3,  0x4,  0x5,  0x8,  0x9,  0xe,  0xf,  0xFF, 0xFF, 0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 0x0,  0x1,  0x4,  0x5,  0x8,  0x9,  0xe,  0xf,
-    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x4,  0x5,  0x8,  0x9,
-    0xe,  0xf,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-    0x0,  0x1,  0x2,  0x3,  0x8,  0x9,  0xe,  0xf,  0xFF, 0xFF, 0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 0x2,  0x3,  0x8,  0x9,  0xe,  0xf,  0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x0,  0x1,  0x8,  0x9,
-    0xe,  0xf,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-    0x8,  0x9,  0xe,  0xf,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 0x0,  0x1,  0x2,  0x3,  0x4,  0x5,  0x6,  0x7,
-    0xe,  0xf,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x2,  0x3,  0x4,  0x5,
-    0x6,  0x7,  0xe,  0xf,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-    0x0,  0x1,  0x4,  0x5,  0x6,  0x7,  0xe,  0xf,  0xFF, 0xFF, 0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 0x4,  0x5,  0x6,  0x7,  0xe,  0xf,  0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x0,  0x1,  0x2,  0x3,
-    0x6,  0x7,  0xe,  0xf,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-    0x2,  0x3,  0x6,  0x7,  0xe,  0xf,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 0x0,  0x1,  0x6,  0x7,  0xe,  0xf,  0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x6,  0x7,  0xe,  0xf,
-    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-    0x0,  0x1,  0x2,  0x3,  0x4,  0x5,  0xe,  0xf,  0xFF, 0xFF, 0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 0x2,  0x3,  0x4,  0x5,  0xe,  0xf,  0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x0,  0x1,  0x4,  0x5,
-    0xe,  0xf,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-    0x4,  0x5,  0xe,  0xf,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 0x0,  0x1,  0x2,  0x3,  0xe,  0xf,  0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x2,  0x3,  0xe,  0xf,
-    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-    0x0,  0x1,  0xe,  0xf,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 0xe,  0xf,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x0,  0x1,  0x2,  0x3,
-    0x4,  0x5,  0x6,  0x7,  0x8,  0x9,  0xa,  0xb,  0xc,  0xd,  0xFF, 0xFF,
-    0x2,  0x3,  0x4,  0x5,  0x6,  0x7,  0x8,  0x9,  0xa,  0xb,  0xc,  0xd,
-    0xFF, 0xFF, 0xFF, 0xFF, 0x0,  0x1,  0x4,  0x5,  0x6,  0x7,  0x8,  0x9,
-    0xa,  0xb,  0xc,  0xd,  0xFF, 0xFF, 0xFF, 0xFF, 0x4,  0x5,  0x6,  0x7,
-    0x8,  0x9,  0xa,  0xb,  0xc,  0xd,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-    0x0,  0x1,  0x2,  0x3,  0x6,  0x7,  0x8,  0x9,  0xa,  0xb,  0xc,  0xd,
-    0xFF, 0xFF, 0xFF, 0xFF, 0x2,  0x3,  0x6,  0x7,  0x8,  0x9,  0xa,  0xb,
-    0xc,  0xd,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x0,  0x1,  0x6,  0x7,
-    0x8,  0x9,  0xa,  0xb,  0xc,  0xd,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-    0x6,  0x7,  0x8,  0x9,  0xa,  0xb,  0xc,  0xd,  0xFF, 0xFF, 0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 0x0,  0x1,  0x2,  0x3,  0x4,  0x5,  0x8,  0x9,
-    0xa,  0xb,  0xc,  0xd,  0xFF, 0xFF, 0xFF, 0xFF, 0x2,  0x3,  0x4,  0x5,
-    0x8,  0x9,  0xa,  0xb,  0xc,  0xd,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-    0x0,  0x1,  0x4,  0x5,  0x8,  0x9,  0xa,  0xb,  0xc,  0xd,  0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 0x4,  0x5,  0x8,  0x9,  0xa,  0xb,  0xc,  0xd,
-    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x0,  0x1,  0x2,  0x3,
-    0x8,  0x9,  0xa,  0xb,  0xc,  0xd,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-    0x2,  0x3,  0x8,  0x9,  0xa,  0xb,  0xc,  0xd,  0xFF, 0xFF, 0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 0x0,  0x1,  0x8,  0x9,  0xa,  0xb,  0xc,  0xd,
-    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x8,  0x9,  0xa,  0xb,
-    0xc,  0xd,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-    0x0,  0x1,  0x2,  0x3,  0x4,  0x5,  0x6,  0x7,  0xa,  0xb,  0xc,  0xd,
-    0xFF, 0xFF, 0xFF, 0xFF, 0x2,  0x3,  0x4,  0x5,  0x6,  0x7,  0xa,  0xb,
-    0xc,  0xd,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x0,  0x1,  0x4,  0x5,
-    0x6,  0x7,  0xa,  0xb,  0xc,  0xd,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-    0x4,  0x5,  0x6,  0x7,  0xa,  0xb,  0xc,  0xd,  0xFF, 0xFF, 0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 0x0,  0x1,  0x2,  0x3,  0x6,  0x7,  0xa,  0xb,
-    0xc,  0xd,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x2,  0x3,  0x6,  0x7,
-    0xa,  0xb,  0xc,  0xd,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-    0x0,  0x1,  0x6,  0x7,  0xa,  0xb,  0xc,  0xd,  0xFF, 0xFF, 0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 0x6,  0x7,  0xa,  0xb,  0xc,  0xd,  0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x0,  0x1,  0x2,  0x3,
-    0x4,  0x5,  0xa,  0xb,  0xc,  0xd,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-    0x2,  0x3,  0x4,  0x5,  0xa,  0xb,  0xc,  0xd,  0xFF, 0xFF, 0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 0x0,  0x1,  0x4,  0x5,  0xa,  0xb,  0xc,  0xd,
-    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x4,  0x5,  0xa,  0xb,
-    0xc,  0xd,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-    0x0,  0x1,  0x2,  0x3,  0xa,  0xb,  0xc,  0xd,  0xFF, 0xFF, 0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 0x2,  0x3,  0xa,  0xb,  0xc,  0xd,  0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x0,  0x1,  0xa,  0xb,
-    0xc,  0xd,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-    0xa,  0xb,  0xc,  0xd,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 0x0,  0x1,  0x2,  0x3,  0x4,  0x5,  0x6,  0x7,
-    0x8,  0x9,  0xc,  0xd,  0xFF, 0xFF, 0xFF, 0xFF, 0x2,  0x3,  0x4,  0x5,
-    0x6,  0x7,  0x8,  0x9,  0xc,  0xd,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-    0x0,  0x1,  0x4,  0x5,  0x6,  0x7,  0x8,  0x9,  0xc,  0xd,  0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 0x4,  0x5,  0x6,  0x7,  0x8,  0x9,  0xc,  0xd,
-    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x0,  0x1,  0x2,  0x3,
-    0x6,  0x7,  0x8,  0x9,  0xc,  0xd,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-    0x2,  0x3,  0x6,  0x7,  0x8,  0x9,  0xc,  0xd,  0xFF, 0xFF, 0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 0x0,  0x1,  0x6,  0x7,  0x8,  0x9,  0xc,  0xd,
-    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x6,  0x7,  0x8,  0x9,
-    0xc,  0xd,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-    0x0,  0x1,  0x2,  0x3,  0x4,  0x5,  0x8,  0x9,  0xc,  0xd,  0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 0x2,  0x3,  0x4,  0x5,  0x8,  0x9,  0xc,  0xd,
-    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x0,  0x1,  0x4,  0x5,
-    0x8,  0x9,  0xc,  0xd,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-    0x4,  0x5,  0x8,  0x9,  0xc,  0xd,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 0x0,  0x1,  0x2,  0x3,  0x8,  0x9,  0xc,  0xd,
-    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x2,  0x3,  0x8,  0x9,
-    0xc,  0xd,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-    0x0,  0x1,  0x8,  0x9,  0xc,  0xd,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 0x8,  0x9,  0xc,  0xd,  0xFF, 0xFF, 0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x0,  0x1,  0x2,  0x3,
-    0x4,  0x5,  0x6,  0x7,  0xc,  0xd,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-    0x2,  0x3,  0x4,  0x5,  0x6,  0x7,  0xc,  0xd,  0xFF, 0xFF, 0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 0x0,  0x1,  0x4,  0x5,  0x6,  0x7,  0xc,  0xd,
-    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x4,  0x5,  0x6,  0x7,
-    0xc,  0xd,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-    0x0,  0x1,  0x2,  0x3,  0x6,  0x7,  0xc,  0xd,  0xFF, 0xFF, 0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 0x2,  0x3,  0x6,  0x7,  0xc,  0xd,  0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x0,  0x1,  0x6,  0x7,
-    0xc,  0xd,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-    0x6,  0x7,  0xc,  0xd,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 0x0,  0x1,  0x2,  0x3,  0x4,  0x5,  0xc,  0xd,
-    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x2,  0x3,  0x4,  0x5,
-    0xc,  0xd,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-    0x0,  0x1,  0x4,  0x5,  0xc,  0xd,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 0x4,  0x5,  0xc,  0xd,  0xFF, 0xFF, 0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x0,  0x1,  0x2,  0x3,
-    0xc,  0xd,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-    0x2,  0x3,  0xc,  0xd,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 0x0,  0x1,  0xc,  0xd,  0xFF, 0xFF, 0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xc,  0xd,  0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-    0x0,  0x1,  0x2,  0x3,  0x4,  0x5,  0x6,  0x7,  0x8,  0x9,  0xa,  0xb,
-    0xFF, 0xFF, 0xFF, 0xFF, 0x2,  0x3,  0x4,  0x5,  0x6,  0x7,  0x8,  0x9,
-    0xa,  0xb,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x0,  0x1,  0x4,  0x5,
-    0x6,  0x7,  0x8,  0x9,  0xa,  0xb,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-    0x4,  0x5,  0x6,  0x7,  0x8,  0x9,  0xa,  0xb,  0xFF, 0xFF, 0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 0x0,  0x1,  0x2,  0x3,  0x6,  0x7,  0x8,  0x9,
-    0xa,  0xb,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x2,  0x3,  0x6,  0x7,
-    0x8,  0x9,  0xa,  0xb,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-    0x0,  0x1,  0x6,  0x7,  0x8,  0x9,  0xa,  0xb,  0xFF, 0xFF, 0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 0x6,  0x7,  0x8,  0x9,  0xa,  0xb,  0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x0,  0x1,  0x2,  0x3,
-    0x4,  0x5,  0x8,  0x9,  0xa,  0xb,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-    0x2,  0x3,  0x4,  0x5,  0x8,  0x9,  0xa,  0xb,  0xFF, 0xFF, 0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 0x0,  0x1,  0x4,  0x5,  0x8,  0x9,  0xa,  0xb,
-    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x4,  0x5,  0x8,  0x9,
-    0xa,  0xb,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-    0x0,  0x1,  0x2,  0x3,  0x8,  0x9,  0xa,  0xb,  0xFF, 0xFF, 0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 0x2,  0x3,  0x8,  0x9,  0xa,  0xb,  0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x0,  0x1,  0x8,  0x9,
-    0xa,  0xb,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-    0x8,  0x9,  0xa,  0xb,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 0x0,  0x1,  0x2,  0x3,  0x4,  0x5,  0x6,  0x7,
-    0xa,  0xb,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x2,  0x3,  0x4,  0x5,
-    0x6,  0x7,  0xa,  0xb,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-    0x0,  0x1,  0x4,  0x5,  0x6,  0x7,  0xa,  0xb,  0xFF, 0xFF, 0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 0x4,  0x5,  0x6,  0x7,  0xa,  0xb,  0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x0,  0x1,  0x2,  0x3,
-    0x6,  0x7,  0xa,  0xb,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-    0x2,  0x3,  0x6,  0x7,  0xa,  0xb,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 0x0,  0x1,  0x6,  0x7,  0xa,  0xb,  0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x6,  0x7,  0xa,  0xb,
-    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-    0x0,  0x1,  0x2,  0x3,  0x4,  0x5,  0xa,  0xb,  0xFF, 0xFF, 0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 0x2,  0x3,  0x4,  0x5,  0xa,  0xb,  0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x0,  0x1,  0x4,  0x5,
-    0xa,  0xb,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-    0x4,  0x5,  0xa,  0xb,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 0x0,  0x1,  0x2,  0x3,  0xa,  0xb,  0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x2,  0x3,  0xa,  0xb,
-    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-    0x0,  0x1,  0xa,  0xb,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 0xa,  0xb,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x0,  0x1,  0x2,  0x3,
-    0x4,  0x5,  0x6,  0x7,  0x8,  0x9,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-    0x2,  0x3,  0x4,  0x5,  0x6,  0x7,  0x8,  0x9,  0xFF, 0xFF, 0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 0x0,  0x1,  0x4,  0x5,  0x6,  0x7,  0x8,  0x9,
-    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x4,  0x5,  0x6,  0x7,
-    0x8,  0x9,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-    0x0,  0x1,  0x2,  0x3,  0x6,  0x7,  0x8,  0x9,  0xFF, 0xFF, 0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 0x2,  0x3,  0x6,  0x7,  0x8,  0x9,  0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x0,  0x1,  0x6,  0x7,
-    0x8,  0x9,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-    0x6,  0x7,  0x8,  0x9,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 0x0,  0x1,  0x2,  0x3,  0x4,  0x5,  0x8,  0x9,
-    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x2,  0x3,  0x4,  0x5,
-    0x8,  0x9,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-    0x0,  0x1,  0x4,  0x5,  0x8,  0x9,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 0x4,  0x5,  0x8,  0x9,  0xFF, 0xFF, 0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x0,  0x1,  0x2,  0x3,
-    0x8,  0x9,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-    0x2,  0x3,  0x8,  0x9,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 0x0,  0x1,  0x8,  0x9,  0xFF, 0xFF, 0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x8,  0x9,  0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-    0x0,  0x1,  0x2,  0x3,  0x4,  0x5,  0x6,  0x7,  0xFF, 0xFF, 0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 0x2,  0x3,  0x4,  0x5,  0x6,  0x7,  0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x0,  0x1,  0x4,  0x5,
-    0x6,  0x7,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-    0x4,  0x5,  0x6,  0x7,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 0x0,  0x1,  0x2,  0x3,  0x6,  0x7,  0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x2,  0x3,  0x6,  0x7,
-    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-    0x0,  0x1,  0x6,  0x7,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 0x6,  0x7,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x0,  0x1,  0x2,  0x3,
-    0x4,  0x5,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-    0x2,  0x3,  0x4,  0x5,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 0x0,  0x1,  0x4,  0x5,  0xFF, 0xFF, 0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x4,  0x5,  0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-    0x0,  0x1,  0x2,  0x3,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 0x2,  0x3,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x0,  0x1,  0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF};
+        0x0,  0x1,  0x2,  0x3,  0x4,  0x5,  0x6,  0x7,  0x8,  0x9,  0xa,  0xb,
+        0xc,  0xd,  0xe,  0xf,  0x2,  0x3,  0x4,  0x5,  0x6,  0x7,  0x8,  0x9,
+        0xa,  0xb,  0xc,  0xd,  0xe,  0xf,  0xFF, 0xFF, 0x0,  0x1,  0x4,  0x5,
+        0x6,  0x7,  0x8,  0x9,  0xa,  0xb,  0xc,  0xd,  0xe,  0xf,  0xFF, 0xFF,
+        0x4,  0x5,  0x6,  0x7,  0x8,  0x9,  0xa,  0xb,  0xc,  0xd,  0xe,  0xf,
+        0xFF, 0xFF, 0xFF, 0xFF, 0x0,  0x1,  0x2,  0x3,  0x6,  0x7,  0x8,  0x9,
+        0xa,  0xb,  0xc,  0xd,  0xe,  0xf,  0xFF, 0xFF, 0x2,  0x3,  0x6,  0x7,
+        0x8,  0x9,  0xa,  0xb,  0xc,  0xd,  0xe,  0xf,  0xFF, 0xFF, 0xFF, 0xFF,
+        0x0,  0x1,  0x6,  0x7,  0x8,  0x9,  0xa,  0xb,  0xc,  0xd,  0xe,  0xf,
+        0xFF, 0xFF, 0xFF, 0xFF, 0x6,  0x7,  0x8,  0x9,  0xa,  0xb,  0xc,  0xd,
+        0xe,  0xf,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x0,  0x1,  0x2,  0x3,
+        0x4,  0x5,  0x8,  0x9,  0xa,  0xb,  0xc,  0xd,  0xe,  0xf,  0xFF, 0xFF,
+        0x2,  0x3,  0x4,  0x5,  0x8,  0x9,  0xa,  0xb,  0xc,  0xd,  0xe,  0xf,
+        0xFF, 0xFF, 0xFF, 0xFF, 0x0,  0x1,  0x4,  0x5,  0x8,  0x9,  0xa,  0xb,
+        0xc,  0xd,  0xe,  0xf,  0xFF, 0xFF, 0xFF, 0xFF, 0x4,  0x5,  0x8,  0x9,
+        0xa,  0xb,  0xc,  0xd,  0xe,  0xf,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+        0x0,  0x1,  0x2,  0x3,  0x8,  0x9,  0xa,  0xb,  0xc,  0xd,  0xe,  0xf,
+        0xFF, 0xFF, 0xFF, 0xFF, 0x2,  0x3,  0x8,  0x9,  0xa,  0xb,  0xc,  0xd,
+        0xe,  0xf,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x0,  0x1,  0x8,  0x9,
+        0xa,  0xb,  0xc,  0xd,  0xe,  0xf,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+        0x8,  0x9,  0xa,  0xb,  0xc,  0xd,  0xe,  0xf,  0xFF, 0xFF, 0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0xFF, 0x0,  0x1,  0x2,  0x3,  0x4,  0x5,  0x6,  0x7,
+        0xa,  0xb,  0xc,  0xd,  0xe,  0xf,  0xFF, 0xFF, 0x2,  0x3,  0x4,  0x5,
+        0x6,  0x7,  0xa,  0xb,  0xc,  0xd,  0xe,  0xf,  0xFF, 0xFF, 0xFF, 0xFF,
+        0x0,  0x1,  0x4,  0x5,  0x6,  0x7,  0xa,  0xb,  0xc,  0xd,  0xe,  0xf,
+        0xFF, 0xFF, 0xFF, 0xFF, 0x4,  0x5,  0x6,  0x7,  0xa,  0xb,  0xc,  0xd,
+        0xe,  0xf,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x0,  0x1,  0x2,  0x3,
+        0x6,  0x7,  0xa,  0xb,  0xc,  0xd,  0xe,  0xf,  0xFF, 0xFF, 0xFF, 0xFF,
+        0x2,  0x3,  0x6,  0x7,  0xa,  0xb,  0xc,  0xd,  0xe,  0xf,  0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0xFF, 0x0,  0x1,  0x6,  0x7,  0xa,  0xb,  0xc,  0xd,
+        0xe,  0xf,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x6,  0x7,  0xa,  0xb,
+        0xc,  0xd,  0xe,  0xf,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+        0x0,  0x1,  0x2,  0x3,  0x4,  0x5,  0xa,  0xb,  0xc,  0xd,  0xe,  0xf,
+        0xFF, 0xFF, 0xFF, 0xFF, 0x2,  0x3,  0x4,  0x5,  0xa,  0xb,  0xc,  0xd,
+        0xe,  0xf,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x0,  0x1,  0x4,  0x5,
+        0xa,  0xb,  0xc,  0xd,  0xe,  0xf,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+        0x4,  0x5,  0xa,  0xb,  0xc,  0xd,  0xe,  0xf,  0xFF, 0xFF, 0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0xFF, 0x0,  0x1,  0x2,  0x3,  0xa,  0xb,  0xc,  0xd,
+        0xe,  0xf,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x2,  0x3,  0xa,  0xb,
+        0xc,  0xd,  0xe,  0xf,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+        0x0,  0x1,  0xa,  0xb,  0xc,  0xd,  0xe,  0xf,  0xFF, 0xFF, 0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0xFF, 0xa,  0xb,  0xc,  0xd,  0xe,  0xf,  0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x0,  0x1,  0x2,  0x3,
+        0x4,  0x5,  0x6,  0x7,  0x8,  0x9,  0xc,  0xd,  0xe,  0xf,  0xFF, 0xFF,
+        0x2,  0x3,  0x4,  0x5,  0x6,  0x7,  0x8,  0x9,  0xc,  0xd,  0xe,  0xf,
+        0xFF, 0xFF, 0xFF, 0xFF, 0x0,  0x1,  0x4,  0x5,  0x6,  0x7,  0x8,  0x9,
+        0xc,  0xd,  0xe,  0xf,  0xFF, 0xFF, 0xFF, 0xFF, 0x4,  0x5,  0x6,  0x7,
+        0x8,  0x9,  0xc,  0xd,  0xe,  0xf,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+        0x0,  0x1,  0x2,  0x3,  0x6,  0x7,  0x8,  0x9,  0xc,  0xd,  0xe,  0xf,
+        0xFF, 0xFF, 0xFF, 0xFF, 0x2,  0x3,  0x6,  0x7,  0x8,  0x9,  0xc,  0xd,
+        0xe,  0xf,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x0,  0x1,  0x6,  0x7,
+        0x8,  0x9,  0xc,  0xd,  0xe,  0xf,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+        0x6,  0x7,  0x8,  0x9,  0xc,  0xd,  0xe,  0xf,  0xFF, 0xFF, 0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0xFF, 0x0,  0x1,  0x2,  0x3,  0x4,  0x5,  0x8,  0x9,
+        0xc,  0xd,  0xe,  0xf,  0xFF, 0xFF, 0xFF, 0xFF, 0x2,  0x3,  0x4,  0x5,
+        0x8,  0x9,  0xc,  0xd,  0xe,  0xf,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+        0x0,  0x1,  0x4,  0x5,  0x8,  0x9,  0xc,  0xd,  0xe,  0xf,  0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0xFF, 0x4,  0x5,  0x8,  0x9,  0xc,  0xd,  0xe,  0xf,
+        0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x0,  0x1,  0x2,  0x3,
+        0x8,  0x9,  0xc,  0xd,  0xe,  0xf,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+        0x2,  0x3,  0x8,  0x9,  0xc,  0xd,  0xe,  0xf,  0xFF, 0xFF, 0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0xFF, 0x0,  0x1,  0x8,  0x9,  0xc,  0xd,  0xe,  0xf,
+        0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x8,  0x9,  0xc,  0xd,
+        0xe,  0xf,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+        0x0,  0x1,  0x2,  0x3,  0x4,  0x5,  0x6,  0x7,  0xc,  0xd,  0xe,  0xf,
+        0xFF, 0xFF, 0xFF, 0xFF, 0x2,  0x3,  0x4,  0x5,  0x6,  0x7,  0xc,  0xd,
+        0xe,  0xf,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x0,  0x1,  0x4,  0x5,
+        0x6,  0x7,  0xc,  0xd,  0xe,  0xf,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+        0x4,  0x5,  0x6,  0x7,  0xc,  0xd,  0xe,  0xf,  0xFF, 0xFF, 0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0xFF, 0x0,  0x1,  0x2,  0x3,  0x6,  0x7,  0xc,  0xd,
+        0xe,  0xf,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x2,  0x3,  0x6,  0x7,
+        0xc,  0xd,  0xe,  0xf,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+        0x0,  0x1,  0x6,  0x7,  0xc,  0xd,  0xe,  0xf,  0xFF, 0xFF, 0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0xFF, 0x6,  0x7,  0xc,  0xd,  0xe,  0xf,  0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x0,  0x1,  0x2,  0x3,
+        0x4,  0x5,  0xc,  0xd,  0xe,  0xf,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+        0x2,  0x3,  0x4,  0x5,  0xc,  0xd,  0xe,  0xf,  0xFF, 0xFF, 0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0xFF, 0x0,  0x1,  0x4,  0x5,  0xc,  0xd,  0xe,  0xf,
+        0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x4,  0x5,  0xc,  0xd,
+        0xe,  0xf,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+        0x0,  0x1,  0x2,  0x3,  0xc,  0xd,  0xe,  0xf,  0xFF, 0xFF, 0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0xFF, 0x2,  0x3,  0xc,  0xd,  0xe,  0xf,  0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x0,  0x1,  0xc,  0xd,
+        0xe,  0xf,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+        0xc,  0xd,  0xe,  0xf,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0xFF, 0x0,  0x1,  0x2,  0x3,  0x4,  0x5,  0x6,  0x7,
+        0x8,  0x9,  0xa,  0xb,  0xe,  0xf,  0xFF, 0xFF, 0x2,  0x3,  0x4,  0x5,
+        0x6,  0x7,  0x8,  0x9,  0xa,  0xb,  0xe,  0xf,  0xFF, 0xFF, 0xFF, 0xFF,
+        0x0,  0x1,  0x4,  0x5,  0x6,  0x7,  0x8,  0x9,  0xa,  0xb,  0xe,  0xf,
+        0xFF, 0xFF, 0xFF, 0xFF, 0x4,  0x5,  0x6,  0x7,  0x8,  0x9,  0xa,  0xb,
+        0xe,  0xf,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x0,  0x1,  0x2,  0x3,
+        0x6,  0x7,  0x8,  0x9,  0xa,  0xb,  0xe,  0xf,  0xFF, 0xFF, 0xFF, 0xFF,
+        0x2,  0x3,  0x6,  0x7,  0x8,  0x9,  0xa,  0xb,  0xe,  0xf,  0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0xFF, 0x0,  0x1,  0x6,  0x7,  0x8,  0x9,  0xa,  0xb,
+        0xe,  0xf,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x6,  0x7,  0x8,  0x9,
+        0xa,  0xb,  0xe,  0xf,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+        0x0,  0x1,  0x2,  0x3,  0x4,  0x5,  0x8,  0x9,  0xa,  0xb,  0xe,  0xf,
+        0xFF, 0xFF, 0xFF, 0xFF, 0x2,  0x3,  0x4,  0x5,  0x8,  0x9,  0xa,  0xb,
+        0xe,  0xf,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x0,  0x1,  0x4,  0x5,
+        0x8,  0x9,  0xa,  0xb,  0xe,  0xf,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+        0x4,  0x5,  0x8,  0x9,  0xa,  0xb,  0xe,  0xf,  0xFF, 0xFF, 0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0xFF, 0x0,  0x1,  0x2,  0x3,  0x8,  0x9,  0xa,  0xb,
+        0xe,  0xf,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x2,  0x3,  0x8,  0x9,
+        0xa,  0xb,  0xe,  0xf,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+        0x0,  0x1,  0x8,  0x9,  0xa,  0xb,  0xe,  0xf,  0xFF, 0xFF, 0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0xFF, 0x8,  0x9,  0xa,  0xb,  0xe,  0xf,  0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x0,  0x1,  0x2,  0x3,
+        0x4,  0x5,  0x6,  0x7,  0xa,  0xb,  0xe,  0xf,  0xFF, 0xFF, 0xFF, 0xFF,
+        0x2,  0x3,  0x4,  0x5,  0x6,  0x7,  0xa,  0xb,  0xe,  0xf,  0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0xFF, 0x0,  0x1,  0x4,  0x5,  0x6,  0x7,  0xa,  0xb,
+        0xe,  0xf,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x4,  0x5,  0x6,  0x7,
+        0xa,  0xb,  0xe,  0xf,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+        0x0,  0x1,  0x2,  0x3,  0x6,  0x7,  0xa,  0xb,  0xe,  0xf,  0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0xFF, 0x2,  0x3,  0x6,  0x7,  0xa,  0xb,  0xe,  0xf,
+        0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x0,  0x1,  0x6,  0x7,
+        0xa,  0xb,  0xe,  0xf,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+        0x6,  0x7,  0xa,  0xb,  0xe,  0xf,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0xFF, 0x0,  0x1,  0x2,  0x3,  0x4,  0x5,  0xa,  0xb,
+        0xe,  0xf,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x2,  0x3,  0x4,  0x5,
+        0xa,  0xb,  0xe,  0xf,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+        0x0,  0x1,  0x4,  0x5,  0xa,  0xb,  0xe,  0xf,  0xFF, 0xFF, 0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0xFF, 0x4,  0x5,  0xa,  0xb,  0xe,  0xf,  0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x0,  0x1,  0x2,  0x3,
+        0xa,  0xb,  0xe,  0xf,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+        0x2,  0x3,  0xa,  0xb,  0xe,  0xf,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0xFF, 0x0,  0x1,  0xa,  0xb,  0xe,  0xf,  0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xa,  0xb,  0xe,  0xf,
+        0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+        0x0,  0x1,  0x2,  0x3,  0x4,  0x5,  0x6,  0x7,  0x8,  0x9,  0xe,  0xf,
+        0xFF, 0xFF, 0xFF, 0xFF, 0x2,  0x3,  0x4,  0x5,  0x6,  0x7,  0x8,  0x9,
+        0xe,  0xf,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x0,  0x1,  0x4,  0x5,
+        0x6,  0x7,  0x8,  0x9,  0xe,  0xf,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+        0x4,  0x5,  0x6,  0x7,  0x8,  0x9,  0xe,  0xf,  0xFF, 0xFF, 0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0xFF, 0x0,  0x1,  0x2,  0x3,  0x6,  0x7,  0x8,  0x9,
+        0xe,  0xf,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x2,  0x3,  0x6,  0x7,
+        0x8,  0x9,  0xe,  0xf,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+        0x0,  0x1,  0x6,  0x7,  0x8,  0x9,  0xe,  0xf,  0xFF, 0xFF, 0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0xFF, 0x6,  0x7,  0x8,  0x9,  0xe,  0xf,  0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x0,  0x1,  0x2,  0x3,
+        0x4,  0x5,  0x8,  0x9,  0xe,  0xf,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+        0x2,  0x3,  0x4,  0x5,  0x8,  0x9,  0xe,  0xf,  0xFF, 0xFF, 0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0xFF, 0x0,  0x1,  0x4,  0x5,  0x8,  0x9,  0xe,  0xf,
+        0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x4,  0x5,  0x8,  0x9,
+        0xe,  0xf,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+        0x0,  0x1,  0x2,  0x3,  0x8,  0x9,  0xe,  0xf,  0xFF, 0xFF, 0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0xFF, 0x2,  0x3,  0x8,  0x9,  0xe,  0xf,  0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x0,  0x1,  0x8,  0x9,
+        0xe,  0xf,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+        0x8,  0x9,  0xe,  0xf,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0xFF, 0x0,  0x1,  0x2,  0x3,  0x4,  0x5,  0x6,  0x7,
+        0xe,  0xf,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x2,  0x3,  0x4,  0x5,
+        0x6,  0x7,  0xe,  0xf,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+        0x0,  0x1,  0x4,  0x5,  0x6,  0x7,  0xe,  0xf,  0xFF, 0xFF, 0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0xFF, 0x4,  0x5,  0x6,  0x7,  0xe,  0xf,  0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x0,  0x1,  0x2,  0x3,
+        0x6,  0x7,  0xe,  0xf,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+        0x2,  0x3,  0x6,  0x7,  0xe,  0xf,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0xFF, 0x0,  0x1,  0x6,  0x7,  0xe,  0xf,  0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x6,  0x7,  0xe,  0xf,
+        0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+        0x0,  0x1,  0x2,  0x3,  0x4,  0x5,  0xe,  0xf,  0xFF, 0xFF, 0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0xFF, 0x2,  0x3,  0x4,  0x5,  0xe,  0xf,  0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x0,  0x1,  0x4,  0x5,
+        0xe,  0xf,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+        0x4,  0x5,  0xe,  0xf,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0xFF, 0x0,  0x1,  0x2,  0x3,  0xe,  0xf,  0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x2,  0x3,  0xe,  0xf,
+        0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+        0x0,  0x1,  0xe,  0xf,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0xFF, 0xe,  0xf,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x0,  0x1,  0x2,  0x3,
+        0x4,  0x5,  0x6,  0x7,  0x8,  0x9,  0xa,  0xb,  0xc,  0xd,  0xFF, 0xFF,
+        0x2,  0x3,  0x4,  0x5,  0x6,  0x7,  0x8,  0x9,  0xa,  0xb,  0xc,  0xd,
+        0xFF, 0xFF, 0xFF, 0xFF, 0x0,  0x1,  0x4,  0x5,  0x6,  0x7,  0x8,  0x9,
+        0xa,  0xb,  0xc,  0xd,  0xFF, 0xFF, 0xFF, 0xFF, 0x4,  0x5,  0x6,  0x7,
+        0x8,  0x9,  0xa,  0xb,  0xc,  0xd,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+        0x0,  0x1,  0x2,  0x3,  0x6,  0x7,  0x8,  0x9,  0xa,  0xb,  0xc,  0xd,
+        0xFF, 0xFF, 0xFF, 0xFF, 0x2,  0x3,  0x6,  0x7,  0x8,  0x9,  0xa,  0xb,
+        0xc,  0xd,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x0,  0x1,  0x6,  0x7,
+        0x8,  0x9,  0xa,  0xb,  0xc,  0xd,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+        0x6,  0x7,  0x8,  0x9,  0xa,  0xb,  0xc,  0xd,  0xFF, 0xFF, 0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0xFF, 0x0,  0x1,  0x2,  0x3,  0x4,  0x5,  0x8,  0x9,
+        0xa,  0xb,  0xc,  0xd,  0xFF, 0xFF, 0xFF, 0xFF, 0x2,  0x3,  0x4,  0x5,
+        0x8,  0x9,  0xa,  0xb,  0xc,  0xd,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+        0x0,  0x1,  0x4,  0x5,  0x8,  0x9,  0xa,  0xb,  0xc,  0xd,  0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0xFF, 0x4,  0x5,  0x8,  0x9,  0xa,  0xb,  0xc,  0xd,
+        0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x0,  0x1,  0x2,  0x3,
+        0x8,  0x9,  0xa,  0xb,  0xc,  0xd,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+        0x2,  0x3,  0x8,  0x9,  0xa,  0xb,  0xc,  0xd,  0xFF, 0xFF, 0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0xFF, 0x0,  0x1,  0x8,  0x9,  0xa,  0xb,  0xc,  0xd,
+        0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x8,  0x9,  0xa,  0xb,
+        0xc,  0xd,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+        0x0,  0x1,  0x2,  0x3,  0x4,  0x5,  0x6,  0x7,  0xa,  0xb,  0xc,  0xd,
+        0xFF, 0xFF, 0xFF, 0xFF, 0x2,  0x3,  0x4,  0x5,  0x6,  0x7,  0xa,  0xb,
+        0xc,  0xd,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x0,  0x1,  0x4,  0x5,
+        0x6,  0x7,  0xa,  0xb,  0xc,  0xd,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+        0x4,  0x5,  0x6,  0x7,  0xa,  0xb,  0xc,  0xd,  0xFF, 0xFF, 0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0xFF, 0x0,  0x1,  0x2,  0x3,  0x6,  0x7,  0xa,  0xb,
+        0xc,  0xd,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x2,  0x3,  0x6,  0x7,
+        0xa,  0xb,  0xc,  0xd,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+        0x0,  0x1,  0x6,  0x7,  0xa,  0xb,  0xc,  0xd,  0xFF, 0xFF, 0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0xFF, 0x6,  0x7,  0xa,  0xb,  0xc,  0xd,  0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x0,  0x1,  0x2,  0x3,
+        0x4,  0x5,  0xa,  0xb,  0xc,  0xd,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+        0x2,  0x3,  0x4,  0x5,  0xa,  0xb,  0xc,  0xd,  0xFF, 0xFF, 0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0xFF, 0x0,  0x1,  0x4,  0x5,  0xa,  0xb,  0xc,  0xd,
+        0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x4,  0x5,  0xa,  0xb,
+        0xc,  0xd,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+        0x0,  0x1,  0x2,  0x3,  0xa,  0xb,  0xc,  0xd,  0xFF, 0xFF, 0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0xFF, 0x2,  0x3,  0xa,  0xb,  0xc,  0xd,  0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x0,  0x1,  0xa,  0xb,
+        0xc,  0xd,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+        0xa,  0xb,  0xc,  0xd,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0xFF, 0x0,  0x1,  0x2,  0x3,  0x4,  0x5,  0x6,  0x7,
+        0x8,  0x9,  0xc,  0xd,  0xFF, 0xFF, 0xFF, 0xFF, 0x2,  0x3,  0x4,  0x5,
+        0x6,  0x7,  0x8,  0x9,  0xc,  0xd,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+        0x0,  0x1,  0x4,  0x5,  0x6,  0x7,  0x8,  0x9,  0xc,  0xd,  0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0xFF, 0x4,  0x5,  0x6,  0x7,  0x8,  0x9,  0xc,  0xd,
+        0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x0,  0x1,  0x2,  0x3,
+        0x6,  0x7,  0x8,  0x9,  0xc,  0xd,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+        0x2,  0x3,  0x6,  0x7,  0x8,  0x9,  0xc,  0xd,  0xFF, 0xFF, 0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0xFF, 0x0,  0x1,  0x6,  0x7,  0x8,  0x9,  0xc,  0xd,
+        0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x6,  0x7,  0x8,  0x9,
+        0xc,  0xd,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+        0x0,  0x1,  0x2,  0x3,  0x4,  0x5,  0x8,  0x9,  0xc,  0xd,  0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0xFF, 0x2,  0x3,  0x4,  0x5,  0x8,  0x9,  0xc,  0xd,
+        0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x0,  0x1,  0x4,  0x5,
+        0x8,  0x9,  0xc,  0xd,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+        0x4,  0x5,  0x8,  0x9,  0xc,  0xd,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0xFF, 0x0,  0x1,  0x2,  0x3,  0x8,  0x9,  0xc,  0xd,
+        0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x2,  0x3,  0x8,  0x9,
+        0xc,  0xd,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+        0x0,  0x1,  0x8,  0x9,  0xc,  0xd,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0xFF, 0x8,  0x9,  0xc,  0xd,  0xFF, 0xFF, 0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x0,  0x1,  0x2,  0x3,
+        0x4,  0x5,  0x6,  0x7,  0xc,  0xd,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+        0x2,  0x3,  0x4,  0x5,  0x6,  0x7,  0xc,  0xd,  0xFF, 0xFF, 0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0xFF, 0x0,  0x1,  0x4,  0x5,  0x6,  0x7,  0xc,  0xd,
+        0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x4,  0x5,  0x6,  0x7,
+        0xc,  0xd,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+        0x0,  0x1,  0x2,  0x3,  0x6,  0x7,  0xc,  0xd,  0xFF, 0xFF, 0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0xFF, 0x2,  0x3,  0x6,  0x7,  0xc,  0xd,  0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x0,  0x1,  0x6,  0x7,
+        0xc,  0xd,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+        0x6,  0x7,  0xc,  0xd,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0xFF, 0x0,  0x1,  0x2,  0x3,  0x4,  0x5,  0xc,  0xd,
+        0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x2,  0x3,  0x4,  0x5,
+        0xc,  0xd,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+        0x0,  0x1,  0x4,  0x5,  0xc,  0xd,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0xFF, 0x4,  0x5,  0xc,  0xd,  0xFF, 0xFF, 0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x0,  0x1,  0x2,  0x3,
+        0xc,  0xd,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+        0x2,  0x3,  0xc,  0xd,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0xFF, 0x0,  0x1,  0xc,  0xd,  0xFF, 0xFF, 0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xc,  0xd,  0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+        0x0,  0x1,  0x2,  0x3,  0x4,  0x5,  0x6,  0x7,  0x8,  0x9,  0xa,  0xb,
+        0xFF, 0xFF, 0xFF, 0xFF, 0x2,  0x3,  0x4,  0x5,  0x6,  0x7,  0x8,  0x9,
+        0xa,  0xb,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x0,  0x1,  0x4,  0x5,
+        0x6,  0x7,  0x8,  0x9,  0xa,  0xb,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+        0x4,  0x5,  0x6,  0x7,  0x8,  0x9,  0xa,  0xb,  0xFF, 0xFF, 0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0xFF, 0x0,  0x1,  0x2,  0x3,  0x6,  0x7,  0x8,  0x9,
+        0xa,  0xb,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x2,  0x3,  0x6,  0x7,
+        0x8,  0x9,  0xa,  0xb,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+        0x0,  0x1,  0x6,  0x7,  0x8,  0x9,  0xa,  0xb,  0xFF, 0xFF, 0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0xFF, 0x6,  0x7,  0x8,  0x9,  0xa,  0xb,  0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x0,  0x1,  0x2,  0x3,
+        0x4,  0x5,  0x8,  0x9,  0xa,  0xb,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+        0x2,  0x3,  0x4,  0x5,  0x8,  0x9,  0xa,  0xb,  0xFF, 0xFF, 0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0xFF, 0x0,  0x1,  0x4,  0x5,  0x8,  0x9,  0xa,  0xb,
+        0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x4,  0x5,  0x8,  0x9,
+        0xa,  0xb,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+        0x0,  0x1,  0x2,  0x3,  0x8,  0x9,  0xa,  0xb,  0xFF, 0xFF, 0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0xFF, 0x2,  0x3,  0x8,  0x9,  0xa,  0xb,  0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x0,  0x1,  0x8,  0x9,
+        0xa,  0xb,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+        0x8,  0x9,  0xa,  0xb,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0xFF, 0x0,  0x1,  0x2,  0x3,  0x4,  0x5,  0x6,  0x7,
+        0xa,  0xb,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x2,  0x3,  0x4,  0x5,
+        0x6,  0x7,  0xa,  0xb,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+        0x0,  0x1,  0x4,  0x5,  0x6,  0x7,  0xa,  0xb,  0xFF, 0xFF, 0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0xFF, 0x4,  0x5,  0x6,  0x7,  0xa,  0xb,  0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x0,  0x1,  0x2,  0x3,
+        0x6,  0x7,  0xa,  0xb,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+        0x2,  0x3,  0x6,  0x7,  0xa,  0xb,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0xFF, 0x0,  0x1,  0x6,  0x7,  0xa,  0xb,  0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x6,  0x7,  0xa,  0xb,
+        0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+        0x0,  0x1,  0x2,  0x3,  0x4,  0x5,  0xa,  0xb,  0xFF, 0xFF, 0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0xFF, 0x2,  0x3,  0x4,  0x5,  0xa,  0xb,  0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x0,  0x1,  0x4,  0x5,
+        0xa,  0xb,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+        0x4,  0x5,  0xa,  0xb,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0xFF, 0x0,  0x1,  0x2,  0x3,  0xa,  0xb,  0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x2,  0x3,  0xa,  0xb,
+        0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+        0x0,  0x1,  0xa,  0xb,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0xFF, 0xa,  0xb,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x0,  0x1,  0x2,  0x3,
+        0x4,  0x5,  0x6,  0x7,  0x8,  0x9,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+        0x2,  0x3,  0x4,  0x5,  0x6,  0x7,  0x8,  0x9,  0xFF, 0xFF, 0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0xFF, 0x0,  0x1,  0x4,  0x5,  0x6,  0x7,  0x8,  0x9,
+        0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x4,  0x5,  0x6,  0x7,
+        0x8,  0x9,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+        0x0,  0x1,  0x2,  0x3,  0x6,  0x7,  0x8,  0x9,  0xFF, 0xFF, 0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0xFF, 0x2,  0x3,  0x6,  0x7,  0x8,  0x9,  0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x0,  0x1,  0x6,  0x7,
+        0x8,  0x9,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+        0x6,  0x7,  0x8,  0x9,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0xFF, 0x0,  0x1,  0x2,  0x3,  0x4,  0x5,  0x8,  0x9,
+        0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x2,  0x3,  0x4,  0x5,
+        0x8,  0x9,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+        0x0,  0x1,  0x4,  0x5,  0x8,  0x9,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0xFF, 0x4,  0x5,  0x8,  0x9,  0xFF, 0xFF, 0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x0,  0x1,  0x2,  0x3,
+        0x8,  0x9,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+        0x2,  0x3,  0x8,  0x9,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0xFF, 0x0,  0x1,  0x8,  0x9,  0xFF, 0xFF, 0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x8,  0x9,  0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+        0x0,  0x1,  0x2,  0x3,  0x4,  0x5,  0x6,  0x7,  0xFF, 0xFF, 0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0xFF, 0x2,  0x3,  0x4,  0x5,  0x6,  0x7,  0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x0,  0x1,  0x4,  0x5,
+        0x6,  0x7,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+        0x4,  0x5,  0x6,  0x7,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0xFF, 0x0,  0x1,  0x2,  0x3,  0x6,  0x7,  0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x2,  0x3,  0x6,  0x7,
+        0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+        0x0,  0x1,  0x6,  0x7,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0xFF, 0x6,  0x7,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x0,  0x1,  0x2,  0x3,
+        0x4,  0x5,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+        0x2,  0x3,  0x4,  0x5,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0xFF, 0x0,  0x1,  0x4,  0x5,  0xFF, 0xFF, 0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x4,  0x5,  0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+        0x0,  0x1,  0x2,  0x3,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0xFF, 0x2,  0x3,  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x0,  0x1,  0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0xFF};
 CROARING_TARGET_AVX2
 // write vector new, while omitting repeated values assuming that previously
 // written vector was "old"
@@ -8554,7 +8554,7 @@ static inline int store_unique(__m128i old, __m128i newval, uint16_t *output) {
     __m128i vecTmp = _mm_alignr_epi8(newval, old, 16 - 2);
     // lots of high latency instructions follow (optimize?)
     int M = _mm_movemask_epi8(
-        _mm_packs_epi16(_mm_cmpeq_epi16(vecTmp, newval), _mm_setzero_si128()));
+            _mm_packs_epi16(_mm_cmpeq_epi16(vecTmp, newval), _mm_setzero_si128()));
     int numberofnewvalues = 8 - _mm_popcnt_u32(M);
     __m128i key = _mm_lddqu_si128((const __m128i *)uniqshuf + M);
     __m128i val = _mm_shuffle_epi8(newval, key);
@@ -8684,7 +8684,7 @@ static inline int store_unique_xor(__m128i old, __m128i newval,
     __m128i equalright = _mm_cmpeq_epi16(vecTmp2, newval);
     __m128i equalleftoright = _mm_or_si128(equalleft, equalright);
     int M = _mm_movemask_epi8(
-        _mm_packs_epi16(equalleftoright, _mm_setzero_si128()));
+            _mm_packs_epi16(equalleftoright, _mm_setzero_si128()));
     int numberofnewvalues = 8 - _mm_popcnt_u32(M);
     __m128i key = _mm_lddqu_si128((const __m128i *)uniqshuf + M);
     __m128i val = _mm_shuffle_epi8(vecTmp2, key);
@@ -9053,11 +9053,11 @@ bool memequals(const void *s1, const void *s2, size_t n) {
         return _avx512_memequals(s1, s2, n);
     } else
 #endif  // CROARING_COMPILER_SUPPORTS_AVX512
-        if (support & ROARING_SUPPORTS_AVX2) {
-            return _avx2_memequals(s1, s2, n);
-        } else {
-            return memcmp(s1, s2, n) == 0;
-        }
+    if (support & ROARING_SUPPORTS_AVX2) {
+        return _avx2_memequals(s1, s2, n);
+    } else {
+        return memcmp(s1, s2, n) == 0;
+    }
 #else
     return memcmp(s1, s2, n) == 0;
 #endif
@@ -9073,7 +9073,7 @@ int avx512_array_container_to_uint32_array(void *vout, const uint16_t *array,
     uint32_t *out = (uint32_t *)vout;
     size_t i = 0;
     for (; i + sizeof(__m256i) / sizeof(uint16_t) <= cardinality;
-         i += sizeof(__m256i) / sizeof(uint16_t)) {
+           i += sizeof(__m256i) / sizeof(uint16_t)) {
         __m256i vinput = _mm256_loadu_si256((const __m256i *)(array + i));
         __m512i voutput = _mm512_add_epi32(_mm512_cvtepu16_epi32(vinput),
                                            _mm512_set1_epi32(base));
@@ -9106,14 +9106,14 @@ CROARING_UNTARGET_AVX512
 #include <string.h>
 
 
-#define CROARING_ART_NODE4_TYPE 0
-#define CROARING_ART_NODE16_TYPE 1
-#define CROARING_ART_NODE48_TYPE 2
-#define CROARING_ART_NODE256_TYPE 3
-#define CROARING_ART_NUM_TYPES 4
+#define ART_NODE4_TYPE 0
+#define ART_NODE16_TYPE 1
+#define ART_NODE48_TYPE 2
+#define ART_NODE256_TYPE 3
+#define ART_NUM_TYPES 4
 
 // Node48 placeholder value to indicate no child is present at this key index.
-#define CROARING_ART_NODE48_EMPTY_VAL 48
+#define ART_NODE48_EMPTY_VAL 48
 
 // We use the least significant bit of node pointers to indicate whether a node
 // is a leaf or an inner node. This is never surfaced to the user.
@@ -9124,15 +9124,15 @@ CROARING_UNTARGET_AVX512
 // deallocation of the ART, we know not to free the leaves without having to
 // dereference the leaf pointers.
 //
-// All internal operations on leaves should use CROARING_CAST_LEAF before using
-// the leaf. The only places that use CROARING_SET_LEAF are locations where a
-// field is directly assigned to a leaf pointer. After using CROARING_SET_LEAF,
-// the leaf should be treated as a node of unknown type.
-#define CROARING_IS_LEAF(p) (((uintptr_t)(p) & 1))
-#define CROARING_SET_LEAF(p) ((art_node_t *)((uintptr_t)(p) | 1))
-#define CROARING_CAST_LEAF(p) ((art_leaf_t *)((void *)((uintptr_t)(p) & ~1)))
+// All internal operations on leaves should use CAST_LEAF before using the leaf.
+// The only places that use SET_LEAF are locations where a field is directly
+// assigned to a leaf pointer. After using SET_LEAF, the leaf should be treated
+// as a node of unknown type.
+#define IS_LEAF(p) (((uintptr_t)(p) & 1))
+#define SET_LEAF(p) ((art_node_t *)((uintptr_t)(p) | 1))
+#define CAST_LEAF(p) ((art_leaf_t *)((void *)((uintptr_t)(p) & ~1)))
 
-#define CROARING_NODE48_AVAILABLE_CHILDREN_MASK ((UINT64_C(1) << 48) - 1)
+#define NODE48_AVAILABLE_CHILDREN_MASK ((UINT64_C(1) << 48) - 1)
 
 #ifdef __cplusplus
 extern "C" {
@@ -9189,8 +9189,7 @@ typedef struct art_node16_s {
 } art_node16_t;
 
 // Node48: key[i] corresponds with children[key[i]] if key[i] !=
-// CROARING_ART_NODE48_EMPTY_VAL. Keys are naturally sorted due to direct
-// indexing.
+// ART_NODE48_EMPTY_VAL. Keys are naturally sorted due to direct indexing.
 typedef struct art_node48_s {
     art_inner_node_t base;
     uint8_t count;
@@ -9216,9 +9215,7 @@ typedef struct art_indexed_child_s {
     art_key_chunk_t key_chunk;
 } art_indexed_child_t;
 
-static inline bool art_is_leaf(const art_node_t *node) {
-    return CROARING_IS_LEAF(node);
-}
+static inline bool art_is_leaf(const art_node_t *node) { return IS_LEAF(node); }
 
 static void art_leaf_populate(art_leaf_t *leaf, const art_key_chunk_t key[]) {
     memcpy(leaf->key, key, ART_KEY_BYTES);
@@ -9262,8 +9259,7 @@ static art_node_t *art_node256_insert(art_node256_t *node, art_node_t *child,
 static art_node4_t *art_node4_create(const art_key_chunk_t prefix[],
                                      uint8_t prefix_size) {
     art_node4_t *node = (art_node4_t *)roaring_malloc(sizeof(art_node4_t));
-    art_init_inner_node(&node->base, CROARING_ART_NODE4_TYPE, prefix,
-                        prefix_size);
+    art_init_inner_node(&node->base, ART_NODE4_TYPE, prefix, prefix_size);
     node->count = 0;
     return node;
 }
@@ -9307,7 +9303,7 @@ static art_node_t *art_node4_insert(art_node4_t *node, art_node_t *child,
         return (art_node_t *)node;
     }
     art_node16_t *new_node =
-        art_node16_create(node->base.prefix, node->base.prefix_size);
+            art_node16_create(node->base.prefix, node->base.prefix_size);
     // Instead of calling insert, this could be specialized to 2x memcpy and
     // setting the count.
     for (size_t i = 0; i < 4; ++i) {
@@ -9413,7 +9409,7 @@ static inline art_indexed_child_t art_node4_child_at(const art_node4_t *node,
 }
 
 static inline art_indexed_child_t art_node4_lower_bound(
-    art_node4_t *node, art_key_chunk_t key_chunk) {
+        art_node4_t *node, art_key_chunk_t key_chunk) {
     art_indexed_child_t indexed_child;
     for (size_t i = 0; i < node->count; ++i) {
         if (node->keys[i] >= key_chunk) {
@@ -9440,14 +9436,14 @@ static bool art_node4_internal_validate(const art_node4_t *node,
     }
     if (node->count == 1) {
         return art_validate_fail(
-            &validator, "Node4 and child node should have been combined");
+                &validator, "Node4 and child node should have been combined");
     }
     validator.depth++;
     for (int i = 0; i < node->count; ++i) {
         if (i > 0) {
             if (node->keys[i - 1] >= node->keys[i]) {
                 return art_validate_fail(
-                    &validator, "Node4 keys are not strictly increasing");
+                        &validator, "Node4 keys are not strictly increasing");
             }
         }
         for (int j = i + 1; j < node->count; ++j) {
@@ -9467,8 +9463,7 @@ static bool art_node4_internal_validate(const art_node4_t *node,
 static art_node16_t *art_node16_create(const art_key_chunk_t prefix[],
                                        uint8_t prefix_size) {
     art_node16_t *node = (art_node16_t *)roaring_malloc(sizeof(art_node16_t));
-    art_init_inner_node(&node->base, CROARING_ART_NODE16_TYPE, prefix,
-                        prefix_size);
+    art_init_inner_node(&node->base, ART_NODE16_TYPE, prefix, prefix_size);
     node->count = 0;
     return node;
 }
@@ -9512,7 +9507,7 @@ static art_node_t *art_node16_insert(art_node16_t *node, art_node_t *child,
         return (art_node_t *)node;
     }
     art_node48_t *new_node =
-        art_node48_create(node->base.prefix, node->base.prefix_size);
+            art_node48_create(node->base.prefix, node->base.prefix_size);
     for (size_t i = 0; i < 16; ++i) {
         art_node48_insert(new_node, node->children[i], node->keys[i]);
     }
@@ -9538,7 +9533,7 @@ static inline art_node_t *art_node16_erase(art_node16_t *node,
         return (art_node_t *)node;
     }
     art_node4_t *new_node =
-        art_node4_create(node->base.prefix, node->base.prefix_size);
+            art_node4_create(node->base.prefix, node->base.prefix_size);
     // Instead of calling insert, this could be specialized to 2x memcpy and
     // setting the count.
     for (size_t i = 0; i < 4; ++i) {
@@ -9560,7 +9555,7 @@ static inline void art_node16_replace(art_node16_t *node,
 }
 
 static inline art_indexed_child_t art_node16_next_child(
-    const art_node16_t *node, int index) {
+        const art_node16_t *node, int index) {
     art_indexed_child_t indexed_child;
     index++;
     if (index >= node->count) {
@@ -9574,7 +9569,7 @@ static inline art_indexed_child_t art_node16_next_child(
 }
 
 static inline art_indexed_child_t art_node16_prev_child(
-    const art_node16_t *node, int index) {
+        const art_node16_t *node, int index) {
     if (index > node->count) {
         index = node->count;
     }
@@ -9604,7 +9599,7 @@ static inline art_indexed_child_t art_node16_child_at(const art_node16_t *node,
 }
 
 static inline art_indexed_child_t art_node16_lower_bound(
-    art_node16_t *node, art_key_chunk_t key_chunk) {
+        art_node16_t *node, art_key_chunk_t key_chunk) {
     art_indexed_child_t indexed_child;
     for (size_t i = 0; i < node->count; ++i) {
         if (node->keys[i] >= key_chunk) {
@@ -9631,7 +9626,7 @@ static bool art_node16_internal_validate(const art_node16_t *node,
         if (i > 0) {
             if (node->keys[i - 1] >= node->keys[i]) {
                 return art_validate_fail(
-                    &validator, "Node16 keys are not strictly increasing");
+                        &validator, "Node16 keys are not strictly increasing");
             }
         }
         for (int j = i + 1; j < node->count; ++j) {
@@ -9651,19 +9646,18 @@ static bool art_node16_internal_validate(const art_node16_t *node,
 static art_node48_t *art_node48_create(const art_key_chunk_t prefix[],
                                        uint8_t prefix_size) {
     art_node48_t *node = (art_node48_t *)roaring_malloc(sizeof(art_node48_t));
-    art_init_inner_node(&node->base, CROARING_ART_NODE48_TYPE, prefix,
-                        prefix_size);
+    art_init_inner_node(&node->base, ART_NODE48_TYPE, prefix, prefix_size);
     node->count = 0;
-    node->available_children = CROARING_NODE48_AVAILABLE_CHILDREN_MASK;
+    node->available_children = NODE48_AVAILABLE_CHILDREN_MASK;
     for (size_t i = 0; i < 256; ++i) {
-        node->keys[i] = CROARING_ART_NODE48_EMPTY_VAL;
+        node->keys[i] = ART_NODE48_EMPTY_VAL;
     }
     return node;
 }
 
 static void art_free_node48(art_node48_t *node) {
     uint64_t used_children =
-        (node->available_children) ^ CROARING_NODE48_AVAILABLE_CHILDREN_MASK;
+            (node->available_children) ^ NODE48_AVAILABLE_CHILDREN_MASK;
     while (used_children != 0) {
         // We checked above that used_children is not zero
         uint8_t child_idx = roaring_trailing_zeroes(used_children);
@@ -9676,7 +9670,7 @@ static void art_free_node48(art_node48_t *node) {
 static inline art_node_t *art_node48_find_child(const art_node48_t *node,
                                                 art_key_chunk_t key) {
     uint8_t val_idx = node->keys[key];
-    if (val_idx != CROARING_ART_NODE48_EMPTY_VAL) {
+    if (val_idx != ART_NODE48_EMPTY_VAL) {
         return node->children[val_idx];
     }
     return NULL;
@@ -9695,10 +9689,10 @@ static art_node_t *art_node48_insert(art_node48_t *node, art_node_t *child,
         return (art_node_t *)node;
     }
     art_node256_t *new_node =
-        art_node256_create(node->base.prefix, node->base.prefix_size);
+            art_node256_create(node->base.prefix, node->base.prefix_size);
     for (size_t i = 0; i < 256; ++i) {
         uint8_t val_idx = node->keys[i];
-        if (val_idx != CROARING_ART_NODE48_EMPTY_VAL) {
+        if (val_idx != ART_NODE48_EMPTY_VAL) {
             art_node256_insert(new_node, node->children[val_idx], i);
         }
     }
@@ -9709,10 +9703,10 @@ static art_node_t *art_node48_insert(art_node48_t *node, art_node_t *child,
 static inline art_node_t *art_node48_erase(art_node48_t *node,
                                            uint8_t key_chunk) {
     uint8_t val_idx = node->keys[key_chunk];
-    if (val_idx == CROARING_ART_NODE48_EMPTY_VAL) {
+    if (val_idx == ART_NODE48_EMPTY_VAL) {
         return (art_node_t *)node;
     }
-    node->keys[key_chunk] = CROARING_ART_NODE48_EMPTY_VAL;
+    node->keys[key_chunk] = ART_NODE48_EMPTY_VAL;
     node->available_children |= UINT64_C(1) << val_idx;
     node->count--;
     if (node->count > 16) {
@@ -9720,10 +9714,10 @@ static inline art_node_t *art_node48_erase(art_node48_t *node,
     }
 
     art_node16_t *new_node =
-        art_node16_create(node->base.prefix, node->base.prefix_size);
+            art_node16_create(node->base.prefix, node->base.prefix_size);
     for (size_t i = 0; i < 256; ++i) {
         val_idx = node->keys[i];
-        if (val_idx != CROARING_ART_NODE48_EMPTY_VAL) {
+        if (val_idx != ART_NODE48_EMPTY_VAL) {
             art_node16_insert(new_node, node->children[val_idx], i);
         }
     }
@@ -9735,16 +9729,16 @@ static inline void art_node48_replace(art_node48_t *node,
                                       art_key_chunk_t key_chunk,
                                       art_node_t *new_child) {
     uint8_t val_idx = node->keys[key_chunk];
-    assert(val_idx != CROARING_ART_NODE48_EMPTY_VAL);
+    assert(val_idx != ART_NODE48_EMPTY_VAL);
     node->children[val_idx] = new_child;
 }
 
 static inline art_indexed_child_t art_node48_next_child(
-    const art_node48_t *node, int index) {
+        const art_node48_t *node, int index) {
     art_indexed_child_t indexed_child;
     index++;
     for (size_t i = index; i < 256; ++i) {
-        if (node->keys[i] != CROARING_ART_NODE48_EMPTY_VAL) {
+        if (node->keys[i] != ART_NODE48_EMPTY_VAL) {
             indexed_child.index = i;
             indexed_child.child = node->children[node->keys[i]];
             indexed_child.key_chunk = i;
@@ -9756,14 +9750,14 @@ static inline art_indexed_child_t art_node48_next_child(
 }
 
 static inline art_indexed_child_t art_node48_prev_child(
-    const art_node48_t *node, int index) {
+        const art_node48_t *node, int index) {
     if (index > 256) {
         index = 256;
     }
     index--;
     art_indexed_child_t indexed_child;
     for (int i = index; i >= 0; --i) {
-        if (node->keys[i] != CROARING_ART_NODE48_EMPTY_VAL) {
+        if (node->keys[i] != ART_NODE48_EMPTY_VAL) {
             indexed_child.index = i;
             indexed_child.child = node->children[node->keys[i]];
             indexed_child.key_chunk = i;
@@ -9788,10 +9782,10 @@ static inline art_indexed_child_t art_node48_child_at(const art_node48_t *node,
 }
 
 static inline art_indexed_child_t art_node48_lower_bound(
-    art_node48_t *node, art_key_chunk_t key_chunk) {
+        art_node48_t *node, art_key_chunk_t key_chunk) {
     art_indexed_child_t indexed_child;
     for (size_t i = key_chunk; i < 256; ++i) {
-        if (node->keys[i] != CROARING_ART_NODE48_EMPTY_VAL) {
+        if (node->keys[i] != ART_NODE48_EMPTY_VAL) {
             indexed_child.index = i;
             indexed_child.child = node->children[node->keys[i]];
             indexed_child.key_chunk = i;
@@ -9813,10 +9807,10 @@ static bool art_node48_internal_validate(const art_node48_t *node,
     uint64_t used_children = 0;
     for (int i = 0; i < 256; ++i) {
         uint8_t child_idx = node->keys[i];
-        if (child_idx != CROARING_ART_NODE48_EMPTY_VAL) {
+        if (child_idx != ART_NODE48_EMPTY_VAL) {
             if (used_children & (UINT64_C(1) << child_idx)) {
                 return art_validate_fail(
-                    &validator, "Node48 keys point to the same child index");
+                        &validator, "Node48 keys point to the same child index");
             }
 
             art_node_t *child = node->children[child_idx];
@@ -9827,11 +9821,11 @@ static bool art_node48_internal_validate(const art_node48_t *node,
         }
     }
     uint64_t expected_used_children =
-        (node->available_children) ^ CROARING_NODE48_AVAILABLE_CHILDREN_MASK;
+            (node->available_children) ^ NODE48_AVAILABLE_CHILDREN_MASK;
     if (used_children != expected_used_children) {
         return art_validate_fail(
-            &validator,
-            "Node48 available_children does not match actual children");
+                &validator,
+                "Node48 available_children does not match actual children");
     }
     while (used_children != 0) {
         uint8_t child_idx = roaring_trailing_zeroes(used_children);
@@ -9850,7 +9844,7 @@ static bool art_node48_internal_validate(const art_node48_t *node,
 
     validator.depth++;
     for (int i = 0; i < 256; ++i) {
-        if (node->keys[i] != CROARING_ART_NODE48_EMPTY_VAL) {
+        if (node->keys[i] != ART_NODE48_EMPTY_VAL) {
             validator.current_key[validator.depth - 1] = i;
             if (!art_internal_validate_at(node->children[node->keys[i]],
                                           validator)) {
@@ -9864,9 +9858,8 @@ static bool art_node48_internal_validate(const art_node48_t *node,
 static art_node256_t *art_node256_create(const art_key_chunk_t prefix[],
                                          uint8_t prefix_size) {
     art_node256_t *node =
-        (art_node256_t *)roaring_malloc(sizeof(art_node256_t));
-    art_init_inner_node(&node->base, CROARING_ART_NODE256_TYPE, prefix,
-                        prefix_size);
+            (art_node256_t *)roaring_malloc(sizeof(art_node256_t));
+    art_init_inner_node(&node->base, ART_NODE256_TYPE, prefix, prefix_size);
     node->count = 0;
     for (size_t i = 0; i < 256; ++i) {
         node->children[i] = NULL;
@@ -9904,7 +9897,7 @@ static inline art_node_t *art_node256_erase(art_node256_t *node,
     }
 
     art_node48_t *new_node =
-        art_node48_create(node->base.prefix, node->base.prefix_size);
+            art_node48_create(node->base.prefix, node->base.prefix_size);
     for (size_t i = 0; i < 256; ++i) {
         if (node->children[i] != NULL) {
             art_node48_insert(new_node, node->children[i], i);
@@ -9921,7 +9914,7 @@ static inline void art_node256_replace(art_node256_t *node,
 }
 
 static inline art_indexed_child_t art_node256_next_child(
-    const art_node256_t *node, int index) {
+        const art_node256_t *node, int index) {
     art_indexed_child_t indexed_child;
     index++;
     for (size_t i = index; i < 256; ++i) {
@@ -9937,7 +9930,7 @@ static inline art_indexed_child_t art_node256_next_child(
 }
 
 static inline art_indexed_child_t art_node256_prev_child(
-    const art_node256_t *node, int index) {
+        const art_node256_t *node, int index) {
     if (index > 256) {
         index = 256;
     }
@@ -9956,7 +9949,7 @@ static inline art_indexed_child_t art_node256_prev_child(
 }
 
 static inline art_indexed_child_t art_node256_child_at(
-    const art_node256_t *node, int index) {
+        const art_node256_t *node, int index) {
     art_indexed_child_t indexed_child;
     if (index < 0 || index >= 256) {
         indexed_child.child = NULL;
@@ -9969,7 +9962,7 @@ static inline art_indexed_child_t art_node256_child_at(
 }
 
 static inline art_indexed_child_t art_node256_lower_bound(
-    art_node256_t *node, art_key_chunk_t key_chunk) {
+        art_node256_t *node, art_key_chunk_t key_chunk) {
     art_indexed_child_t indexed_child;
     for (size_t i = key_chunk; i < 256; ++i) {
         if (node->children[i] != NULL) {
@@ -10012,7 +10005,7 @@ static bool art_node256_internal_validate(const art_node256_t *node,
     }
     if (actual_count != node->count) {
         return art_validate_fail(
-            &validator, "Node256 count does not match actual children");
+                &validator, "Node256 count does not match actual children");
     }
     return true;
 }
@@ -10022,13 +10015,13 @@ static bool art_node256_internal_validate(const art_node256_t *node,
 static art_node_t *art_find_child(const art_inner_node_t *node,
                                   art_key_chunk_t key_chunk) {
     switch (art_get_type(node)) {
-        case CROARING_ART_NODE4_TYPE:
+        case ART_NODE4_TYPE:
             return art_node4_find_child((art_node4_t *)node, key_chunk);
-        case CROARING_ART_NODE16_TYPE:
+        case ART_NODE16_TYPE:
             return art_node16_find_child((art_node16_t *)node, key_chunk);
-        case CROARING_ART_NODE48_TYPE:
+        case ART_NODE48_TYPE:
             return art_node48_find_child((art_node48_t *)node, key_chunk);
-        case CROARING_ART_NODE256_TYPE:
+        case ART_NODE256_TYPE:
             return art_node256_find_child((art_node256_t *)node, key_chunk);
         default:
             assert(false);
@@ -10040,16 +10033,16 @@ static art_node_t *art_find_child(const art_inner_node_t *node,
 static void art_replace(art_inner_node_t *node, art_key_chunk_t key_chunk,
                         art_node_t *new_child) {
     switch (art_get_type(node)) {
-        case CROARING_ART_NODE4_TYPE:
+        case ART_NODE4_TYPE:
             art_node4_replace((art_node4_t *)node, key_chunk, new_child);
             break;
-        case CROARING_ART_NODE16_TYPE:
+        case ART_NODE16_TYPE:
             art_node16_replace((art_node16_t *)node, key_chunk, new_child);
             break;
-        case CROARING_ART_NODE48_TYPE:
+        case ART_NODE48_TYPE:
             art_node48_replace((art_node48_t *)node, key_chunk, new_child);
             break;
-        case CROARING_ART_NODE256_TYPE:
+        case ART_NODE256_TYPE:
             art_node256_replace((art_node256_t *)node, key_chunk, new_child);
             break;
         default:
@@ -10062,13 +10055,13 @@ static void art_replace(art_inner_node_t *node, art_key_chunk_t key_chunk,
 static art_node_t *art_node_erase(art_inner_node_t *node,
                                   art_key_chunk_t key_chunk) {
     switch (art_get_type(node)) {
-        case CROARING_ART_NODE4_TYPE:
+        case ART_NODE4_TYPE:
             return art_node4_erase((art_node4_t *)node, key_chunk);
-        case CROARING_ART_NODE16_TYPE:
+        case ART_NODE16_TYPE:
             return art_node16_erase((art_node16_t *)node, key_chunk);
-        case CROARING_ART_NODE48_TYPE:
+        case ART_NODE48_TYPE:
             return art_node48_erase((art_node48_t *)node, key_chunk);
-        case CROARING_ART_NODE256_TYPE:
+        case ART_NODE256_TYPE:
             return art_node256_erase((art_node256_t *)node, key_chunk);
         default:
             assert(false);
@@ -10081,15 +10074,15 @@ static art_node_t *art_node_erase(art_inner_node_t *node,
 static art_node_t *art_node_insert_leaf(art_inner_node_t *node,
                                         art_key_chunk_t key_chunk,
                                         art_leaf_t *leaf) {
-    art_node_t *child = (art_node_t *)(CROARING_SET_LEAF(leaf));
+    art_node_t *child = (art_node_t *)(SET_LEAF(leaf));
     switch (art_get_type(node)) {
-        case CROARING_ART_NODE4_TYPE:
+        case ART_NODE4_TYPE:
             return art_node4_insert((art_node4_t *)node, child, key_chunk);
-        case CROARING_ART_NODE16_TYPE:
+        case ART_NODE16_TYPE:
             return art_node16_insert((art_node16_t *)node, child, key_chunk);
-        case CROARING_ART_NODE48_TYPE:
+        case ART_NODE48_TYPE:
             return art_node48_insert((art_node48_t *)node, child, key_chunk);
-        case CROARING_ART_NODE256_TYPE:
+        case ART_NODE256_TYPE:
             return art_node256_insert((art_node256_t *)node, child, key_chunk);
         default:
             assert(false);
@@ -10104,16 +10097,16 @@ static void art_free_node(art_node_t *node) {
         return;
     }
     switch (art_get_type((art_inner_node_t *)node)) {
-        case CROARING_ART_NODE4_TYPE:
+        case ART_NODE4_TYPE:
             art_free_node4((art_node4_t *)node);
             break;
-        case CROARING_ART_NODE16_TYPE:
+        case ART_NODE16_TYPE:
             art_free_node16((art_node16_t *)node);
             break;
-        case CROARING_ART_NODE48_TYPE:
+        case ART_NODE48_TYPE:
             art_free_node48((art_node48_t *)node);
             break;
-        case CROARING_ART_NODE256_TYPE:
+        case ART_NODE256_TYPE:
             art_free_node256((art_node256_t *)node);
             break;
         default:
@@ -10131,17 +10124,17 @@ static art_indexed_child_t art_node_next_child(const art_node_t *node,
         return indexed_child;
     }
     switch (art_get_type((art_inner_node_t *)node)) {
-        case CROARING_ART_NODE4_TYPE:
+        case ART_NODE4_TYPE:
             return art_node4_next_child((art_node4_t *)node, index);
-        case CROARING_ART_NODE16_TYPE:
+        case ART_NODE16_TYPE:
             return art_node16_next_child((art_node16_t *)node, index);
-        case CROARING_ART_NODE48_TYPE:
+        case ART_NODE48_TYPE:
             return art_node48_next_child((art_node48_t *)node, index);
-        case CROARING_ART_NODE256_TYPE:
+        case ART_NODE256_TYPE:
             return art_node256_next_child((art_node256_t *)node, index);
         default:
             assert(false);
-            return (art_indexed_child_t){0, 0, 0};
+            return (art_indexed_child_t){0};
     }
 }
 
@@ -10155,17 +10148,17 @@ static art_indexed_child_t art_node_prev_child(const art_node_t *node,
         return indexed_child;
     }
     switch (art_get_type((art_inner_node_t *)node)) {
-        case CROARING_ART_NODE4_TYPE:
+        case ART_NODE4_TYPE:
             return art_node4_prev_child((art_node4_t *)node, index);
-        case CROARING_ART_NODE16_TYPE:
+        case ART_NODE16_TYPE:
             return art_node16_prev_child((art_node16_t *)node, index);
-        case CROARING_ART_NODE48_TYPE:
+        case ART_NODE48_TYPE:
             return art_node48_prev_child((art_node48_t *)node, index);
-        case CROARING_ART_NODE256_TYPE:
+        case ART_NODE256_TYPE:
             return art_node256_prev_child((art_node256_t *)node, index);
         default:
             assert(false);
-            return (art_indexed_child_t){0, 0, 0};
+            return (art_indexed_child_t){0};
     }
 }
 
@@ -10179,17 +10172,17 @@ static art_indexed_child_t art_node_child_at(const art_node_t *node,
         return indexed_child;
     }
     switch (art_get_type((art_inner_node_t *)node)) {
-        case CROARING_ART_NODE4_TYPE:
+        case ART_NODE4_TYPE:
             return art_node4_child_at((art_node4_t *)node, index);
-        case CROARING_ART_NODE16_TYPE:
+        case ART_NODE16_TYPE:
             return art_node16_child_at((art_node16_t *)node, index);
-        case CROARING_ART_NODE48_TYPE:
+        case ART_NODE48_TYPE:
             return art_node48_child_at((art_node48_t *)node, index);
-        case CROARING_ART_NODE256_TYPE:
+        case ART_NODE256_TYPE:
             return art_node256_child_at((art_node256_t *)node, index);
         default:
             assert(false);
-            return (art_indexed_child_t){0, 0, 0};
+            return (art_indexed_child_t){0};
     }
 }
 
@@ -10203,17 +10196,17 @@ static art_indexed_child_t art_node_lower_bound(const art_node_t *node,
         return indexed_child;
     }
     switch (art_get_type((art_inner_node_t *)node)) {
-        case CROARING_ART_NODE4_TYPE:
+        case ART_NODE4_TYPE:
             return art_node4_lower_bound((art_node4_t *)node, key_chunk);
-        case CROARING_ART_NODE16_TYPE:
+        case ART_NODE16_TYPE:
             return art_node16_lower_bound((art_node16_t *)node, key_chunk);
-        case CROARING_ART_NODE48_TYPE:
+        case ART_NODE48_TYPE:
             return art_node48_lower_bound((art_node48_t *)node, key_chunk);
-        case CROARING_ART_NODE256_TYPE:
+        case ART_NODE256_TYPE:
             return art_node256_lower_bound((art_node256_t *)node, key_chunk);
         default:
             assert(false);
-            return (art_indexed_child_t){0, 0, 0};
+            return (art_indexed_child_t){0};
     }
 }
 
@@ -10260,14 +10253,14 @@ static uint8_t art_common_prefix(const art_key_chunk_t key1[],
 static art_node_t *art_insert_at(art_node_t *node, const art_key_chunk_t key[],
                                  uint8_t depth, art_leaf_t *new_leaf) {
     if (art_is_leaf(node)) {
-        art_leaf_t *leaf = CROARING_CAST_LEAF(node);
+        art_leaf_t *leaf = CAST_LEAF(node);
         uint8_t common_prefix = art_common_prefix(
-            leaf->key, depth, ART_KEY_BYTES, key, depth, ART_KEY_BYTES);
+                leaf->key, depth, ART_KEY_BYTES, key, depth, ART_KEY_BYTES);
 
         // Previously this was a leaf, create an inner node instead and add both
         // the existing and new leaf to it.
         art_node_t *new_node =
-            (art_node_t *)art_node4_create(key + depth, common_prefix);
+                (art_node_t *)art_node4_create(key + depth, common_prefix);
 
         new_node = art_node_insert_leaf((art_inner_node_t *)new_node,
                                         leaf->key[depth + common_prefix], leaf);
@@ -10280,17 +10273,17 @@ static art_node_t *art_insert_at(art_node_t *node, const art_key_chunk_t key[],
     art_inner_node_t *inner_node = (art_inner_node_t *)node;
     // Not a leaf: inner node
     uint8_t common_prefix =
-        art_common_prefix(inner_node->prefix, 0, inner_node->prefix_size, key,
-                          depth, ART_KEY_BYTES);
+            art_common_prefix(inner_node->prefix, 0, inner_node->prefix_size, key,
+                              depth, ART_KEY_BYTES);
     if (common_prefix != inner_node->prefix_size) {
         // Partial prefix match.  Create a new internal node to hold the common
         // prefix.
         art_node4_t *node4 =
-            art_node4_create(inner_node->prefix, common_prefix);
+                art_node4_create(inner_node->prefix, common_prefix);
 
         // Make the existing internal node a child of the new internal node.
         node4 = (art_node4_t *)art_node4_insert(
-            node4, node, inner_node->prefix[common_prefix]);
+                node4, node, inner_node->prefix[common_prefix]);
 
         // Correct the prefix of the moved internal node, trimming off the chunk
         // inserted into the new internal node.
@@ -10311,7 +10304,7 @@ static art_node_t *art_insert_at(art_node_t *node, const art_key_chunk_t key[],
     art_node_t *child = art_find_child(inner_node, key_chunk);
     if (child != NULL) {
         art_node_t *new_child =
-            art_insert_at(child, key, depth + common_prefix + 1, new_leaf);
+                art_insert_at(child, key, depth + common_prefix + 1, new_leaf);
         if (new_child != child) {
             // Node type changed.
             art_replace(inner_node, key_chunk, new_child);
@@ -10340,7 +10333,7 @@ static art_erase_result_t art_erase_at(art_node_t *node,
     result.value_erased = NULL;
 
     if (art_is_leaf(node)) {
-        art_leaf_t *leaf = CROARING_CAST_LEAF(node);
+        art_leaf_t *leaf = CAST_LEAF(node);
         uint8_t common_prefix = art_common_prefix(leaf->key, 0, ART_KEY_BYTES,
                                                   key, 0, ART_KEY_BYTES);
         if (common_prefix != ART_KEY_BYTES) {
@@ -10352,8 +10345,8 @@ static art_erase_result_t art_erase_at(art_node_t *node,
     }
     art_inner_node_t *inner_node = (art_inner_node_t *)node;
     uint8_t common_prefix =
-        art_common_prefix(inner_node->prefix, 0, inner_node->prefix_size, key,
-                          depth, ART_KEY_BYTES);
+            art_common_prefix(inner_node->prefix, 0, inner_node->prefix_size, key,
+                              depth, ART_KEY_BYTES);
     if (common_prefix != inner_node->prefix_size) {
         // Prefix mismatch.
         return result;
@@ -10367,7 +10360,7 @@ static art_erase_result_t art_erase_at(art_node_t *node,
     // Try to erase the key further down. Skip the key chunk associated with the
     // child in the node.
     art_erase_result_t child_result =
-        art_erase_at(child, key, depth + common_prefix + 1);
+            art_erase_at(child, key, depth + common_prefix + 1);
     if (child_result.value_erased == NULL) {
         return result;
     }
@@ -10391,13 +10384,13 @@ static art_val_t *art_find_at(const art_node_t *node,
     while (!art_is_leaf(node)) {
         art_inner_node_t *inner_node = (art_inner_node_t *)node;
         uint8_t common_prefix =
-            art_common_prefix(inner_node->prefix, 0, inner_node->prefix_size,
-                              key, depth, ART_KEY_BYTES);
+                art_common_prefix(inner_node->prefix, 0, inner_node->prefix_size,
+                                  key, depth, ART_KEY_BYTES);
         if (common_prefix != inner_node->prefix_size) {
             return NULL;
         }
         art_node_t *child =
-            art_find_child(inner_node, key[depth + inner_node->prefix_size]);
+                art_find_child(inner_node, key[depth + inner_node->prefix_size]);
         if (child == NULL) {
             return NULL;
         }
@@ -10405,12 +10398,12 @@ static art_val_t *art_find_at(const art_node_t *node,
         // Include both the prefix and the child key chunk in the depth.
         depth += inner_node->prefix_size + 1;
     }
-    art_leaf_t *leaf = CROARING_CAST_LEAF(node);
+    art_leaf_t *leaf = CAST_LEAF(node);
     if (depth >= ART_KEY_BYTES) {
         return (art_val_t *)leaf;
     }
     uint8_t common_prefix =
-        art_common_prefix(leaf->key, 0, ART_KEY_BYTES, key, 0, ART_KEY_BYTES);
+            art_common_prefix(leaf->key, 0, ART_KEY_BYTES, key, 0, ART_KEY_BYTES);
     if (common_prefix == ART_KEY_BYTES) {
         return (art_val_t *)leaf;
     }
@@ -10424,16 +10417,16 @@ size_t art_size_in_bytes_at(const art_node_t *node) {
     }
     size_t size = 0;
     switch (art_get_type((art_inner_node_t *)node)) {
-        case CROARING_ART_NODE4_TYPE: {
+        case ART_NODE4_TYPE: {
             size += sizeof(art_node4_t);
         } break;
-        case CROARING_ART_NODE16_TYPE: {
+        case ART_NODE16_TYPE: {
             size += sizeof(art_node16_t);
         } break;
-        case CROARING_ART_NODE48_TYPE: {
+        case ART_NODE48_TYPE: {
             size += sizeof(art_node48_t);
         } break;
-        case CROARING_ART_NODE256_TYPE: {
+        case ART_NODE256_TYPE: {
             size += sizeof(art_node256_t);
         } break;
         default:
@@ -10454,16 +10447,16 @@ static void art_node_print_type(const art_node_t *node) {
         return;
     }
     switch (art_get_type((art_inner_node_t *)node)) {
-        case CROARING_ART_NODE4_TYPE:
+        case ART_NODE4_TYPE:
             printf("Node4");
             return;
-        case CROARING_ART_NODE16_TYPE:
+        case ART_NODE16_TYPE:
             printf("Node16");
             return;
-        case CROARING_ART_NODE48_TYPE:
+        case ART_NODE48_TYPE:
             printf("Node48");
             return;
-        case CROARING_ART_NODE256_TYPE:
+        case ART_NODE256_TYPE:
             printf("Node256");
             return;
         default:
@@ -10475,7 +10468,7 @@ static void art_node_print_type(const art_node_t *node) {
 void art_node_printf(const art_node_t *node, uint8_t depth) {
     if (art_is_leaf(node)) {
         printf("{ type: Leaf, key: ");
-        art_leaf_t *leaf = CROARING_CAST_LEAF(node);
+        art_leaf_t *leaf = CAST_LEAF(node);
         for (size_t i = 0; i < ART_KEY_BYTES; ++i) {
             printf("%02x", leaf->key[i]);
         }
@@ -10502,7 +10495,7 @@ void art_node_printf(const art_node_t *node, uint8_t depth) {
     printf("\n");
 
     switch (art_get_type(inner_node)) {
-        case CROARING_ART_NODE4_TYPE: {
+        case ART_NODE4_TYPE: {
             art_node4_t *node4 = (art_node4_t *)node;
             for (uint8_t i = 0; i < node4->count; ++i) {
                 printf("%*s", depth, "");
@@ -10510,7 +10503,7 @@ void art_node_printf(const art_node_t *node, uint8_t depth) {
                 art_node_printf(node4->children[i], depth);
             }
         } break;
-        case CROARING_ART_NODE16_TYPE: {
+        case ART_NODE16_TYPE: {
             art_node16_t *node16 = (art_node16_t *)node;
             for (uint8_t i = 0; i < node16->count; ++i) {
                 printf("%*s", depth, "");
@@ -10518,10 +10511,10 @@ void art_node_printf(const art_node_t *node, uint8_t depth) {
                 art_node_printf(node16->children[i], depth);
             }
         } break;
-        case CROARING_ART_NODE48_TYPE: {
+        case ART_NODE48_TYPE: {
             art_node48_t *node48 = (art_node48_t *)node;
             for (int i = 0; i < 256; ++i) {
-                if (node48->keys[i] != CROARING_ART_NODE48_EMPTY_VAL) {
+                if (node48->keys[i] != ART_NODE48_EMPTY_VAL) {
                     printf("%*s", depth, "");
                     printf("key: %02x ", i);
                     printf("child: %02x ", node48->keys[i]);
@@ -10529,7 +10522,7 @@ void art_node_printf(const art_node_t *node, uint8_t depth) {
                 }
             }
         } break;
-        case CROARING_ART_NODE256_TYPE: {
+        case ART_NODE256_TYPE: {
             art_node256_t *node256 = (art_node256_t *)node;
             for (int i = 0; i < 256; ++i) {
                 if (node256->children[i] != NULL) {
@@ -10552,7 +10545,7 @@ void art_insert(art_t *art, const art_key_chunk_t *key, art_val_t *val) {
     art_leaf_t *leaf = (art_leaf_t *)val;
     art_leaf_populate(leaf, key);
     if (art->root == NULL) {
-        art->root = (art_node_t *)CROARING_SET_LEAF(leaf);
+        art->root = (art_node_t *)SET_LEAF(leaf);
         return;
     }
     art->root = art_insert_at(art->root, key, 0, leaf);
@@ -10610,7 +10603,7 @@ static inline art_node_t *art_iterator_node(art_iterator_t *iterator) {
 // true for convenience.
 static inline bool art_iterator_valid_loc(art_iterator_t *iterator,
                                           art_leaf_t *leaf) {
-    iterator->frames[iterator->frame].node = CROARING_SET_LEAF(leaf);
+    iterator->frames[iterator->frame].node = SET_LEAF(leaf);
     iterator->frames[iterator->frame].index_in_node = 0;
     memcpy(iterator->key, leaf->key, ART_KEY_BYTES);
     iterator->value = (art_val_t *)leaf;
@@ -10635,7 +10628,7 @@ static void art_iterator_down(art_iterator_t *iterator,
     iterator->frames[iterator->frame].index_in_node = index_in_node;
     iterator->frame++;
     art_indexed_child_t indexed_child =
-        art_node_child_at((art_node_t *)node, index_in_node);
+            art_node_child_at((art_node_t *)node, index_in_node);
     assert(indexed_child.child != NULL);
     iterator->frames[iterator->frame].node = indexed_child.child;
     iterator->depth += node->prefix_size + 1;
@@ -10644,8 +10637,8 @@ static void art_iterator_down(art_iterator_t *iterator,
 // Moves the iterator to the next/previous child of the current node. Returns
 // the child moved to, or NULL if there is no neighboring child.
 static art_node_t *art_iterator_neighbor_child(
-    art_iterator_t *iterator, const art_inner_node_t *inner_node,
-    bool forward) {
+        art_iterator_t *iterator, const art_inner_node_t *inner_node,
+        bool forward) {
     art_iterator_frame_t frame = iterator->frames[iterator->frame];
     art_indexed_child_t indexed_child;
     if (forward) {
@@ -10667,7 +10660,7 @@ static bool art_iterator_up(art_iterator_t *iterator) {
     iterator->frame--;
     // We went up, so we are at an inner node.
     iterator->depth -=
-        ((art_inner_node_t *)art_iterator_node(iterator))->prefix_size + 1;
+            ((art_inner_node_t *)art_iterator_node(iterator))->prefix_size + 1;
     return true;
 }
 
@@ -10699,7 +10692,7 @@ static bool art_node_init_iterator(const art_node_t *node,
     // We're at a leaf.
     iterator->frames[iterator->frame].node = (art_node_t *)node;
     iterator->frames[iterator->frame].index_in_node = 0;  // Should not matter.
-    return art_iterator_valid_loc(iterator, CROARING_CAST_LEAF(node));
+    return art_iterator_valid_loc(iterator, CAST_LEAF(node));
 }
 
 bool art_iterator_move(art_iterator_t *iterator, bool forward) {
@@ -10712,7 +10705,7 @@ bool art_iterator_move(art_iterator_t *iterator, bool forward) {
     }
     // Advance within inner node.
     art_node_t *neighbor_child = art_iterator_neighbor_child(
-        iterator, (art_inner_node_t *)art_iterator_node(iterator), forward);
+            iterator, (art_inner_node_t *)art_iterator_node(iterator), forward);
     if (neighbor_child != NULL) {
         // There is another child at this level, go down to the first or last
         // leaf.
@@ -10730,8 +10723,8 @@ static bool art_node_iterator_lower_bound(const art_node_t *node,
     while (!art_is_leaf(node)) {
         art_inner_node_t *inner_node = (art_inner_node_t *)node;
         int prefix_comparison =
-            art_compare_prefix(inner_node->prefix, 0, key, iterator->depth,
-                               inner_node->prefix_size);
+                art_compare_prefix(inner_node->prefix, 0, key, iterator->depth,
+                                   inner_node->prefix_size);
         if (prefix_comparison < 0) {
             // Prefix so far has been equal, but we've found a smaller key.
             // Since we take the lower bound within each node, we can return the
@@ -10743,9 +10736,9 @@ static bool art_node_iterator_lower_bound(const art_node_t *node,
         }
         // Prefix is equal, move to lower bound child.
         art_key_chunk_t key_chunk =
-            key[iterator->depth + inner_node->prefix_size];
+                key[iterator->depth + inner_node->prefix_size];
         art_indexed_child_t indexed_child =
-            art_node_lower_bound(node, key_chunk);
+                art_node_lower_bound(node, key_chunk);
         if (indexed_child.child == NULL) {
             // Only smaller keys among children.
             return art_iterator_up_and_move(iterator, true);
@@ -10759,7 +10752,7 @@ static bool art_node_iterator_lower_bound(const art_node_t *node,
         art_iterator_down(iterator, inner_node, indexed_child.index);
         node = indexed_child.child;
     }
-    art_leaf_t *leaf = CROARING_CAST_LEAF(node);
+    art_leaf_t *leaf = CAST_LEAF(node);
     if (art_compare_keys(leaf->key, key) >= 0) {
         // Leaf has an equal or larger key.
         return art_iterator_valid_loc(iterator, leaf);
@@ -10770,7 +10763,7 @@ static bool art_node_iterator_lower_bound(const art_node_t *node,
 }
 
 art_iterator_t art_init_iterator(const art_t *art, bool first) {
-    art_iterator_t iterator = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+    art_iterator_t iterator = {0};
     if (art->root == NULL) {
         return iterator;
     }
@@ -10797,7 +10790,7 @@ bool art_iterator_lower_bound(art_iterator_t *iterator,
                                              iterator, key);
     }
     int compare_result =
-        art_compare_prefix(iterator->key, 0, key, 0, ART_KEY_BYTES);
+            art_compare_prefix(iterator->key, 0, key, 0, ART_KEY_BYTES);
     // Move up until we have an equal prefix, after which we can do a normal
     // lower bound search.
     while (compare_result != 0) {
@@ -10813,10 +10806,10 @@ bool art_iterator_lower_bound(art_iterator_t *iterator,
         // Since we're only moving up, we can keep comparing against the
         // iterator key.
         art_inner_node_t *inner_node =
-            (art_inner_node_t *)art_iterator_node(iterator);
+                (art_inner_node_t *)art_iterator_node(iterator);
         compare_result =
-            art_compare_prefix(iterator->key, 0, key, 0,
-                               iterator->depth + inner_node->prefix_size);
+                art_compare_prefix(iterator->key, 0, key, 0,
+                                   iterator->depth + inner_node->prefix_size);
     }
     if (compare_result > 0) {
         return art_node_init_iterator(art_iterator_node(iterator), iterator,
@@ -10827,7 +10820,7 @@ bool art_iterator_lower_bound(art_iterator_t *iterator,
 }
 
 art_iterator_t art_lower_bound(const art_t *art, const art_key_chunk_t *key) {
-    art_iterator_t iterator = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+    art_iterator_t iterator = {0};
     if (art->root != NULL) {
         art_node_iterator_lower_bound(art->root, &iterator, key);
     }
@@ -10835,7 +10828,7 @@ art_iterator_t art_lower_bound(const art_t *art, const art_key_chunk_t *key) {
 }
 
 art_iterator_t art_upper_bound(const art_t *art, const art_key_chunk_t *key) {
-    art_iterator_t iterator = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+    art_iterator_t iterator = {0};
     if (art->root != NULL) {
         if (art_node_iterator_lower_bound(art->root, &iterator, key) &&
             art_compare_keys(iterator.key, key) == 0) {
@@ -10874,11 +10867,11 @@ art_val_t *art_iterator_erase(art_t *art, art_iterator_t *iterator) {
 
     // Erase the leaf.
     art_inner_node_t *parent_node =
-        (art_inner_node_t *)art_iterator_node(iterator);
+            (art_inner_node_t *)art_iterator_node(iterator);
     art_key_chunk_t key_chunk_in_parent =
-        iterator->key[iterator->depth + parent_node->prefix_size];
+            iterator->key[iterator->depth + parent_node->prefix_size];
     art_node_t *new_parent_node =
-        art_node_erase(parent_node, key_chunk_in_parent);
+            art_node_erase(parent_node, key_chunk_in_parent);
 
     if (new_parent_node != ((art_node_t *)parent_node)) {
         // Replace the pointer to the inner node we erased from in its
@@ -10887,9 +10880,9 @@ art_val_t *art_iterator_erase(art_t *art, art_iterator_t *iterator) {
         went_up = art_iterator_up(iterator);
         if (went_up) {
             art_inner_node_t *grandparent_node =
-                (art_inner_node_t *)art_iterator_node(iterator);
+                    (art_inner_node_t *)art_iterator_node(iterator);
             art_key_chunk_t key_chunk_in_grandparent =
-                iterator->key[iterator->depth + grandparent_node->prefix_size];
+                    iterator->key[iterator->depth + grandparent_node->prefix_size];
             art_replace(grandparent_node, key_chunk_in_grandparent,
                         new_parent_node);
         } else {
@@ -10913,12 +10906,12 @@ static bool art_internal_validate_at(const art_node_t *node,
         return art_validate_fail(&validator, "node is null");
     }
     if (art_is_leaf(node)) {
-        art_leaf_t *leaf = CROARING_CAST_LEAF(node);
+        art_leaf_t *leaf = CAST_LEAF(node);
         if (art_compare_prefix(leaf->key, 0, validator.current_key, 0,
                                validator.depth) != 0) {
             return art_validate_fail(
-                &validator,
-                "leaf key does not match its position's prefix in the tree");
+                    &validator,
+                    "leaf key does not match its position's prefix in the tree");
         }
         if (validator.validate_cb != NULL &&
             !validator.validate_cb(leaf, validator.reason)) {
@@ -10939,25 +10932,25 @@ static bool art_internal_validate_at(const art_node_t *node,
         validator.depth += inner_node->prefix_size;
 
         switch (inner_node->typecode) {
-            case CROARING_ART_NODE4_TYPE:
+            case ART_NODE4_TYPE:
                 if (!art_node4_internal_validate((art_node4_t *)inner_node,
                                                  validator)) {
                     return false;
                 }
                 break;
-            case CROARING_ART_NODE16_TYPE:
+            case ART_NODE16_TYPE:
                 if (!art_node16_internal_validate((art_node16_t *)inner_node,
                                                   validator)) {
                     return false;
                 }
                 break;
-            case CROARING_ART_NODE48_TYPE:
+            case ART_NODE48_TYPE:
                 if (!art_node48_internal_validate((art_node48_t *)inner_node,
                                                   validator)) {
                     return false;
                 }
                 break;
-            case CROARING_ART_NODE256_TYPE:
+            case ART_NODE256_TYPE:
                 if (!art_node256_internal_validate((art_node256_t *)inner_node,
                                                    validator)) {
                     return false;
@@ -10982,10 +10975,10 @@ bool art_internal_validate(const art_t *art, const char **reason,
         return true;
     }
     art_internal_validate_t validator = {
-        .reason = reason,
-        .validate_cb = validate_cb,
-        .depth = 0,
-        .current_key = {0},
+            .reason = reason,
+            .validate_cb = validate_cb,
+            .depth = 0,
+            .current_key = {0},
     };
     return art_internal_validate_at(art->root, validator);
 }
@@ -11046,10 +11039,10 @@ bitset_t *bitset_create_with_capacity(size_t size) {
         return NULL;
     }
     bitset->arraysize =
-        (size + sizeof(uint64_t) * 8 - 1) / (sizeof(uint64_t) * 8);
+            (size + sizeof(uint64_t) * 8 - 1) / (sizeof(uint64_t) * 8);
     bitset->capacity = bitset->arraysize;
     if ((bitset->array = (uint64_t *)roaring_calloc(
-             bitset->arraysize, sizeof(uint64_t))) == NULL) {
+            bitset->arraysize, sizeof(uint64_t))) == NULL) {
         roaring_free(bitset);
         return NULL;
     }
@@ -11095,11 +11088,11 @@ void bitset_shift_left(bitset_t *bitset, size_t s) {
     } else {
         bitset_resize(bitset, as + extra_words + 1, true);
         bitset->array[as + extra_words] =
-            bitset->array[as - 1] >> (64 - inword_shift);
+                bitset->array[as - 1] >> (64 - inword_shift);
         for (size_t i = as + extra_words; i >= extra_words + 2; i--) {
             bitset->array[i - 1] =
-                (bitset->array[i - 1 - extra_words] << inword_shift) |
-                (bitset->array[i - 2 - extra_words] >> (64 - inword_shift));
+                    (bitset->array[i - 1 - extra_words] << inword_shift) |
+                    (bitset->array[i - 2 - extra_words] >> (64 - inword_shift));
         }
         bitset->array[extra_words] = bitset->array[0] << inword_shift;
     }
@@ -11122,11 +11115,11 @@ void bitset_shift_right(bitset_t *bitset, size_t s) {
     } else {
         for (size_t i = 0; i + extra_words + 1 < as; i++) {
             bitset->array[i] =
-                (bitset->array[i + extra_words] >> inword_shift) |
-                (bitset->array[i + extra_words + 1] << (64 - inword_shift));
+                    (bitset->array[i + extra_words] >> inword_shift) |
+                    (bitset->array[i + extra_words + 1] << (64 - inword_shift));
         }
         bitset->array[as - extra_words - 1] =
-            (bitset->array[as - 1] >> inword_shift);
+                (bitset->array[as - 1] >> inword_shift);
         bitset_resize(bitset, as - extra_words, false);
     }
 }
@@ -11147,7 +11140,7 @@ bool bitset_resize(bitset_t *bitset, size_t newarraysize, bool padwithzeroes) {
         return false;
     }
     size_t smallest =
-        newarraysize < bitset->arraysize ? newarraysize : bitset->arraysize;
+            newarraysize < bitset->arraysize ? newarraysize : bitset->arraysize;
     if (bitset->capacity < newarraysize) {
         uint64_t *newarray;
         size_t newcapacity = bitset->capacity;
@@ -11158,7 +11151,7 @@ bool bitset_resize(bitset_t *bitset, size_t newarraysize, bool padwithzeroes) {
             newcapacity *= 2;
         }
         if ((newarray = (uint64_t *)roaring_realloc(
-                 bitset->array, sizeof(uint64_t) * newcapacity)) == NULL) {
+                bitset->array, sizeof(uint64_t) * newcapacity)) == NULL) {
             return false;
         }
         bitset->capacity = newcapacity;
@@ -11196,10 +11189,10 @@ size_t bitset_count(const bitset_t *bitset) {
     return card;
 }
 
-bool bitset_inplace_union(bitset_t *CROARING_CBITSET_RESTRICT b1,
-                          const bitset_t *CROARING_CBITSET_RESTRICT b2) {
+bool bitset_inplace_union(bitset_t *CBITSET_RESTRICT b1,
+                          const bitset_t *CBITSET_RESTRICT b2) {
     size_t minlength =
-        b1->arraysize < b2->arraysize ? b1->arraysize : b2->arraysize;
+            b1->arraysize < b2->arraysize ? b1->arraysize : b2->arraysize;
     for (size_t k = 0; k < minlength; ++k) {
         b1->array[k] |= b2->array[k];
     }
@@ -11232,13 +11225,13 @@ bool bitset_grow(bitset_t *bitset, size_t newarraysize) {
     if (bitset->capacity < newarraysize) {
         uint64_t *newarray;
         size_t newcapacity = (UINT64_C(0xFFFFFFFFFFFFFFFF) >>
-                              roaring_leading_zeroes(newarraysize)) +
+                                                           roaring_leading_zeroes(newarraysize)) +
                              1;
         while (newcapacity < newarraysize) {
             newcapacity *= 2;
         }
         if ((newarray = (uint64_t *)roaring_realloc(
-                 bitset->array, sizeof(uint64_t) * newcapacity)) == NULL) {
+                bitset->array, sizeof(uint64_t) * newcapacity)) == NULL) {
             return false;
         }
         bitset->capacity = newcapacity;
@@ -11263,10 +11256,10 @@ size_t bitset_maximum(const bitset_t *bitset) {
 /* Returns true if bitsets share no common elements, false otherwise.
  *
  * Performs early-out if common element found. */
-bool bitsets_disjoint(const bitset_t *CROARING_CBITSET_RESTRICT b1,
-                      const bitset_t *CROARING_CBITSET_RESTRICT b2) {
+bool bitsets_disjoint(const bitset_t *CBITSET_RESTRICT b1,
+                      const bitset_t *CBITSET_RESTRICT b2) {
     size_t minlength =
-        b1->arraysize < b2->arraysize ? b1->arraysize : b2->arraysize;
+            b1->arraysize < b2->arraysize ? b1->arraysize : b2->arraysize;
 
     for (size_t k = 0; k < minlength; k++) {
         if ((b1->array[k] & b2->array[k]) != 0) return false;
@@ -11278,10 +11271,10 @@ bool bitsets_disjoint(const bitset_t *CROARING_CBITSET_RESTRICT b1,
  * disjoint.
  *
  * Performs early-out if common element found. */
-bool bitsets_intersect(const bitset_t *CROARING_CBITSET_RESTRICT b1,
-                       const bitset_t *CROARING_CBITSET_RESTRICT b2) {
+bool bitsets_intersect(const bitset_t *CBITSET_RESTRICT b1,
+                       const bitset_t *CBITSET_RESTRICT b2) {
     size_t minlength =
-        b1->arraysize < b2->arraysize ? b1->arraysize : b2->arraysize;
+            b1->arraysize < b2->arraysize ? b1->arraysize : b2->arraysize;
 
     for (size_t k = 0; k < minlength; k++) {
         if ((b1->array[k] & b2->array[k]) != 0) return true;
@@ -11303,8 +11296,8 @@ static bool any_bits_set(const bitset_t *b, size_t starting_loc) {
 /* Returns true if b1 has all of b2's bits set.
  *
  * Performs early out if a bit is found in b2 that is not found in b1. */
-bool bitset_contains_all(const bitset_t *CROARING_CBITSET_RESTRICT b1,
-                         const bitset_t *CROARING_CBITSET_RESTRICT b2) {
+bool bitset_contains_all(const bitset_t *CBITSET_RESTRICT b1,
+                         const bitset_t *CBITSET_RESTRICT b2) {
     size_t min_size = b1->arraysize;
     if (b1->arraysize > b2->arraysize) {
         min_size = b2->arraysize;
@@ -11321,11 +11314,11 @@ bool bitset_contains_all(const bitset_t *CROARING_CBITSET_RESTRICT b1,
     return true;
 }
 
-size_t bitset_union_count(const bitset_t *CROARING_CBITSET_RESTRICT b1,
-                          const bitset_t *CROARING_CBITSET_RESTRICT b2) {
+size_t bitset_union_count(const bitset_t *CBITSET_RESTRICT b1,
+                          const bitset_t *CBITSET_RESTRICT b2) {
     size_t answer = 0;
     size_t minlength =
-        b1->arraysize < b2->arraysize ? b1->arraysize : b2->arraysize;
+            b1->arraysize < b2->arraysize ? b1->arraysize : b2->arraysize;
     size_t k = 0;
     for (; k + 3 < minlength; k += 4) {
         answer += roaring_hamming(b1->array[k] | b2->array[k]);
@@ -11362,10 +11355,10 @@ size_t bitset_union_count(const bitset_t *CROARING_CBITSET_RESTRICT b1,
     return answer;
 }
 
-void bitset_inplace_intersection(bitset_t *CROARING_CBITSET_RESTRICT b1,
-                                 const bitset_t *CROARING_CBITSET_RESTRICT b2) {
+void bitset_inplace_intersection(bitset_t *CBITSET_RESTRICT b1,
+                                 const bitset_t *CBITSET_RESTRICT b2) {
     size_t minlength =
-        b1->arraysize < b2->arraysize ? b1->arraysize : b2->arraysize;
+            b1->arraysize < b2->arraysize ? b1->arraysize : b2->arraysize;
     size_t k = 0;
     for (; k < minlength; ++k) {
         b1->array[k] &= b2->array[k];
@@ -11375,31 +11368,31 @@ void bitset_inplace_intersection(bitset_t *CROARING_CBITSET_RESTRICT b1,
     }
 }
 
-size_t bitset_intersection_count(const bitset_t *CROARING_CBITSET_RESTRICT b1,
-                                 const bitset_t *CROARING_CBITSET_RESTRICT b2) {
+size_t bitset_intersection_count(const bitset_t *CBITSET_RESTRICT b1,
+                                 const bitset_t *CBITSET_RESTRICT b2) {
     size_t answer = 0;
     size_t minlength =
-        b1->arraysize < b2->arraysize ? b1->arraysize : b2->arraysize;
+            b1->arraysize < b2->arraysize ? b1->arraysize : b2->arraysize;
     for (size_t k = 0; k < minlength; ++k) {
         answer += roaring_hamming(b1->array[k] & b2->array[k]);
     }
     return answer;
 }
 
-void bitset_inplace_difference(bitset_t *CROARING_CBITSET_RESTRICT b1,
-                               const bitset_t *CROARING_CBITSET_RESTRICT b2) {
+void bitset_inplace_difference(bitset_t *CBITSET_RESTRICT b1,
+                               const bitset_t *CBITSET_RESTRICT b2) {
     size_t minlength =
-        b1->arraysize < b2->arraysize ? b1->arraysize : b2->arraysize;
+            b1->arraysize < b2->arraysize ? b1->arraysize : b2->arraysize;
     size_t k = 0;
     for (; k < minlength; ++k) {
         b1->array[k] &= ~(b2->array[k]);
     }
 }
 
-size_t bitset_difference_count(const bitset_t *CROARING_CBITSET_RESTRICT b1,
-                               const bitset_t *CROARING_CBITSET_RESTRICT b2) {
+size_t bitset_difference_count(const bitset_t *CBITSET_RESTRICT b1,
+                               const bitset_t *CBITSET_RESTRICT b2) {
     size_t minlength =
-        b1->arraysize < b2->arraysize ? b1->arraysize : b2->arraysize;
+            b1->arraysize < b2->arraysize ? b1->arraysize : b2->arraysize;
     size_t k = 0;
     size_t answer = 0;
     for (; k < minlength; ++k) {
@@ -11411,11 +11404,10 @@ size_t bitset_difference_count(const bitset_t *CROARING_CBITSET_RESTRICT b1,
     return answer;
 }
 
-bool bitset_inplace_symmetric_difference(
-    bitset_t *CROARING_CBITSET_RESTRICT b1,
-    const bitset_t *CROARING_CBITSET_RESTRICT b2) {
+bool bitset_inplace_symmetric_difference(bitset_t *CBITSET_RESTRICT b1,
+                                         const bitset_t *CBITSET_RESTRICT b2) {
     size_t minlength =
-        b1->arraysize < b2->arraysize ? b1->arraysize : b2->arraysize;
+            b1->arraysize < b2->arraysize ? b1->arraysize : b2->arraysize;
     size_t k = 0;
     for (; k < minlength; ++k) {
         b1->array[k] ^= b2->array[k];
@@ -11429,11 +11421,10 @@ bool bitset_inplace_symmetric_difference(
     return true;
 }
 
-size_t bitset_symmetric_difference_count(
-    const bitset_t *CROARING_CBITSET_RESTRICT b1,
-    const bitset_t *CROARING_CBITSET_RESTRICT b2) {
+size_t bitset_symmetric_difference_count(const bitset_t *CBITSET_RESTRICT b1,
+                                         const bitset_t *CBITSET_RESTRICT b2) {
     size_t minlength =
-        b1->arraysize < b2->arraysize ? b1->arraysize : b2->arraysize;
+            b1->arraysize < b2->arraysize ? b1->arraysize : b2->arraysize;
     size_t k = 0;
     size_t answer = 0;
     for (; k < minlength; ++k) {
@@ -11462,7 +11453,7 @@ bool bitset_trim(bitset_t *bitset) {
     if (bitset->capacity == newsize) return true;  // nothing to do
     uint64_t *newarray;
     if ((newarray = (uint64_t *)roaring_realloc(
-             bitset->array, sizeof(uint64_t) * newsize)) == NULL) {
+            bitset->array, sizeof(uint64_t) * newsize)) == NULL) {
         return false;
     }
     bitset->array = newarray;
@@ -11504,278 +11495,278 @@ namespace api {
 
 #if CROARING_IS_X64
 static uint8_t lengthTable[256] = {
-    0, 1, 1, 2, 1, 2, 2, 3, 1, 2, 2, 3, 2, 3, 3, 4, 1, 2, 2, 3, 2, 3, 3, 4,
-    2, 3, 3, 4, 3, 4, 4, 5, 1, 2, 2, 3, 2, 3, 3, 4, 2, 3, 3, 4, 3, 4, 4, 5,
-    2, 3, 3, 4, 3, 4, 4, 5, 3, 4, 4, 5, 4, 5, 5, 6, 1, 2, 2, 3, 2, 3, 3, 4,
-    2, 3, 3, 4, 3, 4, 4, 5, 2, 3, 3, 4, 3, 4, 4, 5, 3, 4, 4, 5, 4, 5, 5, 6,
-    2, 3, 3, 4, 3, 4, 4, 5, 3, 4, 4, 5, 4, 5, 5, 6, 3, 4, 4, 5, 4, 5, 5, 6,
-    4, 5, 5, 6, 5, 6, 6, 7, 1, 2, 2, 3, 2, 3, 3, 4, 2, 3, 3, 4, 3, 4, 4, 5,
-    2, 3, 3, 4, 3, 4, 4, 5, 3, 4, 4, 5, 4, 5, 5, 6, 2, 3, 3, 4, 3, 4, 4, 5,
-    3, 4, 4, 5, 4, 5, 5, 6, 3, 4, 4, 5, 4, 5, 5, 6, 4, 5, 5, 6, 5, 6, 6, 7,
-    2, 3, 3, 4, 3, 4, 4, 5, 3, 4, 4, 5, 4, 5, 5, 6, 3, 4, 4, 5, 4, 5, 5, 6,
-    4, 5, 5, 6, 5, 6, 6, 7, 3, 4, 4, 5, 4, 5, 5, 6, 4, 5, 5, 6, 5, 6, 6, 7,
-    4, 5, 5, 6, 5, 6, 6, 7, 5, 6, 6, 7, 6, 7, 7, 8};
+        0, 1, 1, 2, 1, 2, 2, 3, 1, 2, 2, 3, 2, 3, 3, 4, 1, 2, 2, 3, 2, 3, 3, 4,
+        2, 3, 3, 4, 3, 4, 4, 5, 1, 2, 2, 3, 2, 3, 3, 4, 2, 3, 3, 4, 3, 4, 4, 5,
+        2, 3, 3, 4, 3, 4, 4, 5, 3, 4, 4, 5, 4, 5, 5, 6, 1, 2, 2, 3, 2, 3, 3, 4,
+        2, 3, 3, 4, 3, 4, 4, 5, 2, 3, 3, 4, 3, 4, 4, 5, 3, 4, 4, 5, 4, 5, 5, 6,
+        2, 3, 3, 4, 3, 4, 4, 5, 3, 4, 4, 5, 4, 5, 5, 6, 3, 4, 4, 5, 4, 5, 5, 6,
+        4, 5, 5, 6, 5, 6, 6, 7, 1, 2, 2, 3, 2, 3, 3, 4, 2, 3, 3, 4, 3, 4, 4, 5,
+        2, 3, 3, 4, 3, 4, 4, 5, 3, 4, 4, 5, 4, 5, 5, 6, 2, 3, 3, 4, 3, 4, 4, 5,
+        3, 4, 4, 5, 4, 5, 5, 6, 3, 4, 4, 5, 4, 5, 5, 6, 4, 5, 5, 6, 5, 6, 6, 7,
+        2, 3, 3, 4, 3, 4, 4, 5, 3, 4, 4, 5, 4, 5, 5, 6, 3, 4, 4, 5, 4, 5, 5, 6,
+        4, 5, 5, 6, 5, 6, 6, 7, 3, 4, 4, 5, 4, 5, 5, 6, 4, 5, 5, 6, 5, 6, 6, 7,
+        4, 5, 5, 6, 5, 6, 6, 7, 5, 6, 6, 7, 6, 7, 7, 8};
 #endif
 
 #if CROARING_IS_X64
 ALIGNED(32)
 static uint32_t vecDecodeTable[256][8] = {
-    {0, 0, 0, 0, 0, 0, 0, 0}, /* 0x00 (00000000) */
-    {1, 0, 0, 0, 0, 0, 0, 0}, /* 0x01 (00000001) */
-    {2, 0, 0, 0, 0, 0, 0, 0}, /* 0x02 (00000010) */
-    {1, 2, 0, 0, 0, 0, 0, 0}, /* 0x03 (00000011) */
-    {3, 0, 0, 0, 0, 0, 0, 0}, /* 0x04 (00000100) */
-    {1, 3, 0, 0, 0, 0, 0, 0}, /* 0x05 (00000101) */
-    {2, 3, 0, 0, 0, 0, 0, 0}, /* 0x06 (00000110) */
-    {1, 2, 3, 0, 0, 0, 0, 0}, /* 0x07 (00000111) */
-    {4, 0, 0, 0, 0, 0, 0, 0}, /* 0x08 (00001000) */
-    {1, 4, 0, 0, 0, 0, 0, 0}, /* 0x09 (00001001) */
-    {2, 4, 0, 0, 0, 0, 0, 0}, /* 0x0A (00001010) */
-    {1, 2, 4, 0, 0, 0, 0, 0}, /* 0x0B (00001011) */
-    {3, 4, 0, 0, 0, 0, 0, 0}, /* 0x0C (00001100) */
-    {1, 3, 4, 0, 0, 0, 0, 0}, /* 0x0D (00001101) */
-    {2, 3, 4, 0, 0, 0, 0, 0}, /* 0x0E (00001110) */
-    {1, 2, 3, 4, 0, 0, 0, 0}, /* 0x0F (00001111) */
-    {5, 0, 0, 0, 0, 0, 0, 0}, /* 0x10 (00010000) */
-    {1, 5, 0, 0, 0, 0, 0, 0}, /* 0x11 (00010001) */
-    {2, 5, 0, 0, 0, 0, 0, 0}, /* 0x12 (00010010) */
-    {1, 2, 5, 0, 0, 0, 0, 0}, /* 0x13 (00010011) */
-    {3, 5, 0, 0, 0, 0, 0, 0}, /* 0x14 (00010100) */
-    {1, 3, 5, 0, 0, 0, 0, 0}, /* 0x15 (00010101) */
-    {2, 3, 5, 0, 0, 0, 0, 0}, /* 0x16 (00010110) */
-    {1, 2, 3, 5, 0, 0, 0, 0}, /* 0x17 (00010111) */
-    {4, 5, 0, 0, 0, 0, 0, 0}, /* 0x18 (00011000) */
-    {1, 4, 5, 0, 0, 0, 0, 0}, /* 0x19 (00011001) */
-    {2, 4, 5, 0, 0, 0, 0, 0}, /* 0x1A (00011010) */
-    {1, 2, 4, 5, 0, 0, 0, 0}, /* 0x1B (00011011) */
-    {3, 4, 5, 0, 0, 0, 0, 0}, /* 0x1C (00011100) */
-    {1, 3, 4, 5, 0, 0, 0, 0}, /* 0x1D (00011101) */
-    {2, 3, 4, 5, 0, 0, 0, 0}, /* 0x1E (00011110) */
-    {1, 2, 3, 4, 5, 0, 0, 0}, /* 0x1F (00011111) */
-    {6, 0, 0, 0, 0, 0, 0, 0}, /* 0x20 (00100000) */
-    {1, 6, 0, 0, 0, 0, 0, 0}, /* 0x21 (00100001) */
-    {2, 6, 0, 0, 0, 0, 0, 0}, /* 0x22 (00100010) */
-    {1, 2, 6, 0, 0, 0, 0, 0}, /* 0x23 (00100011) */
-    {3, 6, 0, 0, 0, 0, 0, 0}, /* 0x24 (00100100) */
-    {1, 3, 6, 0, 0, 0, 0, 0}, /* 0x25 (00100101) */
-    {2, 3, 6, 0, 0, 0, 0, 0}, /* 0x26 (00100110) */
-    {1, 2, 3, 6, 0, 0, 0, 0}, /* 0x27 (00100111) */
-    {4, 6, 0, 0, 0, 0, 0, 0}, /* 0x28 (00101000) */
-    {1, 4, 6, 0, 0, 0, 0, 0}, /* 0x29 (00101001) */
-    {2, 4, 6, 0, 0, 0, 0, 0}, /* 0x2A (00101010) */
-    {1, 2, 4, 6, 0, 0, 0, 0}, /* 0x2B (00101011) */
-    {3, 4, 6, 0, 0, 0, 0, 0}, /* 0x2C (00101100) */
-    {1, 3, 4, 6, 0, 0, 0, 0}, /* 0x2D (00101101) */
-    {2, 3, 4, 6, 0, 0, 0, 0}, /* 0x2E (00101110) */
-    {1, 2, 3, 4, 6, 0, 0, 0}, /* 0x2F (00101111) */
-    {5, 6, 0, 0, 0, 0, 0, 0}, /* 0x30 (00110000) */
-    {1, 5, 6, 0, 0, 0, 0, 0}, /* 0x31 (00110001) */
-    {2, 5, 6, 0, 0, 0, 0, 0}, /* 0x32 (00110010) */
-    {1, 2, 5, 6, 0, 0, 0, 0}, /* 0x33 (00110011) */
-    {3, 5, 6, 0, 0, 0, 0, 0}, /* 0x34 (00110100) */
-    {1, 3, 5, 6, 0, 0, 0, 0}, /* 0x35 (00110101) */
-    {2, 3, 5, 6, 0, 0, 0, 0}, /* 0x36 (00110110) */
-    {1, 2, 3, 5, 6, 0, 0, 0}, /* 0x37 (00110111) */
-    {4, 5, 6, 0, 0, 0, 0, 0}, /* 0x38 (00111000) */
-    {1, 4, 5, 6, 0, 0, 0, 0}, /* 0x39 (00111001) */
-    {2, 4, 5, 6, 0, 0, 0, 0}, /* 0x3A (00111010) */
-    {1, 2, 4, 5, 6, 0, 0, 0}, /* 0x3B (00111011) */
-    {3, 4, 5, 6, 0, 0, 0, 0}, /* 0x3C (00111100) */
-    {1, 3, 4, 5, 6, 0, 0, 0}, /* 0x3D (00111101) */
-    {2, 3, 4, 5, 6, 0, 0, 0}, /* 0x3E (00111110) */
-    {1, 2, 3, 4, 5, 6, 0, 0}, /* 0x3F (00111111) */
-    {7, 0, 0, 0, 0, 0, 0, 0}, /* 0x40 (01000000) */
-    {1, 7, 0, 0, 0, 0, 0, 0}, /* 0x41 (01000001) */
-    {2, 7, 0, 0, 0, 0, 0, 0}, /* 0x42 (01000010) */
-    {1, 2, 7, 0, 0, 0, 0, 0}, /* 0x43 (01000011) */
-    {3, 7, 0, 0, 0, 0, 0, 0}, /* 0x44 (01000100) */
-    {1, 3, 7, 0, 0, 0, 0, 0}, /* 0x45 (01000101) */
-    {2, 3, 7, 0, 0, 0, 0, 0}, /* 0x46 (01000110) */
-    {1, 2, 3, 7, 0, 0, 0, 0}, /* 0x47 (01000111) */
-    {4, 7, 0, 0, 0, 0, 0, 0}, /* 0x48 (01001000) */
-    {1, 4, 7, 0, 0, 0, 0, 0}, /* 0x49 (01001001) */
-    {2, 4, 7, 0, 0, 0, 0, 0}, /* 0x4A (01001010) */
-    {1, 2, 4, 7, 0, 0, 0, 0}, /* 0x4B (01001011) */
-    {3, 4, 7, 0, 0, 0, 0, 0}, /* 0x4C (01001100) */
-    {1, 3, 4, 7, 0, 0, 0, 0}, /* 0x4D (01001101) */
-    {2, 3, 4, 7, 0, 0, 0, 0}, /* 0x4E (01001110) */
-    {1, 2, 3, 4, 7, 0, 0, 0}, /* 0x4F (01001111) */
-    {5, 7, 0, 0, 0, 0, 0, 0}, /* 0x50 (01010000) */
-    {1, 5, 7, 0, 0, 0, 0, 0}, /* 0x51 (01010001) */
-    {2, 5, 7, 0, 0, 0, 0, 0}, /* 0x52 (01010010) */
-    {1, 2, 5, 7, 0, 0, 0, 0}, /* 0x53 (01010011) */
-    {3, 5, 7, 0, 0, 0, 0, 0}, /* 0x54 (01010100) */
-    {1, 3, 5, 7, 0, 0, 0, 0}, /* 0x55 (01010101) */
-    {2, 3, 5, 7, 0, 0, 0, 0}, /* 0x56 (01010110) */
-    {1, 2, 3, 5, 7, 0, 0, 0}, /* 0x57 (01010111) */
-    {4, 5, 7, 0, 0, 0, 0, 0}, /* 0x58 (01011000) */
-    {1, 4, 5, 7, 0, 0, 0, 0}, /* 0x59 (01011001) */
-    {2, 4, 5, 7, 0, 0, 0, 0}, /* 0x5A (01011010) */
-    {1, 2, 4, 5, 7, 0, 0, 0}, /* 0x5B (01011011) */
-    {3, 4, 5, 7, 0, 0, 0, 0}, /* 0x5C (01011100) */
-    {1, 3, 4, 5, 7, 0, 0, 0}, /* 0x5D (01011101) */
-    {2, 3, 4, 5, 7, 0, 0, 0}, /* 0x5E (01011110) */
-    {1, 2, 3, 4, 5, 7, 0, 0}, /* 0x5F (01011111) */
-    {6, 7, 0, 0, 0, 0, 0, 0}, /* 0x60 (01100000) */
-    {1, 6, 7, 0, 0, 0, 0, 0}, /* 0x61 (01100001) */
-    {2, 6, 7, 0, 0, 0, 0, 0}, /* 0x62 (01100010) */
-    {1, 2, 6, 7, 0, 0, 0, 0}, /* 0x63 (01100011) */
-    {3, 6, 7, 0, 0, 0, 0, 0}, /* 0x64 (01100100) */
-    {1, 3, 6, 7, 0, 0, 0, 0}, /* 0x65 (01100101) */
-    {2, 3, 6, 7, 0, 0, 0, 0}, /* 0x66 (01100110) */
-    {1, 2, 3, 6, 7, 0, 0, 0}, /* 0x67 (01100111) */
-    {4, 6, 7, 0, 0, 0, 0, 0}, /* 0x68 (01101000) */
-    {1, 4, 6, 7, 0, 0, 0, 0}, /* 0x69 (01101001) */
-    {2, 4, 6, 7, 0, 0, 0, 0}, /* 0x6A (01101010) */
-    {1, 2, 4, 6, 7, 0, 0, 0}, /* 0x6B (01101011) */
-    {3, 4, 6, 7, 0, 0, 0, 0}, /* 0x6C (01101100) */
-    {1, 3, 4, 6, 7, 0, 0, 0}, /* 0x6D (01101101) */
-    {2, 3, 4, 6, 7, 0, 0, 0}, /* 0x6E (01101110) */
-    {1, 2, 3, 4, 6, 7, 0, 0}, /* 0x6F (01101111) */
-    {5, 6, 7, 0, 0, 0, 0, 0}, /* 0x70 (01110000) */
-    {1, 5, 6, 7, 0, 0, 0, 0}, /* 0x71 (01110001) */
-    {2, 5, 6, 7, 0, 0, 0, 0}, /* 0x72 (01110010) */
-    {1, 2, 5, 6, 7, 0, 0, 0}, /* 0x73 (01110011) */
-    {3, 5, 6, 7, 0, 0, 0, 0}, /* 0x74 (01110100) */
-    {1, 3, 5, 6, 7, 0, 0, 0}, /* 0x75 (01110101) */
-    {2, 3, 5, 6, 7, 0, 0, 0}, /* 0x76 (01110110) */
-    {1, 2, 3, 5, 6, 7, 0, 0}, /* 0x77 (01110111) */
-    {4, 5, 6, 7, 0, 0, 0, 0}, /* 0x78 (01111000) */
-    {1, 4, 5, 6, 7, 0, 0, 0}, /* 0x79 (01111001) */
-    {2, 4, 5, 6, 7, 0, 0, 0}, /* 0x7A (01111010) */
-    {1, 2, 4, 5, 6, 7, 0, 0}, /* 0x7B (01111011) */
-    {3, 4, 5, 6, 7, 0, 0, 0}, /* 0x7C (01111100) */
-    {1, 3, 4, 5, 6, 7, 0, 0}, /* 0x7D (01111101) */
-    {2, 3, 4, 5, 6, 7, 0, 0}, /* 0x7E (01111110) */
-    {1, 2, 3, 4, 5, 6, 7, 0}, /* 0x7F (01111111) */
-    {8, 0, 0, 0, 0, 0, 0, 0}, /* 0x80 (10000000) */
-    {1, 8, 0, 0, 0, 0, 0, 0}, /* 0x81 (10000001) */
-    {2, 8, 0, 0, 0, 0, 0, 0}, /* 0x82 (10000010) */
-    {1, 2, 8, 0, 0, 0, 0, 0}, /* 0x83 (10000011) */
-    {3, 8, 0, 0, 0, 0, 0, 0}, /* 0x84 (10000100) */
-    {1, 3, 8, 0, 0, 0, 0, 0}, /* 0x85 (10000101) */
-    {2, 3, 8, 0, 0, 0, 0, 0}, /* 0x86 (10000110) */
-    {1, 2, 3, 8, 0, 0, 0, 0}, /* 0x87 (10000111) */
-    {4, 8, 0, 0, 0, 0, 0, 0}, /* 0x88 (10001000) */
-    {1, 4, 8, 0, 0, 0, 0, 0}, /* 0x89 (10001001) */
-    {2, 4, 8, 0, 0, 0, 0, 0}, /* 0x8A (10001010) */
-    {1, 2, 4, 8, 0, 0, 0, 0}, /* 0x8B (10001011) */
-    {3, 4, 8, 0, 0, 0, 0, 0}, /* 0x8C (10001100) */
-    {1, 3, 4, 8, 0, 0, 0, 0}, /* 0x8D (10001101) */
-    {2, 3, 4, 8, 0, 0, 0, 0}, /* 0x8E (10001110) */
-    {1, 2, 3, 4, 8, 0, 0, 0}, /* 0x8F (10001111) */
-    {5, 8, 0, 0, 0, 0, 0, 0}, /* 0x90 (10010000) */
-    {1, 5, 8, 0, 0, 0, 0, 0}, /* 0x91 (10010001) */
-    {2, 5, 8, 0, 0, 0, 0, 0}, /* 0x92 (10010010) */
-    {1, 2, 5, 8, 0, 0, 0, 0}, /* 0x93 (10010011) */
-    {3, 5, 8, 0, 0, 0, 0, 0}, /* 0x94 (10010100) */
-    {1, 3, 5, 8, 0, 0, 0, 0}, /* 0x95 (10010101) */
-    {2, 3, 5, 8, 0, 0, 0, 0}, /* 0x96 (10010110) */
-    {1, 2, 3, 5, 8, 0, 0, 0}, /* 0x97 (10010111) */
-    {4, 5, 8, 0, 0, 0, 0, 0}, /* 0x98 (10011000) */
-    {1, 4, 5, 8, 0, 0, 0, 0}, /* 0x99 (10011001) */
-    {2, 4, 5, 8, 0, 0, 0, 0}, /* 0x9A (10011010) */
-    {1, 2, 4, 5, 8, 0, 0, 0}, /* 0x9B (10011011) */
-    {3, 4, 5, 8, 0, 0, 0, 0}, /* 0x9C (10011100) */
-    {1, 3, 4, 5, 8, 0, 0, 0}, /* 0x9D (10011101) */
-    {2, 3, 4, 5, 8, 0, 0, 0}, /* 0x9E (10011110) */
-    {1, 2, 3, 4, 5, 8, 0, 0}, /* 0x9F (10011111) */
-    {6, 8, 0, 0, 0, 0, 0, 0}, /* 0xA0 (10100000) */
-    {1, 6, 8, 0, 0, 0, 0, 0}, /* 0xA1 (10100001) */
-    {2, 6, 8, 0, 0, 0, 0, 0}, /* 0xA2 (10100010) */
-    {1, 2, 6, 8, 0, 0, 0, 0}, /* 0xA3 (10100011) */
-    {3, 6, 8, 0, 0, 0, 0, 0}, /* 0xA4 (10100100) */
-    {1, 3, 6, 8, 0, 0, 0, 0}, /* 0xA5 (10100101) */
-    {2, 3, 6, 8, 0, 0, 0, 0}, /* 0xA6 (10100110) */
-    {1, 2, 3, 6, 8, 0, 0, 0}, /* 0xA7 (10100111) */
-    {4, 6, 8, 0, 0, 0, 0, 0}, /* 0xA8 (10101000) */
-    {1, 4, 6, 8, 0, 0, 0, 0}, /* 0xA9 (10101001) */
-    {2, 4, 6, 8, 0, 0, 0, 0}, /* 0xAA (10101010) */
-    {1, 2, 4, 6, 8, 0, 0, 0}, /* 0xAB (10101011) */
-    {3, 4, 6, 8, 0, 0, 0, 0}, /* 0xAC (10101100) */
-    {1, 3, 4, 6, 8, 0, 0, 0}, /* 0xAD (10101101) */
-    {2, 3, 4, 6, 8, 0, 0, 0}, /* 0xAE (10101110) */
-    {1, 2, 3, 4, 6, 8, 0, 0}, /* 0xAF (10101111) */
-    {5, 6, 8, 0, 0, 0, 0, 0}, /* 0xB0 (10110000) */
-    {1, 5, 6, 8, 0, 0, 0, 0}, /* 0xB1 (10110001) */
-    {2, 5, 6, 8, 0, 0, 0, 0}, /* 0xB2 (10110010) */
-    {1, 2, 5, 6, 8, 0, 0, 0}, /* 0xB3 (10110011) */
-    {3, 5, 6, 8, 0, 0, 0, 0}, /* 0xB4 (10110100) */
-    {1, 3, 5, 6, 8, 0, 0, 0}, /* 0xB5 (10110101) */
-    {2, 3, 5, 6, 8, 0, 0, 0}, /* 0xB6 (10110110) */
-    {1, 2, 3, 5, 6, 8, 0, 0}, /* 0xB7 (10110111) */
-    {4, 5, 6, 8, 0, 0, 0, 0}, /* 0xB8 (10111000) */
-    {1, 4, 5, 6, 8, 0, 0, 0}, /* 0xB9 (10111001) */
-    {2, 4, 5, 6, 8, 0, 0, 0}, /* 0xBA (10111010) */
-    {1, 2, 4, 5, 6, 8, 0, 0}, /* 0xBB (10111011) */
-    {3, 4, 5, 6, 8, 0, 0, 0}, /* 0xBC (10111100) */
-    {1, 3, 4, 5, 6, 8, 0, 0}, /* 0xBD (10111101) */
-    {2, 3, 4, 5, 6, 8, 0, 0}, /* 0xBE (10111110) */
-    {1, 2, 3, 4, 5, 6, 8, 0}, /* 0xBF (10111111) */
-    {7, 8, 0, 0, 0, 0, 0, 0}, /* 0xC0 (11000000) */
-    {1, 7, 8, 0, 0, 0, 0, 0}, /* 0xC1 (11000001) */
-    {2, 7, 8, 0, 0, 0, 0, 0}, /* 0xC2 (11000010) */
-    {1, 2, 7, 8, 0, 0, 0, 0}, /* 0xC3 (11000011) */
-    {3, 7, 8, 0, 0, 0, 0, 0}, /* 0xC4 (11000100) */
-    {1, 3, 7, 8, 0, 0, 0, 0}, /* 0xC5 (11000101) */
-    {2, 3, 7, 8, 0, 0, 0, 0}, /* 0xC6 (11000110) */
-    {1, 2, 3, 7, 8, 0, 0, 0}, /* 0xC7 (11000111) */
-    {4, 7, 8, 0, 0, 0, 0, 0}, /* 0xC8 (11001000) */
-    {1, 4, 7, 8, 0, 0, 0, 0}, /* 0xC9 (11001001) */
-    {2, 4, 7, 8, 0, 0, 0, 0}, /* 0xCA (11001010) */
-    {1, 2, 4, 7, 8, 0, 0, 0}, /* 0xCB (11001011) */
-    {3, 4, 7, 8, 0, 0, 0, 0}, /* 0xCC (11001100) */
-    {1, 3, 4, 7, 8, 0, 0, 0}, /* 0xCD (11001101) */
-    {2, 3, 4, 7, 8, 0, 0, 0}, /* 0xCE (11001110) */
-    {1, 2, 3, 4, 7, 8, 0, 0}, /* 0xCF (11001111) */
-    {5, 7, 8, 0, 0, 0, 0, 0}, /* 0xD0 (11010000) */
-    {1, 5, 7, 8, 0, 0, 0, 0}, /* 0xD1 (11010001) */
-    {2, 5, 7, 8, 0, 0, 0, 0}, /* 0xD2 (11010010) */
-    {1, 2, 5, 7, 8, 0, 0, 0}, /* 0xD3 (11010011) */
-    {3, 5, 7, 8, 0, 0, 0, 0}, /* 0xD4 (11010100) */
-    {1, 3, 5, 7, 8, 0, 0, 0}, /* 0xD5 (11010101) */
-    {2, 3, 5, 7, 8, 0, 0, 0}, /* 0xD6 (11010110) */
-    {1, 2, 3, 5, 7, 8, 0, 0}, /* 0xD7 (11010111) */
-    {4, 5, 7, 8, 0, 0, 0, 0}, /* 0xD8 (11011000) */
-    {1, 4, 5, 7, 8, 0, 0, 0}, /* 0xD9 (11011001) */
-    {2, 4, 5, 7, 8, 0, 0, 0}, /* 0xDA (11011010) */
-    {1, 2, 4, 5, 7, 8, 0, 0}, /* 0xDB (11011011) */
-    {3, 4, 5, 7, 8, 0, 0, 0}, /* 0xDC (11011100) */
-    {1, 3, 4, 5, 7, 8, 0, 0}, /* 0xDD (11011101) */
-    {2, 3, 4, 5, 7, 8, 0, 0}, /* 0xDE (11011110) */
-    {1, 2, 3, 4, 5, 7, 8, 0}, /* 0xDF (11011111) */
-    {6, 7, 8, 0, 0, 0, 0, 0}, /* 0xE0 (11100000) */
-    {1, 6, 7, 8, 0, 0, 0, 0}, /* 0xE1 (11100001) */
-    {2, 6, 7, 8, 0, 0, 0, 0}, /* 0xE2 (11100010) */
-    {1, 2, 6, 7, 8, 0, 0, 0}, /* 0xE3 (11100011) */
-    {3, 6, 7, 8, 0, 0, 0, 0}, /* 0xE4 (11100100) */
-    {1, 3, 6, 7, 8, 0, 0, 0}, /* 0xE5 (11100101) */
-    {2, 3, 6, 7, 8, 0, 0, 0}, /* 0xE6 (11100110) */
-    {1, 2, 3, 6, 7, 8, 0, 0}, /* 0xE7 (11100111) */
-    {4, 6, 7, 8, 0, 0, 0, 0}, /* 0xE8 (11101000) */
-    {1, 4, 6, 7, 8, 0, 0, 0}, /* 0xE9 (11101001) */
-    {2, 4, 6, 7, 8, 0, 0, 0}, /* 0xEA (11101010) */
-    {1, 2, 4, 6, 7, 8, 0, 0}, /* 0xEB (11101011) */
-    {3, 4, 6, 7, 8, 0, 0, 0}, /* 0xEC (11101100) */
-    {1, 3, 4, 6, 7, 8, 0, 0}, /* 0xED (11101101) */
-    {2, 3, 4, 6, 7, 8, 0, 0}, /* 0xEE (11101110) */
-    {1, 2, 3, 4, 6, 7, 8, 0}, /* 0xEF (11101111) */
-    {5, 6, 7, 8, 0, 0, 0, 0}, /* 0xF0 (11110000) */
-    {1, 5, 6, 7, 8, 0, 0, 0}, /* 0xF1 (11110001) */
-    {2, 5, 6, 7, 8, 0, 0, 0}, /* 0xF2 (11110010) */
-    {1, 2, 5, 6, 7, 8, 0, 0}, /* 0xF3 (11110011) */
-    {3, 5, 6, 7, 8, 0, 0, 0}, /* 0xF4 (11110100) */
-    {1, 3, 5, 6, 7, 8, 0, 0}, /* 0xF5 (11110101) */
-    {2, 3, 5, 6, 7, 8, 0, 0}, /* 0xF6 (11110110) */
-    {1, 2, 3, 5, 6, 7, 8, 0}, /* 0xF7 (11110111) */
-    {4, 5, 6, 7, 8, 0, 0, 0}, /* 0xF8 (11111000) */
-    {1, 4, 5, 6, 7, 8, 0, 0}, /* 0xF9 (11111001) */
-    {2, 4, 5, 6, 7, 8, 0, 0}, /* 0xFA (11111010) */
-    {1, 2, 4, 5, 6, 7, 8, 0}, /* 0xFB (11111011) */
-    {3, 4, 5, 6, 7, 8, 0, 0}, /* 0xFC (11111100) */
-    {1, 3, 4, 5, 6, 7, 8, 0}, /* 0xFD (11111101) */
-    {2, 3, 4, 5, 6, 7, 8, 0}, /* 0xFE (11111110) */
-    {1, 2, 3, 4, 5, 6, 7, 8}  /* 0xFF (11111111) */
+        {0, 0, 0, 0, 0, 0, 0, 0}, /* 0x00 (00000000) */
+        {1, 0, 0, 0, 0, 0, 0, 0}, /* 0x01 (00000001) */
+        {2, 0, 0, 0, 0, 0, 0, 0}, /* 0x02 (00000010) */
+        {1, 2, 0, 0, 0, 0, 0, 0}, /* 0x03 (00000011) */
+        {3, 0, 0, 0, 0, 0, 0, 0}, /* 0x04 (00000100) */
+        {1, 3, 0, 0, 0, 0, 0, 0}, /* 0x05 (00000101) */
+        {2, 3, 0, 0, 0, 0, 0, 0}, /* 0x06 (00000110) */
+        {1, 2, 3, 0, 0, 0, 0, 0}, /* 0x07 (00000111) */
+        {4, 0, 0, 0, 0, 0, 0, 0}, /* 0x08 (00001000) */
+        {1, 4, 0, 0, 0, 0, 0, 0}, /* 0x09 (00001001) */
+        {2, 4, 0, 0, 0, 0, 0, 0}, /* 0x0A (00001010) */
+        {1, 2, 4, 0, 0, 0, 0, 0}, /* 0x0B (00001011) */
+        {3, 4, 0, 0, 0, 0, 0, 0}, /* 0x0C (00001100) */
+        {1, 3, 4, 0, 0, 0, 0, 0}, /* 0x0D (00001101) */
+        {2, 3, 4, 0, 0, 0, 0, 0}, /* 0x0E (00001110) */
+        {1, 2, 3, 4, 0, 0, 0, 0}, /* 0x0F (00001111) */
+        {5, 0, 0, 0, 0, 0, 0, 0}, /* 0x10 (00010000) */
+        {1, 5, 0, 0, 0, 0, 0, 0}, /* 0x11 (00010001) */
+        {2, 5, 0, 0, 0, 0, 0, 0}, /* 0x12 (00010010) */
+        {1, 2, 5, 0, 0, 0, 0, 0}, /* 0x13 (00010011) */
+        {3, 5, 0, 0, 0, 0, 0, 0}, /* 0x14 (00010100) */
+        {1, 3, 5, 0, 0, 0, 0, 0}, /* 0x15 (00010101) */
+        {2, 3, 5, 0, 0, 0, 0, 0}, /* 0x16 (00010110) */
+        {1, 2, 3, 5, 0, 0, 0, 0}, /* 0x17 (00010111) */
+        {4, 5, 0, 0, 0, 0, 0, 0}, /* 0x18 (00011000) */
+        {1, 4, 5, 0, 0, 0, 0, 0}, /* 0x19 (00011001) */
+        {2, 4, 5, 0, 0, 0, 0, 0}, /* 0x1A (00011010) */
+        {1, 2, 4, 5, 0, 0, 0, 0}, /* 0x1B (00011011) */
+        {3, 4, 5, 0, 0, 0, 0, 0}, /* 0x1C (00011100) */
+        {1, 3, 4, 5, 0, 0, 0, 0}, /* 0x1D (00011101) */
+        {2, 3, 4, 5, 0, 0, 0, 0}, /* 0x1E (00011110) */
+        {1, 2, 3, 4, 5, 0, 0, 0}, /* 0x1F (00011111) */
+        {6, 0, 0, 0, 0, 0, 0, 0}, /* 0x20 (00100000) */
+        {1, 6, 0, 0, 0, 0, 0, 0}, /* 0x21 (00100001) */
+        {2, 6, 0, 0, 0, 0, 0, 0}, /* 0x22 (00100010) */
+        {1, 2, 6, 0, 0, 0, 0, 0}, /* 0x23 (00100011) */
+        {3, 6, 0, 0, 0, 0, 0, 0}, /* 0x24 (00100100) */
+        {1, 3, 6, 0, 0, 0, 0, 0}, /* 0x25 (00100101) */
+        {2, 3, 6, 0, 0, 0, 0, 0}, /* 0x26 (00100110) */
+        {1, 2, 3, 6, 0, 0, 0, 0}, /* 0x27 (00100111) */
+        {4, 6, 0, 0, 0, 0, 0, 0}, /* 0x28 (00101000) */
+        {1, 4, 6, 0, 0, 0, 0, 0}, /* 0x29 (00101001) */
+        {2, 4, 6, 0, 0, 0, 0, 0}, /* 0x2A (00101010) */
+        {1, 2, 4, 6, 0, 0, 0, 0}, /* 0x2B (00101011) */
+        {3, 4, 6, 0, 0, 0, 0, 0}, /* 0x2C (00101100) */
+        {1, 3, 4, 6, 0, 0, 0, 0}, /* 0x2D (00101101) */
+        {2, 3, 4, 6, 0, 0, 0, 0}, /* 0x2E (00101110) */
+        {1, 2, 3, 4, 6, 0, 0, 0}, /* 0x2F (00101111) */
+        {5, 6, 0, 0, 0, 0, 0, 0}, /* 0x30 (00110000) */
+        {1, 5, 6, 0, 0, 0, 0, 0}, /* 0x31 (00110001) */
+        {2, 5, 6, 0, 0, 0, 0, 0}, /* 0x32 (00110010) */
+        {1, 2, 5, 6, 0, 0, 0, 0}, /* 0x33 (00110011) */
+        {3, 5, 6, 0, 0, 0, 0, 0}, /* 0x34 (00110100) */
+        {1, 3, 5, 6, 0, 0, 0, 0}, /* 0x35 (00110101) */
+        {2, 3, 5, 6, 0, 0, 0, 0}, /* 0x36 (00110110) */
+        {1, 2, 3, 5, 6, 0, 0, 0}, /* 0x37 (00110111) */
+        {4, 5, 6, 0, 0, 0, 0, 0}, /* 0x38 (00111000) */
+        {1, 4, 5, 6, 0, 0, 0, 0}, /* 0x39 (00111001) */
+        {2, 4, 5, 6, 0, 0, 0, 0}, /* 0x3A (00111010) */
+        {1, 2, 4, 5, 6, 0, 0, 0}, /* 0x3B (00111011) */
+        {3, 4, 5, 6, 0, 0, 0, 0}, /* 0x3C (00111100) */
+        {1, 3, 4, 5, 6, 0, 0, 0}, /* 0x3D (00111101) */
+        {2, 3, 4, 5, 6, 0, 0, 0}, /* 0x3E (00111110) */
+        {1, 2, 3, 4, 5, 6, 0, 0}, /* 0x3F (00111111) */
+        {7, 0, 0, 0, 0, 0, 0, 0}, /* 0x40 (01000000) */
+        {1, 7, 0, 0, 0, 0, 0, 0}, /* 0x41 (01000001) */
+        {2, 7, 0, 0, 0, 0, 0, 0}, /* 0x42 (01000010) */
+        {1, 2, 7, 0, 0, 0, 0, 0}, /* 0x43 (01000011) */
+        {3, 7, 0, 0, 0, 0, 0, 0}, /* 0x44 (01000100) */
+        {1, 3, 7, 0, 0, 0, 0, 0}, /* 0x45 (01000101) */
+        {2, 3, 7, 0, 0, 0, 0, 0}, /* 0x46 (01000110) */
+        {1, 2, 3, 7, 0, 0, 0, 0}, /* 0x47 (01000111) */
+        {4, 7, 0, 0, 0, 0, 0, 0}, /* 0x48 (01001000) */
+        {1, 4, 7, 0, 0, 0, 0, 0}, /* 0x49 (01001001) */
+        {2, 4, 7, 0, 0, 0, 0, 0}, /* 0x4A (01001010) */
+        {1, 2, 4, 7, 0, 0, 0, 0}, /* 0x4B (01001011) */
+        {3, 4, 7, 0, 0, 0, 0, 0}, /* 0x4C (01001100) */
+        {1, 3, 4, 7, 0, 0, 0, 0}, /* 0x4D (01001101) */
+        {2, 3, 4, 7, 0, 0, 0, 0}, /* 0x4E (01001110) */
+        {1, 2, 3, 4, 7, 0, 0, 0}, /* 0x4F (01001111) */
+        {5, 7, 0, 0, 0, 0, 0, 0}, /* 0x50 (01010000) */
+        {1, 5, 7, 0, 0, 0, 0, 0}, /* 0x51 (01010001) */
+        {2, 5, 7, 0, 0, 0, 0, 0}, /* 0x52 (01010010) */
+        {1, 2, 5, 7, 0, 0, 0, 0}, /* 0x53 (01010011) */
+        {3, 5, 7, 0, 0, 0, 0, 0}, /* 0x54 (01010100) */
+        {1, 3, 5, 7, 0, 0, 0, 0}, /* 0x55 (01010101) */
+        {2, 3, 5, 7, 0, 0, 0, 0}, /* 0x56 (01010110) */
+        {1, 2, 3, 5, 7, 0, 0, 0}, /* 0x57 (01010111) */
+        {4, 5, 7, 0, 0, 0, 0, 0}, /* 0x58 (01011000) */
+        {1, 4, 5, 7, 0, 0, 0, 0}, /* 0x59 (01011001) */
+        {2, 4, 5, 7, 0, 0, 0, 0}, /* 0x5A (01011010) */
+        {1, 2, 4, 5, 7, 0, 0, 0}, /* 0x5B (01011011) */
+        {3, 4, 5, 7, 0, 0, 0, 0}, /* 0x5C (01011100) */
+        {1, 3, 4, 5, 7, 0, 0, 0}, /* 0x5D (01011101) */
+        {2, 3, 4, 5, 7, 0, 0, 0}, /* 0x5E (01011110) */
+        {1, 2, 3, 4, 5, 7, 0, 0}, /* 0x5F (01011111) */
+        {6, 7, 0, 0, 0, 0, 0, 0}, /* 0x60 (01100000) */
+        {1, 6, 7, 0, 0, 0, 0, 0}, /* 0x61 (01100001) */
+        {2, 6, 7, 0, 0, 0, 0, 0}, /* 0x62 (01100010) */
+        {1, 2, 6, 7, 0, 0, 0, 0}, /* 0x63 (01100011) */
+        {3, 6, 7, 0, 0, 0, 0, 0}, /* 0x64 (01100100) */
+        {1, 3, 6, 7, 0, 0, 0, 0}, /* 0x65 (01100101) */
+        {2, 3, 6, 7, 0, 0, 0, 0}, /* 0x66 (01100110) */
+        {1, 2, 3, 6, 7, 0, 0, 0}, /* 0x67 (01100111) */
+        {4, 6, 7, 0, 0, 0, 0, 0}, /* 0x68 (01101000) */
+        {1, 4, 6, 7, 0, 0, 0, 0}, /* 0x69 (01101001) */
+        {2, 4, 6, 7, 0, 0, 0, 0}, /* 0x6A (01101010) */
+        {1, 2, 4, 6, 7, 0, 0, 0}, /* 0x6B (01101011) */
+        {3, 4, 6, 7, 0, 0, 0, 0}, /* 0x6C (01101100) */
+        {1, 3, 4, 6, 7, 0, 0, 0}, /* 0x6D (01101101) */
+        {2, 3, 4, 6, 7, 0, 0, 0}, /* 0x6E (01101110) */
+        {1, 2, 3, 4, 6, 7, 0, 0}, /* 0x6F (01101111) */
+        {5, 6, 7, 0, 0, 0, 0, 0}, /* 0x70 (01110000) */
+        {1, 5, 6, 7, 0, 0, 0, 0}, /* 0x71 (01110001) */
+        {2, 5, 6, 7, 0, 0, 0, 0}, /* 0x72 (01110010) */
+        {1, 2, 5, 6, 7, 0, 0, 0}, /* 0x73 (01110011) */
+        {3, 5, 6, 7, 0, 0, 0, 0}, /* 0x74 (01110100) */
+        {1, 3, 5, 6, 7, 0, 0, 0}, /* 0x75 (01110101) */
+        {2, 3, 5, 6, 7, 0, 0, 0}, /* 0x76 (01110110) */
+        {1, 2, 3, 5, 6, 7, 0, 0}, /* 0x77 (01110111) */
+        {4, 5, 6, 7, 0, 0, 0, 0}, /* 0x78 (01111000) */
+        {1, 4, 5, 6, 7, 0, 0, 0}, /* 0x79 (01111001) */
+        {2, 4, 5, 6, 7, 0, 0, 0}, /* 0x7A (01111010) */
+        {1, 2, 4, 5, 6, 7, 0, 0}, /* 0x7B (01111011) */
+        {3, 4, 5, 6, 7, 0, 0, 0}, /* 0x7C (01111100) */
+        {1, 3, 4, 5, 6, 7, 0, 0}, /* 0x7D (01111101) */
+        {2, 3, 4, 5, 6, 7, 0, 0}, /* 0x7E (01111110) */
+        {1, 2, 3, 4, 5, 6, 7, 0}, /* 0x7F (01111111) */
+        {8, 0, 0, 0, 0, 0, 0, 0}, /* 0x80 (10000000) */
+        {1, 8, 0, 0, 0, 0, 0, 0}, /* 0x81 (10000001) */
+        {2, 8, 0, 0, 0, 0, 0, 0}, /* 0x82 (10000010) */
+        {1, 2, 8, 0, 0, 0, 0, 0}, /* 0x83 (10000011) */
+        {3, 8, 0, 0, 0, 0, 0, 0}, /* 0x84 (10000100) */
+        {1, 3, 8, 0, 0, 0, 0, 0}, /* 0x85 (10000101) */
+        {2, 3, 8, 0, 0, 0, 0, 0}, /* 0x86 (10000110) */
+        {1, 2, 3, 8, 0, 0, 0, 0}, /* 0x87 (10000111) */
+        {4, 8, 0, 0, 0, 0, 0, 0}, /* 0x88 (10001000) */
+        {1, 4, 8, 0, 0, 0, 0, 0}, /* 0x89 (10001001) */
+        {2, 4, 8, 0, 0, 0, 0, 0}, /* 0x8A (10001010) */
+        {1, 2, 4, 8, 0, 0, 0, 0}, /* 0x8B (10001011) */
+        {3, 4, 8, 0, 0, 0, 0, 0}, /* 0x8C (10001100) */
+        {1, 3, 4, 8, 0, 0, 0, 0}, /* 0x8D (10001101) */
+        {2, 3, 4, 8, 0, 0, 0, 0}, /* 0x8E (10001110) */
+        {1, 2, 3, 4, 8, 0, 0, 0}, /* 0x8F (10001111) */
+        {5, 8, 0, 0, 0, 0, 0, 0}, /* 0x90 (10010000) */
+        {1, 5, 8, 0, 0, 0, 0, 0}, /* 0x91 (10010001) */
+        {2, 5, 8, 0, 0, 0, 0, 0}, /* 0x92 (10010010) */
+        {1, 2, 5, 8, 0, 0, 0, 0}, /* 0x93 (10010011) */
+        {3, 5, 8, 0, 0, 0, 0, 0}, /* 0x94 (10010100) */
+        {1, 3, 5, 8, 0, 0, 0, 0}, /* 0x95 (10010101) */
+        {2, 3, 5, 8, 0, 0, 0, 0}, /* 0x96 (10010110) */
+        {1, 2, 3, 5, 8, 0, 0, 0}, /* 0x97 (10010111) */
+        {4, 5, 8, 0, 0, 0, 0, 0}, /* 0x98 (10011000) */
+        {1, 4, 5, 8, 0, 0, 0, 0}, /* 0x99 (10011001) */
+        {2, 4, 5, 8, 0, 0, 0, 0}, /* 0x9A (10011010) */
+        {1, 2, 4, 5, 8, 0, 0, 0}, /* 0x9B (10011011) */
+        {3, 4, 5, 8, 0, 0, 0, 0}, /* 0x9C (10011100) */
+        {1, 3, 4, 5, 8, 0, 0, 0}, /* 0x9D (10011101) */
+        {2, 3, 4, 5, 8, 0, 0, 0}, /* 0x9E (10011110) */
+        {1, 2, 3, 4, 5, 8, 0, 0}, /* 0x9F (10011111) */
+        {6, 8, 0, 0, 0, 0, 0, 0}, /* 0xA0 (10100000) */
+        {1, 6, 8, 0, 0, 0, 0, 0}, /* 0xA1 (10100001) */
+        {2, 6, 8, 0, 0, 0, 0, 0}, /* 0xA2 (10100010) */
+        {1, 2, 6, 8, 0, 0, 0, 0}, /* 0xA3 (10100011) */
+        {3, 6, 8, 0, 0, 0, 0, 0}, /* 0xA4 (10100100) */
+        {1, 3, 6, 8, 0, 0, 0, 0}, /* 0xA5 (10100101) */
+        {2, 3, 6, 8, 0, 0, 0, 0}, /* 0xA6 (10100110) */
+        {1, 2, 3, 6, 8, 0, 0, 0}, /* 0xA7 (10100111) */
+        {4, 6, 8, 0, 0, 0, 0, 0}, /* 0xA8 (10101000) */
+        {1, 4, 6, 8, 0, 0, 0, 0}, /* 0xA9 (10101001) */
+        {2, 4, 6, 8, 0, 0, 0, 0}, /* 0xAA (10101010) */
+        {1, 2, 4, 6, 8, 0, 0, 0}, /* 0xAB (10101011) */
+        {3, 4, 6, 8, 0, 0, 0, 0}, /* 0xAC (10101100) */
+        {1, 3, 4, 6, 8, 0, 0, 0}, /* 0xAD (10101101) */
+        {2, 3, 4, 6, 8, 0, 0, 0}, /* 0xAE (10101110) */
+        {1, 2, 3, 4, 6, 8, 0, 0}, /* 0xAF (10101111) */
+        {5, 6, 8, 0, 0, 0, 0, 0}, /* 0xB0 (10110000) */
+        {1, 5, 6, 8, 0, 0, 0, 0}, /* 0xB1 (10110001) */
+        {2, 5, 6, 8, 0, 0, 0, 0}, /* 0xB2 (10110010) */
+        {1, 2, 5, 6, 8, 0, 0, 0}, /* 0xB3 (10110011) */
+        {3, 5, 6, 8, 0, 0, 0, 0}, /* 0xB4 (10110100) */
+        {1, 3, 5, 6, 8, 0, 0, 0}, /* 0xB5 (10110101) */
+        {2, 3, 5, 6, 8, 0, 0, 0}, /* 0xB6 (10110110) */
+        {1, 2, 3, 5, 6, 8, 0, 0}, /* 0xB7 (10110111) */
+        {4, 5, 6, 8, 0, 0, 0, 0}, /* 0xB8 (10111000) */
+        {1, 4, 5, 6, 8, 0, 0, 0}, /* 0xB9 (10111001) */
+        {2, 4, 5, 6, 8, 0, 0, 0}, /* 0xBA (10111010) */
+        {1, 2, 4, 5, 6, 8, 0, 0}, /* 0xBB (10111011) */
+        {3, 4, 5, 6, 8, 0, 0, 0}, /* 0xBC (10111100) */
+        {1, 3, 4, 5, 6, 8, 0, 0}, /* 0xBD (10111101) */
+        {2, 3, 4, 5, 6, 8, 0, 0}, /* 0xBE (10111110) */
+        {1, 2, 3, 4, 5, 6, 8, 0}, /* 0xBF (10111111) */
+        {7, 8, 0, 0, 0, 0, 0, 0}, /* 0xC0 (11000000) */
+        {1, 7, 8, 0, 0, 0, 0, 0}, /* 0xC1 (11000001) */
+        {2, 7, 8, 0, 0, 0, 0, 0}, /* 0xC2 (11000010) */
+        {1, 2, 7, 8, 0, 0, 0, 0}, /* 0xC3 (11000011) */
+        {3, 7, 8, 0, 0, 0, 0, 0}, /* 0xC4 (11000100) */
+        {1, 3, 7, 8, 0, 0, 0, 0}, /* 0xC5 (11000101) */
+        {2, 3, 7, 8, 0, 0, 0, 0}, /* 0xC6 (11000110) */
+        {1, 2, 3, 7, 8, 0, 0, 0}, /* 0xC7 (11000111) */
+        {4, 7, 8, 0, 0, 0, 0, 0}, /* 0xC8 (11001000) */
+        {1, 4, 7, 8, 0, 0, 0, 0}, /* 0xC9 (11001001) */
+        {2, 4, 7, 8, 0, 0, 0, 0}, /* 0xCA (11001010) */
+        {1, 2, 4, 7, 8, 0, 0, 0}, /* 0xCB (11001011) */
+        {3, 4, 7, 8, 0, 0, 0, 0}, /* 0xCC (11001100) */
+        {1, 3, 4, 7, 8, 0, 0, 0}, /* 0xCD (11001101) */
+        {2, 3, 4, 7, 8, 0, 0, 0}, /* 0xCE (11001110) */
+        {1, 2, 3, 4, 7, 8, 0, 0}, /* 0xCF (11001111) */
+        {5, 7, 8, 0, 0, 0, 0, 0}, /* 0xD0 (11010000) */
+        {1, 5, 7, 8, 0, 0, 0, 0}, /* 0xD1 (11010001) */
+        {2, 5, 7, 8, 0, 0, 0, 0}, /* 0xD2 (11010010) */
+        {1, 2, 5, 7, 8, 0, 0, 0}, /* 0xD3 (11010011) */
+        {3, 5, 7, 8, 0, 0, 0, 0}, /* 0xD4 (11010100) */
+        {1, 3, 5, 7, 8, 0, 0, 0}, /* 0xD5 (11010101) */
+        {2, 3, 5, 7, 8, 0, 0, 0}, /* 0xD6 (11010110) */
+        {1, 2, 3, 5, 7, 8, 0, 0}, /* 0xD7 (11010111) */
+        {4, 5, 7, 8, 0, 0, 0, 0}, /* 0xD8 (11011000) */
+        {1, 4, 5, 7, 8, 0, 0, 0}, /* 0xD9 (11011001) */
+        {2, 4, 5, 7, 8, 0, 0, 0}, /* 0xDA (11011010) */
+        {1, 2, 4, 5, 7, 8, 0, 0}, /* 0xDB (11011011) */
+        {3, 4, 5, 7, 8, 0, 0, 0}, /* 0xDC (11011100) */
+        {1, 3, 4, 5, 7, 8, 0, 0}, /* 0xDD (11011101) */
+        {2, 3, 4, 5, 7, 8, 0, 0}, /* 0xDE (11011110) */
+        {1, 2, 3, 4, 5, 7, 8, 0}, /* 0xDF (11011111) */
+        {6, 7, 8, 0, 0, 0, 0, 0}, /* 0xE0 (11100000) */
+        {1, 6, 7, 8, 0, 0, 0, 0}, /* 0xE1 (11100001) */
+        {2, 6, 7, 8, 0, 0, 0, 0}, /* 0xE2 (11100010) */
+        {1, 2, 6, 7, 8, 0, 0, 0}, /* 0xE3 (11100011) */
+        {3, 6, 7, 8, 0, 0, 0, 0}, /* 0xE4 (11100100) */
+        {1, 3, 6, 7, 8, 0, 0, 0}, /* 0xE5 (11100101) */
+        {2, 3, 6, 7, 8, 0, 0, 0}, /* 0xE6 (11100110) */
+        {1, 2, 3, 6, 7, 8, 0, 0}, /* 0xE7 (11100111) */
+        {4, 6, 7, 8, 0, 0, 0, 0}, /* 0xE8 (11101000) */
+        {1, 4, 6, 7, 8, 0, 0, 0}, /* 0xE9 (11101001) */
+        {2, 4, 6, 7, 8, 0, 0, 0}, /* 0xEA (11101010) */
+        {1, 2, 4, 6, 7, 8, 0, 0}, /* 0xEB (11101011) */
+        {3, 4, 6, 7, 8, 0, 0, 0}, /* 0xEC (11101100) */
+        {1, 3, 4, 6, 7, 8, 0, 0}, /* 0xED (11101101) */
+        {2, 3, 4, 6, 7, 8, 0, 0}, /* 0xEE (11101110) */
+        {1, 2, 3, 4, 6, 7, 8, 0}, /* 0xEF (11101111) */
+        {5, 6, 7, 8, 0, 0, 0, 0}, /* 0xF0 (11110000) */
+        {1, 5, 6, 7, 8, 0, 0, 0}, /* 0xF1 (11110001) */
+        {2, 5, 6, 7, 8, 0, 0, 0}, /* 0xF2 (11110010) */
+        {1, 2, 5, 6, 7, 8, 0, 0}, /* 0xF3 (11110011) */
+        {3, 5, 6, 7, 8, 0, 0, 0}, /* 0xF4 (11110100) */
+        {1, 3, 5, 6, 7, 8, 0, 0}, /* 0xF5 (11110101) */
+        {2, 3, 5, 6, 7, 8, 0, 0}, /* 0xF6 (11110110) */
+        {1, 2, 3, 5, 6, 7, 8, 0}, /* 0xF7 (11110111) */
+        {4, 5, 6, 7, 8, 0, 0, 0}, /* 0xF8 (11111000) */
+        {1, 4, 5, 6, 7, 8, 0, 0}, /* 0xF9 (11111001) */
+        {2, 4, 5, 6, 7, 8, 0, 0}, /* 0xFA (11111010) */
+        {1, 2, 4, 5, 6, 7, 8, 0}, /* 0xFB (11111011) */
+        {3, 4, 5, 6, 7, 8, 0, 0}, /* 0xFC (11111100) */
+        {1, 3, 4, 5, 6, 7, 8, 0}, /* 0xFD (11111101) */
+        {2, 3, 4, 5, 6, 7, 8, 0}, /* 0xFE (11111110) */
+        {1, 2, 3, 4, 5, 6, 7, 8}  /* 0xFF (11111111) */
 };
 
 #endif  // #if CROARING_IS_X64
@@ -11784,262 +11775,262 @@ static uint32_t vecDecodeTable[256][8] = {
 // same as vecDecodeTable but in 16 bits
 ALIGNED(32)
 static uint16_t vecDecodeTable_uint16[256][8] = {
-    {0, 0, 0, 0, 0, 0, 0, 0}, /* 0x00 (00000000) */
-    {1, 0, 0, 0, 0, 0, 0, 0}, /* 0x01 (00000001) */
-    {2, 0, 0, 0, 0, 0, 0, 0}, /* 0x02 (00000010) */
-    {1, 2, 0, 0, 0, 0, 0, 0}, /* 0x03 (00000011) */
-    {3, 0, 0, 0, 0, 0, 0, 0}, /* 0x04 (00000100) */
-    {1, 3, 0, 0, 0, 0, 0, 0}, /* 0x05 (00000101) */
-    {2, 3, 0, 0, 0, 0, 0, 0}, /* 0x06 (00000110) */
-    {1, 2, 3, 0, 0, 0, 0, 0}, /* 0x07 (00000111) */
-    {4, 0, 0, 0, 0, 0, 0, 0}, /* 0x08 (00001000) */
-    {1, 4, 0, 0, 0, 0, 0, 0}, /* 0x09 (00001001) */
-    {2, 4, 0, 0, 0, 0, 0, 0}, /* 0x0A (00001010) */
-    {1, 2, 4, 0, 0, 0, 0, 0}, /* 0x0B (00001011) */
-    {3, 4, 0, 0, 0, 0, 0, 0}, /* 0x0C (00001100) */
-    {1, 3, 4, 0, 0, 0, 0, 0}, /* 0x0D (00001101) */
-    {2, 3, 4, 0, 0, 0, 0, 0}, /* 0x0E (00001110) */
-    {1, 2, 3, 4, 0, 0, 0, 0}, /* 0x0F (00001111) */
-    {5, 0, 0, 0, 0, 0, 0, 0}, /* 0x10 (00010000) */
-    {1, 5, 0, 0, 0, 0, 0, 0}, /* 0x11 (00010001) */
-    {2, 5, 0, 0, 0, 0, 0, 0}, /* 0x12 (00010010) */
-    {1, 2, 5, 0, 0, 0, 0, 0}, /* 0x13 (00010011) */
-    {3, 5, 0, 0, 0, 0, 0, 0}, /* 0x14 (00010100) */
-    {1, 3, 5, 0, 0, 0, 0, 0}, /* 0x15 (00010101) */
-    {2, 3, 5, 0, 0, 0, 0, 0}, /* 0x16 (00010110) */
-    {1, 2, 3, 5, 0, 0, 0, 0}, /* 0x17 (00010111) */
-    {4, 5, 0, 0, 0, 0, 0, 0}, /* 0x18 (00011000) */
-    {1, 4, 5, 0, 0, 0, 0, 0}, /* 0x19 (00011001) */
-    {2, 4, 5, 0, 0, 0, 0, 0}, /* 0x1A (00011010) */
-    {1, 2, 4, 5, 0, 0, 0, 0}, /* 0x1B (00011011) */
-    {3, 4, 5, 0, 0, 0, 0, 0}, /* 0x1C (00011100) */
-    {1, 3, 4, 5, 0, 0, 0, 0}, /* 0x1D (00011101) */
-    {2, 3, 4, 5, 0, 0, 0, 0}, /* 0x1E (00011110) */
-    {1, 2, 3, 4, 5, 0, 0, 0}, /* 0x1F (00011111) */
-    {6, 0, 0, 0, 0, 0, 0, 0}, /* 0x20 (00100000) */
-    {1, 6, 0, 0, 0, 0, 0, 0}, /* 0x21 (00100001) */
-    {2, 6, 0, 0, 0, 0, 0, 0}, /* 0x22 (00100010) */
-    {1, 2, 6, 0, 0, 0, 0, 0}, /* 0x23 (00100011) */
-    {3, 6, 0, 0, 0, 0, 0, 0}, /* 0x24 (00100100) */
-    {1, 3, 6, 0, 0, 0, 0, 0}, /* 0x25 (00100101) */
-    {2, 3, 6, 0, 0, 0, 0, 0}, /* 0x26 (00100110) */
-    {1, 2, 3, 6, 0, 0, 0, 0}, /* 0x27 (00100111) */
-    {4, 6, 0, 0, 0, 0, 0, 0}, /* 0x28 (00101000) */
-    {1, 4, 6, 0, 0, 0, 0, 0}, /* 0x29 (00101001) */
-    {2, 4, 6, 0, 0, 0, 0, 0}, /* 0x2A (00101010) */
-    {1, 2, 4, 6, 0, 0, 0, 0}, /* 0x2B (00101011) */
-    {3, 4, 6, 0, 0, 0, 0, 0}, /* 0x2C (00101100) */
-    {1, 3, 4, 6, 0, 0, 0, 0}, /* 0x2D (00101101) */
-    {2, 3, 4, 6, 0, 0, 0, 0}, /* 0x2E (00101110) */
-    {1, 2, 3, 4, 6, 0, 0, 0}, /* 0x2F (00101111) */
-    {5, 6, 0, 0, 0, 0, 0, 0}, /* 0x30 (00110000) */
-    {1, 5, 6, 0, 0, 0, 0, 0}, /* 0x31 (00110001) */
-    {2, 5, 6, 0, 0, 0, 0, 0}, /* 0x32 (00110010) */
-    {1, 2, 5, 6, 0, 0, 0, 0}, /* 0x33 (00110011) */
-    {3, 5, 6, 0, 0, 0, 0, 0}, /* 0x34 (00110100) */
-    {1, 3, 5, 6, 0, 0, 0, 0}, /* 0x35 (00110101) */
-    {2, 3, 5, 6, 0, 0, 0, 0}, /* 0x36 (00110110) */
-    {1, 2, 3, 5, 6, 0, 0, 0}, /* 0x37 (00110111) */
-    {4, 5, 6, 0, 0, 0, 0, 0}, /* 0x38 (00111000) */
-    {1, 4, 5, 6, 0, 0, 0, 0}, /* 0x39 (00111001) */
-    {2, 4, 5, 6, 0, 0, 0, 0}, /* 0x3A (00111010) */
-    {1, 2, 4, 5, 6, 0, 0, 0}, /* 0x3B (00111011) */
-    {3, 4, 5, 6, 0, 0, 0, 0}, /* 0x3C (00111100) */
-    {1, 3, 4, 5, 6, 0, 0, 0}, /* 0x3D (00111101) */
-    {2, 3, 4, 5, 6, 0, 0, 0}, /* 0x3E (00111110) */
-    {1, 2, 3, 4, 5, 6, 0, 0}, /* 0x3F (00111111) */
-    {7, 0, 0, 0, 0, 0, 0, 0}, /* 0x40 (01000000) */
-    {1, 7, 0, 0, 0, 0, 0, 0}, /* 0x41 (01000001) */
-    {2, 7, 0, 0, 0, 0, 0, 0}, /* 0x42 (01000010) */
-    {1, 2, 7, 0, 0, 0, 0, 0}, /* 0x43 (01000011) */
-    {3, 7, 0, 0, 0, 0, 0, 0}, /* 0x44 (01000100) */
-    {1, 3, 7, 0, 0, 0, 0, 0}, /* 0x45 (01000101) */
-    {2, 3, 7, 0, 0, 0, 0, 0}, /* 0x46 (01000110) */
-    {1, 2, 3, 7, 0, 0, 0, 0}, /* 0x47 (01000111) */
-    {4, 7, 0, 0, 0, 0, 0, 0}, /* 0x48 (01001000) */
-    {1, 4, 7, 0, 0, 0, 0, 0}, /* 0x49 (01001001) */
-    {2, 4, 7, 0, 0, 0, 0, 0}, /* 0x4A (01001010) */
-    {1, 2, 4, 7, 0, 0, 0, 0}, /* 0x4B (01001011) */
-    {3, 4, 7, 0, 0, 0, 0, 0}, /* 0x4C (01001100) */
-    {1, 3, 4, 7, 0, 0, 0, 0}, /* 0x4D (01001101) */
-    {2, 3, 4, 7, 0, 0, 0, 0}, /* 0x4E (01001110) */
-    {1, 2, 3, 4, 7, 0, 0, 0}, /* 0x4F (01001111) */
-    {5, 7, 0, 0, 0, 0, 0, 0}, /* 0x50 (01010000) */
-    {1, 5, 7, 0, 0, 0, 0, 0}, /* 0x51 (01010001) */
-    {2, 5, 7, 0, 0, 0, 0, 0}, /* 0x52 (01010010) */
-    {1, 2, 5, 7, 0, 0, 0, 0}, /* 0x53 (01010011) */
-    {3, 5, 7, 0, 0, 0, 0, 0}, /* 0x54 (01010100) */
-    {1, 3, 5, 7, 0, 0, 0, 0}, /* 0x55 (01010101) */
-    {2, 3, 5, 7, 0, 0, 0, 0}, /* 0x56 (01010110) */
-    {1, 2, 3, 5, 7, 0, 0, 0}, /* 0x57 (01010111) */
-    {4, 5, 7, 0, 0, 0, 0, 0}, /* 0x58 (01011000) */
-    {1, 4, 5, 7, 0, 0, 0, 0}, /* 0x59 (01011001) */
-    {2, 4, 5, 7, 0, 0, 0, 0}, /* 0x5A (01011010) */
-    {1, 2, 4, 5, 7, 0, 0, 0}, /* 0x5B (01011011) */
-    {3, 4, 5, 7, 0, 0, 0, 0}, /* 0x5C (01011100) */
-    {1, 3, 4, 5, 7, 0, 0, 0}, /* 0x5D (01011101) */
-    {2, 3, 4, 5, 7, 0, 0, 0}, /* 0x5E (01011110) */
-    {1, 2, 3, 4, 5, 7, 0, 0}, /* 0x5F (01011111) */
-    {6, 7, 0, 0, 0, 0, 0, 0}, /* 0x60 (01100000) */
-    {1, 6, 7, 0, 0, 0, 0, 0}, /* 0x61 (01100001) */
-    {2, 6, 7, 0, 0, 0, 0, 0}, /* 0x62 (01100010) */
-    {1, 2, 6, 7, 0, 0, 0, 0}, /* 0x63 (01100011) */
-    {3, 6, 7, 0, 0, 0, 0, 0}, /* 0x64 (01100100) */
-    {1, 3, 6, 7, 0, 0, 0, 0}, /* 0x65 (01100101) */
-    {2, 3, 6, 7, 0, 0, 0, 0}, /* 0x66 (01100110) */
-    {1, 2, 3, 6, 7, 0, 0, 0}, /* 0x67 (01100111) */
-    {4, 6, 7, 0, 0, 0, 0, 0}, /* 0x68 (01101000) */
-    {1, 4, 6, 7, 0, 0, 0, 0}, /* 0x69 (01101001) */
-    {2, 4, 6, 7, 0, 0, 0, 0}, /* 0x6A (01101010) */
-    {1, 2, 4, 6, 7, 0, 0, 0}, /* 0x6B (01101011) */
-    {3, 4, 6, 7, 0, 0, 0, 0}, /* 0x6C (01101100) */
-    {1, 3, 4, 6, 7, 0, 0, 0}, /* 0x6D (01101101) */
-    {2, 3, 4, 6, 7, 0, 0, 0}, /* 0x6E (01101110) */
-    {1, 2, 3, 4, 6, 7, 0, 0}, /* 0x6F (01101111) */
-    {5, 6, 7, 0, 0, 0, 0, 0}, /* 0x70 (01110000) */
-    {1, 5, 6, 7, 0, 0, 0, 0}, /* 0x71 (01110001) */
-    {2, 5, 6, 7, 0, 0, 0, 0}, /* 0x72 (01110010) */
-    {1, 2, 5, 6, 7, 0, 0, 0}, /* 0x73 (01110011) */
-    {3, 5, 6, 7, 0, 0, 0, 0}, /* 0x74 (01110100) */
-    {1, 3, 5, 6, 7, 0, 0, 0}, /* 0x75 (01110101) */
-    {2, 3, 5, 6, 7, 0, 0, 0}, /* 0x76 (01110110) */
-    {1, 2, 3, 5, 6, 7, 0, 0}, /* 0x77 (01110111) */
-    {4, 5, 6, 7, 0, 0, 0, 0}, /* 0x78 (01111000) */
-    {1, 4, 5, 6, 7, 0, 0, 0}, /* 0x79 (01111001) */
-    {2, 4, 5, 6, 7, 0, 0, 0}, /* 0x7A (01111010) */
-    {1, 2, 4, 5, 6, 7, 0, 0}, /* 0x7B (01111011) */
-    {3, 4, 5, 6, 7, 0, 0, 0}, /* 0x7C (01111100) */
-    {1, 3, 4, 5, 6, 7, 0, 0}, /* 0x7D (01111101) */
-    {2, 3, 4, 5, 6, 7, 0, 0}, /* 0x7E (01111110) */
-    {1, 2, 3, 4, 5, 6, 7, 0}, /* 0x7F (01111111) */
-    {8, 0, 0, 0, 0, 0, 0, 0}, /* 0x80 (10000000) */
-    {1, 8, 0, 0, 0, 0, 0, 0}, /* 0x81 (10000001) */
-    {2, 8, 0, 0, 0, 0, 0, 0}, /* 0x82 (10000010) */
-    {1, 2, 8, 0, 0, 0, 0, 0}, /* 0x83 (10000011) */
-    {3, 8, 0, 0, 0, 0, 0, 0}, /* 0x84 (10000100) */
-    {1, 3, 8, 0, 0, 0, 0, 0}, /* 0x85 (10000101) */
-    {2, 3, 8, 0, 0, 0, 0, 0}, /* 0x86 (10000110) */
-    {1, 2, 3, 8, 0, 0, 0, 0}, /* 0x87 (10000111) */
-    {4, 8, 0, 0, 0, 0, 0, 0}, /* 0x88 (10001000) */
-    {1, 4, 8, 0, 0, 0, 0, 0}, /* 0x89 (10001001) */
-    {2, 4, 8, 0, 0, 0, 0, 0}, /* 0x8A (10001010) */
-    {1, 2, 4, 8, 0, 0, 0, 0}, /* 0x8B (10001011) */
-    {3, 4, 8, 0, 0, 0, 0, 0}, /* 0x8C (10001100) */
-    {1, 3, 4, 8, 0, 0, 0, 0}, /* 0x8D (10001101) */
-    {2, 3, 4, 8, 0, 0, 0, 0}, /* 0x8E (10001110) */
-    {1, 2, 3, 4, 8, 0, 0, 0}, /* 0x8F (10001111) */
-    {5, 8, 0, 0, 0, 0, 0, 0}, /* 0x90 (10010000) */
-    {1, 5, 8, 0, 0, 0, 0, 0}, /* 0x91 (10010001) */
-    {2, 5, 8, 0, 0, 0, 0, 0}, /* 0x92 (10010010) */
-    {1, 2, 5, 8, 0, 0, 0, 0}, /* 0x93 (10010011) */
-    {3, 5, 8, 0, 0, 0, 0, 0}, /* 0x94 (10010100) */
-    {1, 3, 5, 8, 0, 0, 0, 0}, /* 0x95 (10010101) */
-    {2, 3, 5, 8, 0, 0, 0, 0}, /* 0x96 (10010110) */
-    {1, 2, 3, 5, 8, 0, 0, 0}, /* 0x97 (10010111) */
-    {4, 5, 8, 0, 0, 0, 0, 0}, /* 0x98 (10011000) */
-    {1, 4, 5, 8, 0, 0, 0, 0}, /* 0x99 (10011001) */
-    {2, 4, 5, 8, 0, 0, 0, 0}, /* 0x9A (10011010) */
-    {1, 2, 4, 5, 8, 0, 0, 0}, /* 0x9B (10011011) */
-    {3, 4, 5, 8, 0, 0, 0, 0}, /* 0x9C (10011100) */
-    {1, 3, 4, 5, 8, 0, 0, 0}, /* 0x9D (10011101) */
-    {2, 3, 4, 5, 8, 0, 0, 0}, /* 0x9E (10011110) */
-    {1, 2, 3, 4, 5, 8, 0, 0}, /* 0x9F (10011111) */
-    {6, 8, 0, 0, 0, 0, 0, 0}, /* 0xA0 (10100000) */
-    {1, 6, 8, 0, 0, 0, 0, 0}, /* 0xA1 (10100001) */
-    {2, 6, 8, 0, 0, 0, 0, 0}, /* 0xA2 (10100010) */
-    {1, 2, 6, 8, 0, 0, 0, 0}, /* 0xA3 (10100011) */
-    {3, 6, 8, 0, 0, 0, 0, 0}, /* 0xA4 (10100100) */
-    {1, 3, 6, 8, 0, 0, 0, 0}, /* 0xA5 (10100101) */
-    {2, 3, 6, 8, 0, 0, 0, 0}, /* 0xA6 (10100110) */
-    {1, 2, 3, 6, 8, 0, 0, 0}, /* 0xA7 (10100111) */
-    {4, 6, 8, 0, 0, 0, 0, 0}, /* 0xA8 (10101000) */
-    {1, 4, 6, 8, 0, 0, 0, 0}, /* 0xA9 (10101001) */
-    {2, 4, 6, 8, 0, 0, 0, 0}, /* 0xAA (10101010) */
-    {1, 2, 4, 6, 8, 0, 0, 0}, /* 0xAB (10101011) */
-    {3, 4, 6, 8, 0, 0, 0, 0}, /* 0xAC (10101100) */
-    {1, 3, 4, 6, 8, 0, 0, 0}, /* 0xAD (10101101) */
-    {2, 3, 4, 6, 8, 0, 0, 0}, /* 0xAE (10101110) */
-    {1, 2, 3, 4, 6, 8, 0, 0}, /* 0xAF (10101111) */
-    {5, 6, 8, 0, 0, 0, 0, 0}, /* 0xB0 (10110000) */
-    {1, 5, 6, 8, 0, 0, 0, 0}, /* 0xB1 (10110001) */
-    {2, 5, 6, 8, 0, 0, 0, 0}, /* 0xB2 (10110010) */
-    {1, 2, 5, 6, 8, 0, 0, 0}, /* 0xB3 (10110011) */
-    {3, 5, 6, 8, 0, 0, 0, 0}, /* 0xB4 (10110100) */
-    {1, 3, 5, 6, 8, 0, 0, 0}, /* 0xB5 (10110101) */
-    {2, 3, 5, 6, 8, 0, 0, 0}, /* 0xB6 (10110110) */
-    {1, 2, 3, 5, 6, 8, 0, 0}, /* 0xB7 (10110111) */
-    {4, 5, 6, 8, 0, 0, 0, 0}, /* 0xB8 (10111000) */
-    {1, 4, 5, 6, 8, 0, 0, 0}, /* 0xB9 (10111001) */
-    {2, 4, 5, 6, 8, 0, 0, 0}, /* 0xBA (10111010) */
-    {1, 2, 4, 5, 6, 8, 0, 0}, /* 0xBB (10111011) */
-    {3, 4, 5, 6, 8, 0, 0, 0}, /* 0xBC (10111100) */
-    {1, 3, 4, 5, 6, 8, 0, 0}, /* 0xBD (10111101) */
-    {2, 3, 4, 5, 6, 8, 0, 0}, /* 0xBE (10111110) */
-    {1, 2, 3, 4, 5, 6, 8, 0}, /* 0xBF (10111111) */
-    {7, 8, 0, 0, 0, 0, 0, 0}, /* 0xC0 (11000000) */
-    {1, 7, 8, 0, 0, 0, 0, 0}, /* 0xC1 (11000001) */
-    {2, 7, 8, 0, 0, 0, 0, 0}, /* 0xC2 (11000010) */
-    {1, 2, 7, 8, 0, 0, 0, 0}, /* 0xC3 (11000011) */
-    {3, 7, 8, 0, 0, 0, 0, 0}, /* 0xC4 (11000100) */
-    {1, 3, 7, 8, 0, 0, 0, 0}, /* 0xC5 (11000101) */
-    {2, 3, 7, 8, 0, 0, 0, 0}, /* 0xC6 (11000110) */
-    {1, 2, 3, 7, 8, 0, 0, 0}, /* 0xC7 (11000111) */
-    {4, 7, 8, 0, 0, 0, 0, 0}, /* 0xC8 (11001000) */
-    {1, 4, 7, 8, 0, 0, 0, 0}, /* 0xC9 (11001001) */
-    {2, 4, 7, 8, 0, 0, 0, 0}, /* 0xCA (11001010) */
-    {1, 2, 4, 7, 8, 0, 0, 0}, /* 0xCB (11001011) */
-    {3, 4, 7, 8, 0, 0, 0, 0}, /* 0xCC (11001100) */
-    {1, 3, 4, 7, 8, 0, 0, 0}, /* 0xCD (11001101) */
-    {2, 3, 4, 7, 8, 0, 0, 0}, /* 0xCE (11001110) */
-    {1, 2, 3, 4, 7, 8, 0, 0}, /* 0xCF (11001111) */
-    {5, 7, 8, 0, 0, 0, 0, 0}, /* 0xD0 (11010000) */
-    {1, 5, 7, 8, 0, 0, 0, 0}, /* 0xD1 (11010001) */
-    {2, 5, 7, 8, 0, 0, 0, 0}, /* 0xD2 (11010010) */
-    {1, 2, 5, 7, 8, 0, 0, 0}, /* 0xD3 (11010011) */
-    {3, 5, 7, 8, 0, 0, 0, 0}, /* 0xD4 (11010100) */
-    {1, 3, 5, 7, 8, 0, 0, 0}, /* 0xD5 (11010101) */
-    {2, 3, 5, 7, 8, 0, 0, 0}, /* 0xD6 (11010110) */
-    {1, 2, 3, 5, 7, 8, 0, 0}, /* 0xD7 (11010111) */
-    {4, 5, 7, 8, 0, 0, 0, 0}, /* 0xD8 (11011000) */
-    {1, 4, 5, 7, 8, 0, 0, 0}, /* 0xD9 (11011001) */
-    {2, 4, 5, 7, 8, 0, 0, 0}, /* 0xDA (11011010) */
-    {1, 2, 4, 5, 7, 8, 0, 0}, /* 0xDB (11011011) */
-    {3, 4, 5, 7, 8, 0, 0, 0}, /* 0xDC (11011100) */
-    {1, 3, 4, 5, 7, 8, 0, 0}, /* 0xDD (11011101) */
-    {2, 3, 4, 5, 7, 8, 0, 0}, /* 0xDE (11011110) */
-    {1, 2, 3, 4, 5, 7, 8, 0}, /* 0xDF (11011111) */
-    {6, 7, 8, 0, 0, 0, 0, 0}, /* 0xE0 (11100000) */
-    {1, 6, 7, 8, 0, 0, 0, 0}, /* 0xE1 (11100001) */
-    {2, 6, 7, 8, 0, 0, 0, 0}, /* 0xE2 (11100010) */
-    {1, 2, 6, 7, 8, 0, 0, 0}, /* 0xE3 (11100011) */
-    {3, 6, 7, 8, 0, 0, 0, 0}, /* 0xE4 (11100100) */
-    {1, 3, 6, 7, 8, 0, 0, 0}, /* 0xE5 (11100101) */
-    {2, 3, 6, 7, 8, 0, 0, 0}, /* 0xE6 (11100110) */
-    {1, 2, 3, 6, 7, 8, 0, 0}, /* 0xE7 (11100111) */
-    {4, 6, 7, 8, 0, 0, 0, 0}, /* 0xE8 (11101000) */
-    {1, 4, 6, 7, 8, 0, 0, 0}, /* 0xE9 (11101001) */
-    {2, 4, 6, 7, 8, 0, 0, 0}, /* 0xEA (11101010) */
-    {1, 2, 4, 6, 7, 8, 0, 0}, /* 0xEB (11101011) */
-    {3, 4, 6, 7, 8, 0, 0, 0}, /* 0xEC (11101100) */
-    {1, 3, 4, 6, 7, 8, 0, 0}, /* 0xED (11101101) */
-    {2, 3, 4, 6, 7, 8, 0, 0}, /* 0xEE (11101110) */
-    {1, 2, 3, 4, 6, 7, 8, 0}, /* 0xEF (11101111) */
-    {5, 6, 7, 8, 0, 0, 0, 0}, /* 0xF0 (11110000) */
-    {1, 5, 6, 7, 8, 0, 0, 0}, /* 0xF1 (11110001) */
-    {2, 5, 6, 7, 8, 0, 0, 0}, /* 0xF2 (11110010) */
-    {1, 2, 5, 6, 7, 8, 0, 0}, /* 0xF3 (11110011) */
-    {3, 5, 6, 7, 8, 0, 0, 0}, /* 0xF4 (11110100) */
-    {1, 3, 5, 6, 7, 8, 0, 0}, /* 0xF5 (11110101) */
-    {2, 3, 5, 6, 7, 8, 0, 0}, /* 0xF6 (11110110) */
-    {1, 2, 3, 5, 6, 7, 8, 0}, /* 0xF7 (11110111) */
-    {4, 5, 6, 7, 8, 0, 0, 0}, /* 0xF8 (11111000) */
-    {1, 4, 5, 6, 7, 8, 0, 0}, /* 0xF9 (11111001) */
-    {2, 4, 5, 6, 7, 8, 0, 0}, /* 0xFA (11111010) */
-    {1, 2, 4, 5, 6, 7, 8, 0}, /* 0xFB (11111011) */
-    {3, 4, 5, 6, 7, 8, 0, 0}, /* 0xFC (11111100) */
-    {1, 3, 4, 5, 6, 7, 8, 0}, /* 0xFD (11111101) */
-    {2, 3, 4, 5, 6, 7, 8, 0}, /* 0xFE (11111110) */
-    {1, 2, 3, 4, 5, 6, 7, 8}  /* 0xFF (11111111) */
+        {0, 0, 0, 0, 0, 0, 0, 0}, /* 0x00 (00000000) */
+        {1, 0, 0, 0, 0, 0, 0, 0}, /* 0x01 (00000001) */
+        {2, 0, 0, 0, 0, 0, 0, 0}, /* 0x02 (00000010) */
+        {1, 2, 0, 0, 0, 0, 0, 0}, /* 0x03 (00000011) */
+        {3, 0, 0, 0, 0, 0, 0, 0}, /* 0x04 (00000100) */
+        {1, 3, 0, 0, 0, 0, 0, 0}, /* 0x05 (00000101) */
+        {2, 3, 0, 0, 0, 0, 0, 0}, /* 0x06 (00000110) */
+        {1, 2, 3, 0, 0, 0, 0, 0}, /* 0x07 (00000111) */
+        {4, 0, 0, 0, 0, 0, 0, 0}, /* 0x08 (00001000) */
+        {1, 4, 0, 0, 0, 0, 0, 0}, /* 0x09 (00001001) */
+        {2, 4, 0, 0, 0, 0, 0, 0}, /* 0x0A (00001010) */
+        {1, 2, 4, 0, 0, 0, 0, 0}, /* 0x0B (00001011) */
+        {3, 4, 0, 0, 0, 0, 0, 0}, /* 0x0C (00001100) */
+        {1, 3, 4, 0, 0, 0, 0, 0}, /* 0x0D (00001101) */
+        {2, 3, 4, 0, 0, 0, 0, 0}, /* 0x0E (00001110) */
+        {1, 2, 3, 4, 0, 0, 0, 0}, /* 0x0F (00001111) */
+        {5, 0, 0, 0, 0, 0, 0, 0}, /* 0x10 (00010000) */
+        {1, 5, 0, 0, 0, 0, 0, 0}, /* 0x11 (00010001) */
+        {2, 5, 0, 0, 0, 0, 0, 0}, /* 0x12 (00010010) */
+        {1, 2, 5, 0, 0, 0, 0, 0}, /* 0x13 (00010011) */
+        {3, 5, 0, 0, 0, 0, 0, 0}, /* 0x14 (00010100) */
+        {1, 3, 5, 0, 0, 0, 0, 0}, /* 0x15 (00010101) */
+        {2, 3, 5, 0, 0, 0, 0, 0}, /* 0x16 (00010110) */
+        {1, 2, 3, 5, 0, 0, 0, 0}, /* 0x17 (00010111) */
+        {4, 5, 0, 0, 0, 0, 0, 0}, /* 0x18 (00011000) */
+        {1, 4, 5, 0, 0, 0, 0, 0}, /* 0x19 (00011001) */
+        {2, 4, 5, 0, 0, 0, 0, 0}, /* 0x1A (00011010) */
+        {1, 2, 4, 5, 0, 0, 0, 0}, /* 0x1B (00011011) */
+        {3, 4, 5, 0, 0, 0, 0, 0}, /* 0x1C (00011100) */
+        {1, 3, 4, 5, 0, 0, 0, 0}, /* 0x1D (00011101) */
+        {2, 3, 4, 5, 0, 0, 0, 0}, /* 0x1E (00011110) */
+        {1, 2, 3, 4, 5, 0, 0, 0}, /* 0x1F (00011111) */
+        {6, 0, 0, 0, 0, 0, 0, 0}, /* 0x20 (00100000) */
+        {1, 6, 0, 0, 0, 0, 0, 0}, /* 0x21 (00100001) */
+        {2, 6, 0, 0, 0, 0, 0, 0}, /* 0x22 (00100010) */
+        {1, 2, 6, 0, 0, 0, 0, 0}, /* 0x23 (00100011) */
+        {3, 6, 0, 0, 0, 0, 0, 0}, /* 0x24 (00100100) */
+        {1, 3, 6, 0, 0, 0, 0, 0}, /* 0x25 (00100101) */
+        {2, 3, 6, 0, 0, 0, 0, 0}, /* 0x26 (00100110) */
+        {1, 2, 3, 6, 0, 0, 0, 0}, /* 0x27 (00100111) */
+        {4, 6, 0, 0, 0, 0, 0, 0}, /* 0x28 (00101000) */
+        {1, 4, 6, 0, 0, 0, 0, 0}, /* 0x29 (00101001) */
+        {2, 4, 6, 0, 0, 0, 0, 0}, /* 0x2A (00101010) */
+        {1, 2, 4, 6, 0, 0, 0, 0}, /* 0x2B (00101011) */
+        {3, 4, 6, 0, 0, 0, 0, 0}, /* 0x2C (00101100) */
+        {1, 3, 4, 6, 0, 0, 0, 0}, /* 0x2D (00101101) */
+        {2, 3, 4, 6, 0, 0, 0, 0}, /* 0x2E (00101110) */
+        {1, 2, 3, 4, 6, 0, 0, 0}, /* 0x2F (00101111) */
+        {5, 6, 0, 0, 0, 0, 0, 0}, /* 0x30 (00110000) */
+        {1, 5, 6, 0, 0, 0, 0, 0}, /* 0x31 (00110001) */
+        {2, 5, 6, 0, 0, 0, 0, 0}, /* 0x32 (00110010) */
+        {1, 2, 5, 6, 0, 0, 0, 0}, /* 0x33 (00110011) */
+        {3, 5, 6, 0, 0, 0, 0, 0}, /* 0x34 (00110100) */
+        {1, 3, 5, 6, 0, 0, 0, 0}, /* 0x35 (00110101) */
+        {2, 3, 5, 6, 0, 0, 0, 0}, /* 0x36 (00110110) */
+        {1, 2, 3, 5, 6, 0, 0, 0}, /* 0x37 (00110111) */
+        {4, 5, 6, 0, 0, 0, 0, 0}, /* 0x38 (00111000) */
+        {1, 4, 5, 6, 0, 0, 0, 0}, /* 0x39 (00111001) */
+        {2, 4, 5, 6, 0, 0, 0, 0}, /* 0x3A (00111010) */
+        {1, 2, 4, 5, 6, 0, 0, 0}, /* 0x3B (00111011) */
+        {3, 4, 5, 6, 0, 0, 0, 0}, /* 0x3C (00111100) */
+        {1, 3, 4, 5, 6, 0, 0, 0}, /* 0x3D (00111101) */
+        {2, 3, 4, 5, 6, 0, 0, 0}, /* 0x3E (00111110) */
+        {1, 2, 3, 4, 5, 6, 0, 0}, /* 0x3F (00111111) */
+        {7, 0, 0, 0, 0, 0, 0, 0}, /* 0x40 (01000000) */
+        {1, 7, 0, 0, 0, 0, 0, 0}, /* 0x41 (01000001) */
+        {2, 7, 0, 0, 0, 0, 0, 0}, /* 0x42 (01000010) */
+        {1, 2, 7, 0, 0, 0, 0, 0}, /* 0x43 (01000011) */
+        {3, 7, 0, 0, 0, 0, 0, 0}, /* 0x44 (01000100) */
+        {1, 3, 7, 0, 0, 0, 0, 0}, /* 0x45 (01000101) */
+        {2, 3, 7, 0, 0, 0, 0, 0}, /* 0x46 (01000110) */
+        {1, 2, 3, 7, 0, 0, 0, 0}, /* 0x47 (01000111) */
+        {4, 7, 0, 0, 0, 0, 0, 0}, /* 0x48 (01001000) */
+        {1, 4, 7, 0, 0, 0, 0, 0}, /* 0x49 (01001001) */
+        {2, 4, 7, 0, 0, 0, 0, 0}, /* 0x4A (01001010) */
+        {1, 2, 4, 7, 0, 0, 0, 0}, /* 0x4B (01001011) */
+        {3, 4, 7, 0, 0, 0, 0, 0}, /* 0x4C (01001100) */
+        {1, 3, 4, 7, 0, 0, 0, 0}, /* 0x4D (01001101) */
+        {2, 3, 4, 7, 0, 0, 0, 0}, /* 0x4E (01001110) */
+        {1, 2, 3, 4, 7, 0, 0, 0}, /* 0x4F (01001111) */
+        {5, 7, 0, 0, 0, 0, 0, 0}, /* 0x50 (01010000) */
+        {1, 5, 7, 0, 0, 0, 0, 0}, /* 0x51 (01010001) */
+        {2, 5, 7, 0, 0, 0, 0, 0}, /* 0x52 (01010010) */
+        {1, 2, 5, 7, 0, 0, 0, 0}, /* 0x53 (01010011) */
+        {3, 5, 7, 0, 0, 0, 0, 0}, /* 0x54 (01010100) */
+        {1, 3, 5, 7, 0, 0, 0, 0}, /* 0x55 (01010101) */
+        {2, 3, 5, 7, 0, 0, 0, 0}, /* 0x56 (01010110) */
+        {1, 2, 3, 5, 7, 0, 0, 0}, /* 0x57 (01010111) */
+        {4, 5, 7, 0, 0, 0, 0, 0}, /* 0x58 (01011000) */
+        {1, 4, 5, 7, 0, 0, 0, 0}, /* 0x59 (01011001) */
+        {2, 4, 5, 7, 0, 0, 0, 0}, /* 0x5A (01011010) */
+        {1, 2, 4, 5, 7, 0, 0, 0}, /* 0x5B (01011011) */
+        {3, 4, 5, 7, 0, 0, 0, 0}, /* 0x5C (01011100) */
+        {1, 3, 4, 5, 7, 0, 0, 0}, /* 0x5D (01011101) */
+        {2, 3, 4, 5, 7, 0, 0, 0}, /* 0x5E (01011110) */
+        {1, 2, 3, 4, 5, 7, 0, 0}, /* 0x5F (01011111) */
+        {6, 7, 0, 0, 0, 0, 0, 0}, /* 0x60 (01100000) */
+        {1, 6, 7, 0, 0, 0, 0, 0}, /* 0x61 (01100001) */
+        {2, 6, 7, 0, 0, 0, 0, 0}, /* 0x62 (01100010) */
+        {1, 2, 6, 7, 0, 0, 0, 0}, /* 0x63 (01100011) */
+        {3, 6, 7, 0, 0, 0, 0, 0}, /* 0x64 (01100100) */
+        {1, 3, 6, 7, 0, 0, 0, 0}, /* 0x65 (01100101) */
+        {2, 3, 6, 7, 0, 0, 0, 0}, /* 0x66 (01100110) */
+        {1, 2, 3, 6, 7, 0, 0, 0}, /* 0x67 (01100111) */
+        {4, 6, 7, 0, 0, 0, 0, 0}, /* 0x68 (01101000) */
+        {1, 4, 6, 7, 0, 0, 0, 0}, /* 0x69 (01101001) */
+        {2, 4, 6, 7, 0, 0, 0, 0}, /* 0x6A (01101010) */
+        {1, 2, 4, 6, 7, 0, 0, 0}, /* 0x6B (01101011) */
+        {3, 4, 6, 7, 0, 0, 0, 0}, /* 0x6C (01101100) */
+        {1, 3, 4, 6, 7, 0, 0, 0}, /* 0x6D (01101101) */
+        {2, 3, 4, 6, 7, 0, 0, 0}, /* 0x6E (01101110) */
+        {1, 2, 3, 4, 6, 7, 0, 0}, /* 0x6F (01101111) */
+        {5, 6, 7, 0, 0, 0, 0, 0}, /* 0x70 (01110000) */
+        {1, 5, 6, 7, 0, 0, 0, 0}, /* 0x71 (01110001) */
+        {2, 5, 6, 7, 0, 0, 0, 0}, /* 0x72 (01110010) */
+        {1, 2, 5, 6, 7, 0, 0, 0}, /* 0x73 (01110011) */
+        {3, 5, 6, 7, 0, 0, 0, 0}, /* 0x74 (01110100) */
+        {1, 3, 5, 6, 7, 0, 0, 0}, /* 0x75 (01110101) */
+        {2, 3, 5, 6, 7, 0, 0, 0}, /* 0x76 (01110110) */
+        {1, 2, 3, 5, 6, 7, 0, 0}, /* 0x77 (01110111) */
+        {4, 5, 6, 7, 0, 0, 0, 0}, /* 0x78 (01111000) */
+        {1, 4, 5, 6, 7, 0, 0, 0}, /* 0x79 (01111001) */
+        {2, 4, 5, 6, 7, 0, 0, 0}, /* 0x7A (01111010) */
+        {1, 2, 4, 5, 6, 7, 0, 0}, /* 0x7B (01111011) */
+        {3, 4, 5, 6, 7, 0, 0, 0}, /* 0x7C (01111100) */
+        {1, 3, 4, 5, 6, 7, 0, 0}, /* 0x7D (01111101) */
+        {2, 3, 4, 5, 6, 7, 0, 0}, /* 0x7E (01111110) */
+        {1, 2, 3, 4, 5, 6, 7, 0}, /* 0x7F (01111111) */
+        {8, 0, 0, 0, 0, 0, 0, 0}, /* 0x80 (10000000) */
+        {1, 8, 0, 0, 0, 0, 0, 0}, /* 0x81 (10000001) */
+        {2, 8, 0, 0, 0, 0, 0, 0}, /* 0x82 (10000010) */
+        {1, 2, 8, 0, 0, 0, 0, 0}, /* 0x83 (10000011) */
+        {3, 8, 0, 0, 0, 0, 0, 0}, /* 0x84 (10000100) */
+        {1, 3, 8, 0, 0, 0, 0, 0}, /* 0x85 (10000101) */
+        {2, 3, 8, 0, 0, 0, 0, 0}, /* 0x86 (10000110) */
+        {1, 2, 3, 8, 0, 0, 0, 0}, /* 0x87 (10000111) */
+        {4, 8, 0, 0, 0, 0, 0, 0}, /* 0x88 (10001000) */
+        {1, 4, 8, 0, 0, 0, 0, 0}, /* 0x89 (10001001) */
+        {2, 4, 8, 0, 0, 0, 0, 0}, /* 0x8A (10001010) */
+        {1, 2, 4, 8, 0, 0, 0, 0}, /* 0x8B (10001011) */
+        {3, 4, 8, 0, 0, 0, 0, 0}, /* 0x8C (10001100) */
+        {1, 3, 4, 8, 0, 0, 0, 0}, /* 0x8D (10001101) */
+        {2, 3, 4, 8, 0, 0, 0, 0}, /* 0x8E (10001110) */
+        {1, 2, 3, 4, 8, 0, 0, 0}, /* 0x8F (10001111) */
+        {5, 8, 0, 0, 0, 0, 0, 0}, /* 0x90 (10010000) */
+        {1, 5, 8, 0, 0, 0, 0, 0}, /* 0x91 (10010001) */
+        {2, 5, 8, 0, 0, 0, 0, 0}, /* 0x92 (10010010) */
+        {1, 2, 5, 8, 0, 0, 0, 0}, /* 0x93 (10010011) */
+        {3, 5, 8, 0, 0, 0, 0, 0}, /* 0x94 (10010100) */
+        {1, 3, 5, 8, 0, 0, 0, 0}, /* 0x95 (10010101) */
+        {2, 3, 5, 8, 0, 0, 0, 0}, /* 0x96 (10010110) */
+        {1, 2, 3, 5, 8, 0, 0, 0}, /* 0x97 (10010111) */
+        {4, 5, 8, 0, 0, 0, 0, 0}, /* 0x98 (10011000) */
+        {1, 4, 5, 8, 0, 0, 0, 0}, /* 0x99 (10011001) */
+        {2, 4, 5, 8, 0, 0, 0, 0}, /* 0x9A (10011010) */
+        {1, 2, 4, 5, 8, 0, 0, 0}, /* 0x9B (10011011) */
+        {3, 4, 5, 8, 0, 0, 0, 0}, /* 0x9C (10011100) */
+        {1, 3, 4, 5, 8, 0, 0, 0}, /* 0x9D (10011101) */
+        {2, 3, 4, 5, 8, 0, 0, 0}, /* 0x9E (10011110) */
+        {1, 2, 3, 4, 5, 8, 0, 0}, /* 0x9F (10011111) */
+        {6, 8, 0, 0, 0, 0, 0, 0}, /* 0xA0 (10100000) */
+        {1, 6, 8, 0, 0, 0, 0, 0}, /* 0xA1 (10100001) */
+        {2, 6, 8, 0, 0, 0, 0, 0}, /* 0xA2 (10100010) */
+        {1, 2, 6, 8, 0, 0, 0, 0}, /* 0xA3 (10100011) */
+        {3, 6, 8, 0, 0, 0, 0, 0}, /* 0xA4 (10100100) */
+        {1, 3, 6, 8, 0, 0, 0, 0}, /* 0xA5 (10100101) */
+        {2, 3, 6, 8, 0, 0, 0, 0}, /* 0xA6 (10100110) */
+        {1, 2, 3, 6, 8, 0, 0, 0}, /* 0xA7 (10100111) */
+        {4, 6, 8, 0, 0, 0, 0, 0}, /* 0xA8 (10101000) */
+        {1, 4, 6, 8, 0, 0, 0, 0}, /* 0xA9 (10101001) */
+        {2, 4, 6, 8, 0, 0, 0, 0}, /* 0xAA (10101010) */
+        {1, 2, 4, 6, 8, 0, 0, 0}, /* 0xAB (10101011) */
+        {3, 4, 6, 8, 0, 0, 0, 0}, /* 0xAC (10101100) */
+        {1, 3, 4, 6, 8, 0, 0, 0}, /* 0xAD (10101101) */
+        {2, 3, 4, 6, 8, 0, 0, 0}, /* 0xAE (10101110) */
+        {1, 2, 3, 4, 6, 8, 0, 0}, /* 0xAF (10101111) */
+        {5, 6, 8, 0, 0, 0, 0, 0}, /* 0xB0 (10110000) */
+        {1, 5, 6, 8, 0, 0, 0, 0}, /* 0xB1 (10110001) */
+        {2, 5, 6, 8, 0, 0, 0, 0}, /* 0xB2 (10110010) */
+        {1, 2, 5, 6, 8, 0, 0, 0}, /* 0xB3 (10110011) */
+        {3, 5, 6, 8, 0, 0, 0, 0}, /* 0xB4 (10110100) */
+        {1, 3, 5, 6, 8, 0, 0, 0}, /* 0xB5 (10110101) */
+        {2, 3, 5, 6, 8, 0, 0, 0}, /* 0xB6 (10110110) */
+        {1, 2, 3, 5, 6, 8, 0, 0}, /* 0xB7 (10110111) */
+        {4, 5, 6, 8, 0, 0, 0, 0}, /* 0xB8 (10111000) */
+        {1, 4, 5, 6, 8, 0, 0, 0}, /* 0xB9 (10111001) */
+        {2, 4, 5, 6, 8, 0, 0, 0}, /* 0xBA (10111010) */
+        {1, 2, 4, 5, 6, 8, 0, 0}, /* 0xBB (10111011) */
+        {3, 4, 5, 6, 8, 0, 0, 0}, /* 0xBC (10111100) */
+        {1, 3, 4, 5, 6, 8, 0, 0}, /* 0xBD (10111101) */
+        {2, 3, 4, 5, 6, 8, 0, 0}, /* 0xBE (10111110) */
+        {1, 2, 3, 4, 5, 6, 8, 0}, /* 0xBF (10111111) */
+        {7, 8, 0, 0, 0, 0, 0, 0}, /* 0xC0 (11000000) */
+        {1, 7, 8, 0, 0, 0, 0, 0}, /* 0xC1 (11000001) */
+        {2, 7, 8, 0, 0, 0, 0, 0}, /* 0xC2 (11000010) */
+        {1, 2, 7, 8, 0, 0, 0, 0}, /* 0xC3 (11000011) */
+        {3, 7, 8, 0, 0, 0, 0, 0}, /* 0xC4 (11000100) */
+        {1, 3, 7, 8, 0, 0, 0, 0}, /* 0xC5 (11000101) */
+        {2, 3, 7, 8, 0, 0, 0, 0}, /* 0xC6 (11000110) */
+        {1, 2, 3, 7, 8, 0, 0, 0}, /* 0xC7 (11000111) */
+        {4, 7, 8, 0, 0, 0, 0, 0}, /* 0xC8 (11001000) */
+        {1, 4, 7, 8, 0, 0, 0, 0}, /* 0xC9 (11001001) */
+        {2, 4, 7, 8, 0, 0, 0, 0}, /* 0xCA (11001010) */
+        {1, 2, 4, 7, 8, 0, 0, 0}, /* 0xCB (11001011) */
+        {3, 4, 7, 8, 0, 0, 0, 0}, /* 0xCC (11001100) */
+        {1, 3, 4, 7, 8, 0, 0, 0}, /* 0xCD (11001101) */
+        {2, 3, 4, 7, 8, 0, 0, 0}, /* 0xCE (11001110) */
+        {1, 2, 3, 4, 7, 8, 0, 0}, /* 0xCF (11001111) */
+        {5, 7, 8, 0, 0, 0, 0, 0}, /* 0xD0 (11010000) */
+        {1, 5, 7, 8, 0, 0, 0, 0}, /* 0xD1 (11010001) */
+        {2, 5, 7, 8, 0, 0, 0, 0}, /* 0xD2 (11010010) */
+        {1, 2, 5, 7, 8, 0, 0, 0}, /* 0xD3 (11010011) */
+        {3, 5, 7, 8, 0, 0, 0, 0}, /* 0xD4 (11010100) */
+        {1, 3, 5, 7, 8, 0, 0, 0}, /* 0xD5 (11010101) */
+        {2, 3, 5, 7, 8, 0, 0, 0}, /* 0xD6 (11010110) */
+        {1, 2, 3, 5, 7, 8, 0, 0}, /* 0xD7 (11010111) */
+        {4, 5, 7, 8, 0, 0, 0, 0}, /* 0xD8 (11011000) */
+        {1, 4, 5, 7, 8, 0, 0, 0}, /* 0xD9 (11011001) */
+        {2, 4, 5, 7, 8, 0, 0, 0}, /* 0xDA (11011010) */
+        {1, 2, 4, 5, 7, 8, 0, 0}, /* 0xDB (11011011) */
+        {3, 4, 5, 7, 8, 0, 0, 0}, /* 0xDC (11011100) */
+        {1, 3, 4, 5, 7, 8, 0, 0}, /* 0xDD (11011101) */
+        {2, 3, 4, 5, 7, 8, 0, 0}, /* 0xDE (11011110) */
+        {1, 2, 3, 4, 5, 7, 8, 0}, /* 0xDF (11011111) */
+        {6, 7, 8, 0, 0, 0, 0, 0}, /* 0xE0 (11100000) */
+        {1, 6, 7, 8, 0, 0, 0, 0}, /* 0xE1 (11100001) */
+        {2, 6, 7, 8, 0, 0, 0, 0}, /* 0xE2 (11100010) */
+        {1, 2, 6, 7, 8, 0, 0, 0}, /* 0xE3 (11100011) */
+        {3, 6, 7, 8, 0, 0, 0, 0}, /* 0xE4 (11100100) */
+        {1, 3, 6, 7, 8, 0, 0, 0}, /* 0xE5 (11100101) */
+        {2, 3, 6, 7, 8, 0, 0, 0}, /* 0xE6 (11100110) */
+        {1, 2, 3, 6, 7, 8, 0, 0}, /* 0xE7 (11100111) */
+        {4, 6, 7, 8, 0, 0, 0, 0}, /* 0xE8 (11101000) */
+        {1, 4, 6, 7, 8, 0, 0, 0}, /* 0xE9 (11101001) */
+        {2, 4, 6, 7, 8, 0, 0, 0}, /* 0xEA (11101010) */
+        {1, 2, 4, 6, 7, 8, 0, 0}, /* 0xEB (11101011) */
+        {3, 4, 6, 7, 8, 0, 0, 0}, /* 0xEC (11101100) */
+        {1, 3, 4, 6, 7, 8, 0, 0}, /* 0xED (11101101) */
+        {2, 3, 4, 6, 7, 8, 0, 0}, /* 0xEE (11101110) */
+        {1, 2, 3, 4, 6, 7, 8, 0}, /* 0xEF (11101111) */
+        {5, 6, 7, 8, 0, 0, 0, 0}, /* 0xF0 (11110000) */
+        {1, 5, 6, 7, 8, 0, 0, 0}, /* 0xF1 (11110001) */
+        {2, 5, 6, 7, 8, 0, 0, 0}, /* 0xF2 (11110010) */
+        {1, 2, 5, 6, 7, 8, 0, 0}, /* 0xF3 (11110011) */
+        {3, 5, 6, 7, 8, 0, 0, 0}, /* 0xF4 (11110100) */
+        {1, 3, 5, 6, 7, 8, 0, 0}, /* 0xF5 (11110101) */
+        {2, 3, 5, 6, 7, 8, 0, 0}, /* 0xF6 (11110110) */
+        {1, 2, 3, 5, 6, 7, 8, 0}, /* 0xF7 (11110111) */
+        {4, 5, 6, 7, 8, 0, 0, 0}, /* 0xF8 (11111000) */
+        {1, 4, 5, 6, 7, 8, 0, 0}, /* 0xF9 (11111001) */
+        {2, 4, 5, 6, 7, 8, 0, 0}, /* 0xFA (11111010) */
+        {1, 2, 4, 5, 6, 7, 8, 0}, /* 0xFB (11111011) */
+        {3, 4, 5, 6, 7, 8, 0, 0}, /* 0xFC (11111100) */
+        {1, 3, 4, 5, 6, 7, 8, 0}, /* 0xFD (11111101) */
+        {2, 3, 4, 5, 6, 7, 8, 0}, /* 0xFE (11111110) */
+        {1, 2, 3, 4, 5, 6, 7, 8}  /* 0xFF (11111111) */
 };
 
 #endif
@@ -12048,10 +12039,10 @@ static uint16_t vecDecodeTable_uint16[256][8] = {
 #if CROARING_COMPILER_SUPPORTS_AVX512
 CROARING_TARGET_AVX512
 const uint8_t vbmi2_table[64] = {
-    0,  1,  2,  3,  4,  5,  6,  7,  8,  9,  10, 11, 12, 13, 14, 15,
-    16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31,
-    32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47,
-    48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63};
+        0,  1,  2,  3,  4,  5,  6,  7,  8,  9,  10, 11, 12, 13, 14, 15,
+        16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31,
+        32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47,
+        48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63};
 size_t bitset_extract_setbits_avx512(const uint64_t *words, size_t length,
                                      uint32_t *vout, size_t outcapacity,
                                      uint32_t base) {
@@ -12069,7 +12060,7 @@ size_t bitset_extract_setbits_avx512(const uint64_t *words, size_t length,
         uint8_t advance = (uint8_t)roaring_hamming(v);
 
         __m512i vbase =
-            _mm512_add_epi32(base_v, _mm512_set1_epi32((int)(i * 64)));
+                _mm512_add_epi32(base_v, _mm512_set1_epi32((int)(i * 64)));
         __m512i r1 = _mm512_cvtepi8_epi32(_mm512_extracti32x4_epi32(vec, 0));
         __m512i r2 = _mm512_cvtepi8_epi32(_mm512_extracti32x4_epi32(vec, 1));
         __m512i r3 = _mm512_cvtepi8_epi32(_mm512_extracti32x4_epi32(vec, 2));
@@ -12093,10 +12084,10 @@ size_t bitset_extract_setbits_avx512(const uint64_t *words, size_t length,
         uint64_t w = words[i];
         while ((w != 0) && (out < safeout)) {
             uint64_t t =
-                w & (~w + 1);  // on x64, should compile to BLSI (careful: the
-                               // Intel compiler seems to fail)
+                    w & (~w + 1);  // on x64, should compile to BLSI (careful: the
+            // Intel compiler seems to fail)
             int r =
-                roaring_trailing_zeroes(w);  // on x64, should compile to TZCNT
+                    roaring_trailing_zeroes(w);  // on x64, should compile to TZCNT
             uint32_t val = r + base;
             memcpy(out, &val,
                    sizeof(uint32_t));  // should be compiled as a MOV on x64
@@ -12129,7 +12120,7 @@ size_t bitset_extract_setbits_avx512_uint16(const uint64_t *array,
         uint8_t advance = (uint8_t)roaring_hamming(v);
 
         __m512i vbase =
-            _mm512_add_epi16(base_v, _mm512_set1_epi16((short)(i * 64)));
+                _mm512_add_epi16(base_v, _mm512_set1_epi16((short)(i * 64)));
         __m512i r1 = _mm512_cvtepi8_epi16(_mm512_extracti32x8_epi32(vec, 0));
         __m512i r2 = _mm512_cvtepi8_epi16(_mm512_extracti32x8_epi32(vec, 1));
 
@@ -12147,10 +12138,10 @@ size_t bitset_extract_setbits_avx512_uint16(const uint64_t *array,
         uint64_t w = array[i];
         while ((w != 0) && (out < safeout)) {
             uint64_t t =
-                w & (~w + 1);  // on x64, should compile to BLSI (careful: the
-                               // Intel compiler seems to fail)
+                    w & (~w + 1);  // on x64, should compile to BLSI (careful: the
+            // Intel compiler seems to fail)
             int r =
-                roaring_trailing_zeroes(w);  // on x64, should compile to TZCNT
+                    roaring_trailing_zeroes(w);  // on x64, should compile to TZCNT
             uint32_t val = r + base;
             memcpy(out, &val, sizeof(uint16_t));
             out++;
@@ -12184,9 +12175,9 @@ size_t bitset_extract_setbits_avx2(const uint64_t *words, size_t length,
                 uint8_t byteB = (uint8_t)(w >> 8);
                 w >>= 16;
                 __m256i vecA =
-                    _mm256_loadu_si256((const __m256i *)vecDecodeTable[byteA]);
+                        _mm256_loadu_si256((const __m256i *)vecDecodeTable[byteA]);
                 __m256i vecB =
-                    _mm256_loadu_si256((const __m256i *)vecDecodeTable[byteB]);
+                        _mm256_loadu_si256((const __m256i *)vecDecodeTable[byteB]);
                 uint8_t advanceA = lengthTable[byteA];
                 uint8_t advanceB = lengthTable[byteB];
                 vecA = _mm256_add_epi32(baseVec, vecA);
@@ -12205,10 +12196,10 @@ size_t bitset_extract_setbits_avx2(const uint64_t *words, size_t length,
         uint64_t w = words[i];
         while ((w != 0) && (out < safeout)) {
             uint64_t t =
-                w & (~w + 1);  // on x64, should compile to BLSI (careful: the
-                               // Intel compiler seems to fail)
+                    w & (~w + 1);  // on x64, should compile to BLSI (careful: the
+            // Intel compiler seems to fail)
             int r =
-                roaring_trailing_zeroes(w);  // on x64, should compile to TZCNT
+                    roaring_trailing_zeroes(w);  // on x64, should compile to TZCNT
             uint32_t val = r + base;
             memcpy(out, &val,
                    sizeof(uint32_t));  // should be compiled as a MOV on x64
@@ -12229,10 +12220,10 @@ size_t bitset_extract_setbits(const uint64_t *words, size_t length,
         uint64_t w = words[i];
         while (w != 0) {
             uint64_t t =
-                w & (~w + 1);  // on x64, should compile to BLSI (careful: the
-                               // Intel compiler seems to fail)
+                    w & (~w + 1);  // on x64, should compile to BLSI (careful: the
+            // Intel compiler seems to fail)
             int r =
-                roaring_trailing_zeroes(w);  // on x64, should compile to TZCNT
+                    roaring_trailing_zeroes(w);  // on x64, should compile to TZCNT
             uint32_t val = r + base;
             memcpy(out + outpos, &val,
                    sizeof(uint32_t));  // should be compiled as a MOV on x64
@@ -12245,8 +12236,8 @@ size_t bitset_extract_setbits(const uint64_t *words, size_t length,
 }
 
 size_t bitset_extract_intersection_setbits_uint16(
-    const uint64_t *__restrict__ words1, const uint64_t *__restrict__ words2,
-    size_t length, uint16_t *out, uint16_t base) {
+        const uint64_t *__restrict__ words1, const uint64_t *__restrict__ words2,
+        size_t length, uint16_t *out, uint16_t base) {
     int outpos = 0;
     for (size_t i = 0; i < length; ++i) {
         uint64_t w = words1[i] & words2[i];
@@ -12295,9 +12286,9 @@ size_t bitset_extract_setbits_sse_uint16(const uint64_t *words, size_t length,
                 uint8_t byteB = (uint8_t)(w >> 8);
                 w >>= 16;
                 __m128i vecA = _mm_loadu_si128(
-                    (const __m128i *)vecDecodeTable_uint16[byteA]);
+                        (const __m128i *)vecDecodeTable_uint16[byteA]);
                 __m128i vecB = _mm_loadu_si128(
-                    (const __m128i *)vecDecodeTable_uint16[byteB]);
+                        (const __m128i *)vecDecodeTable_uint16[byteB]);
                 uint8_t advanceA = lengthTable[byteA];
                 uint8_t advanceB = lengthTable[byteB];
                 vecA = _mm_add_epi16(baseVec, vecA);
@@ -12366,19 +12357,19 @@ static inline uint64_t _asm_bitset_set_list_withcard(uint64_t *words,
     // TODO: could unroll for performance, see bitset_set_list
     // bts is not available as an intrinsic in GCC
     __asm volatile(
-        "1:\n"
-        "movzwq (%[list]), %[pos]\n"
-        "shrx %[shift], %[pos], %[offset]\n"
-        "mov (%[words],%[offset],8), %[load]\n"
-        "bts %[pos], %[load]\n"
-        "mov %[load], (%[words],%[offset],8)\n"
-        "sbb $-1, %[card]\n"
-        "add $2, %[list]\n"
-        "cmp %[list], %[end]\n"
-        "jnz 1b"
-        : [card] "+&r"(card), [list] "+&r"(list), [load] "=&r"(load),
-          [pos] "=&r"(pos), [offset] "=&r"(offset)
-        : [end] "r"(end), [words] "r"(words), [shift] "r"(shift));
+            "1:\n"
+            "movzwq (%[list]), %[pos]\n"
+            "shrx %[shift], %[pos], %[offset]\n"
+            "mov (%[words],%[offset],8), %[load]\n"
+            "bts %[pos], %[load]\n"
+            "mov %[load], (%[words],%[offset],8)\n"
+            "sbb $-1, %[card]\n"
+            "add $2, %[list]\n"
+            "cmp %[list], %[end]\n"
+            "jnz 1b"
+            : [card] "+&r"(card), [list] "+&r"(list), [load] "=&r"(load),
+    [pos] "=&r"(pos), [offset] "=&r"(offset)
+    : [end] "r"(end), [words] "r"(words), [shift] "r"(shift));
     return card;
 }
 
@@ -12393,47 +12384,47 @@ static inline void _asm_bitset_set_list(uint64_t *words, const uint16_t *list,
     for (; list + 3 < end; list += 4) {
         pos = list[0];
         __asm volatile(
-            "shrx %[shift], %[pos], %[offset]\n"
-            "mov (%[words],%[offset],8), %[load]\n"
-            "bts %[pos], %[load]\n"
-            "mov %[load], (%[words],%[offset],8)"
-            : [load] "=&r"(load), [offset] "=&r"(offset)
-            : [words] "r"(words), [shift] "r"(shift), [pos] "r"(pos));
+                "shrx %[shift], %[pos], %[offset]\n"
+                "mov (%[words],%[offset],8), %[load]\n"
+                "bts %[pos], %[load]\n"
+                "mov %[load], (%[words],%[offset],8)"
+                : [load] "=&r"(load), [offset] "=&r"(offset)
+        : [words] "r"(words), [shift] "r"(shift), [pos] "r"(pos));
         pos = list[1];
         __asm volatile(
-            "shrx %[shift], %[pos], %[offset]\n"
-            "mov (%[words],%[offset],8), %[load]\n"
-            "bts %[pos], %[load]\n"
-            "mov %[load], (%[words],%[offset],8)"
-            : [load] "=&r"(load), [offset] "=&r"(offset)
-            : [words] "r"(words), [shift] "r"(shift), [pos] "r"(pos));
+                "shrx %[shift], %[pos], %[offset]\n"
+                "mov (%[words],%[offset],8), %[load]\n"
+                "bts %[pos], %[load]\n"
+                "mov %[load], (%[words],%[offset],8)"
+                : [load] "=&r"(load), [offset] "=&r"(offset)
+        : [words] "r"(words), [shift] "r"(shift), [pos] "r"(pos));
         pos = list[2];
         __asm volatile(
-            "shrx %[shift], %[pos], %[offset]\n"
-            "mov (%[words],%[offset],8), %[load]\n"
-            "bts %[pos], %[load]\n"
-            "mov %[load], (%[words],%[offset],8)"
-            : [load] "=&r"(load), [offset] "=&r"(offset)
-            : [words] "r"(words), [shift] "r"(shift), [pos] "r"(pos));
+                "shrx %[shift], %[pos], %[offset]\n"
+                "mov (%[words],%[offset],8), %[load]\n"
+                "bts %[pos], %[load]\n"
+                "mov %[load], (%[words],%[offset],8)"
+                : [load] "=&r"(load), [offset] "=&r"(offset)
+        : [words] "r"(words), [shift] "r"(shift), [pos] "r"(pos));
         pos = list[3];
         __asm volatile(
-            "shrx %[shift], %[pos], %[offset]\n"
-            "mov (%[words],%[offset],8), %[load]\n"
-            "bts %[pos], %[load]\n"
-            "mov %[load], (%[words],%[offset],8)"
-            : [load] "=&r"(load), [offset] "=&r"(offset)
-            : [words] "r"(words), [shift] "r"(shift), [pos] "r"(pos));
+                "shrx %[shift], %[pos], %[offset]\n"
+                "mov (%[words],%[offset],8), %[load]\n"
+                "bts %[pos], %[load]\n"
+                "mov %[load], (%[words],%[offset],8)"
+                : [load] "=&r"(load), [offset] "=&r"(offset)
+        : [words] "r"(words), [shift] "r"(shift), [pos] "r"(pos));
     }
 
     while (list != end) {
         pos = list[0];
         __asm volatile(
-            "shrx %[shift], %[pos], %[offset]\n"
-            "mov (%[words],%[offset],8), %[load]\n"
-            "bts %[pos], %[load]\n"
-            "mov %[load], (%[words],%[offset],8)"
-            : [load] "=&r"(load), [offset] "=&r"(offset)
-            : [words] "r"(words), [shift] "r"(shift), [pos] "r"(pos));
+                "shrx %[shift], %[pos], %[offset]\n"
+                "mov (%[words],%[offset],8), %[load]\n"
+                "bts %[pos], %[load]\n"
+                "mov %[load], (%[words],%[offset],8)"
+                : [load] "=&r"(load), [offset] "=&r"(offset)
+        : [words] "r"(words), [shift] "r"(shift), [pos] "r"(pos));
         list++;
     }
 }
@@ -12447,21 +12438,21 @@ static inline uint64_t _asm_bitset_clear_list(uint64_t *words, uint64_t card,
     if (!length) return card;
     // btr is not available as an intrinsic in GCC
     __asm volatile(
-        "1:\n"
-        "movzwq (%[list]), %[pos]\n"
-        "shrx %[shift], %[pos], %[offset]\n"
-        "mov (%[words],%[offset],8), %[load]\n"
-        "btr %[pos], %[load]\n"
-        "mov %[load], (%[words],%[offset],8)\n"
-        "sbb $0, %[card]\n"
-        "add $2, %[list]\n"
-        "cmp %[list], %[end]\n"
-        "jnz 1b"
-        : [card] "+&r"(card), [list] "+&r"(list), [load] "=&r"(load),
-          [pos] "=&r"(pos), [offset] "=&r"(offset)
-        : [end] "r"(end), [words] "r"(words), [shift] "r"(shift)
-        :
-        /* clobbers */ "memory");
+            "1:\n"
+            "movzwq (%[list]), %[pos]\n"
+            "shrx %[shift], %[pos], %[offset]\n"
+            "mov (%[words],%[offset],8), %[load]\n"
+            "btr %[pos], %[load]\n"
+            "mov %[load], (%[words],%[offset],8)\n"
+            "sbb $0, %[card]\n"
+            "add $2, %[list]\n"
+            "cmp %[list], %[end]\n"
+            "jnz 1b"
+            : [card] "+&r"(card), [list] "+&r"(list), [load] "=&r"(load),
+    [pos] "=&r"(pos), [offset] "=&r"(offset)
+    : [end] "r"(end), [words] "r"(words), [shift] "r"(shift)
+    :
+    /* clobbers */ "memory");
     return card;
 }
 
@@ -12609,7 +12600,7 @@ uint64_t bitset_flip_list_withcard(uint64_t *words, uint64_t card,
         newload = load ^ (UINT64_C(1) << index);
         // todo: is a branch here all that bad?
         card +=
-            (1 - 2 * (((UINT64_C(1) << index) & load) >> index));  // +1 or -1
+                (1 - 2 * (((UINT64_C(1) << index) & load) >> index));  // +1 or -1
         words[offset] = newload;
         list++;
     }
@@ -12664,7 +12655,7 @@ namespace internal {
 extern inline uint16_t array_container_minimum(const array_container_t *arr);
 extern inline uint16_t array_container_maximum(const array_container_t *arr);
 extern inline int array_container_index_equalorlarger(
-    const array_container_t *arr, uint16_t x);
+        const array_container_t *arr, uint16_t x);
 
 extern inline int array_container_rank(const array_container_t *arr,
                                        uint16_t x);
@@ -12679,7 +12670,7 @@ extern inline bool array_container_contains(const array_container_t *arr,
                                             uint16_t pos);
 extern inline int array_container_cardinality(const array_container_t *array);
 extern inline bool array_container_nonzero_cardinality(
-    const array_container_t *array);
+        const array_container_t *array);
 extern inline int32_t array_container_serialized_size_in_bytes(int32_t card);
 extern inline bool array_container_empty(const array_container_t *array);
 extern inline bool array_container_full(const array_container_t *array);
@@ -12689,7 +12680,7 @@ array_container_t *array_container_create_given_capacity(int32_t size) {
     array_container_t *container;
 
     if ((container = (array_container_t *)roaring_malloc(
-             sizeof(array_container_t))) == NULL) {
+            sizeof(array_container_t))) == NULL) {
         return NULL;
     }
 
@@ -12715,7 +12706,7 @@ array_container_t *array_container_create(void) {
 /* Create a new array containing all values in [min,max). */
 array_container_t *array_container_create_range(uint32_t min, uint32_t max) {
     array_container_t *answer =
-        array_container_create_given_capacity(max - min + 1);
+            array_container_create_given_capacity(max - min + 1);
     if (answer == NULL) return answer;
     answer->cardinality = 0;
     for (uint32_t k = min; k < max; k++) {
@@ -12728,7 +12719,7 @@ array_container_t *array_container_create_range(uint32_t min, uint32_t max) {
 ALLOW_UNALIGNED
 array_container_t *array_container_clone(const array_container_t *src) {
     array_container_t *newcontainer =
-        array_container_create_given_capacity(src->capacity);
+            array_container_create_given_capacity(src->capacity);
     if (newcontainer == NULL) return NULL;
 
     newcontainer->cardinality = src->cardinality;
@@ -12776,7 +12767,7 @@ int array_container_shrink_to_fit(array_container_t *src) {
     } else {
         uint16_t *oldarray = src->array;
         src->array = (uint16_t *)roaring_realloc(
-            oldarray, src->capacity * sizeof(uint16_t));
+                oldarray, src->capacity * sizeof(uint16_t));
         if (src->array == NULL) roaring_free(oldarray);  // should never happen?
     }
     return savings;
@@ -12794,9 +12785,9 @@ void array_container_free(array_container_t *arr) {
 
 static inline int32_t grow_capacity(int32_t capacity) {
     return (capacity <= 0)   ? ARRAY_DEFAULT_INIT_SIZE
-           : capacity < 64   ? capacity * 2
-           : capacity < 1024 ? capacity * 3 / 2
-                             : capacity * 5 / 4;
+                             : capacity < 64   ? capacity * 2
+                                               : capacity < 1024 ? capacity * 3 / 2
+                                                                 : capacity * 5 / 4;
 }
 
 static inline int32_t clamp(int32_t val, int32_t min, int32_t max) {
@@ -12813,7 +12804,7 @@ void array_container_grow(array_container_t *container, int32_t min,
 
     if (preserve) {
         container->array =
-            (uint16_t *)roaring_realloc(array, new_capacity * sizeof(uint16_t));
+                (uint16_t *)roaring_realloc(array, new_capacity * sizeof(uint16_t));
         if (container->array == NULL) roaring_free(array);
     } else {
         // Jon Strabala reports that some tools complain otherwise
@@ -12821,7 +12812,7 @@ void array_container_grow(array_container_t *container, int32_t min,
             roaring_free(array);
         }
         container->array =
-            (uint16_t *)roaring_malloc(new_capacity * sizeof(uint16_t));
+                (uint16_t *)roaring_malloc(new_capacity * sizeof(uint16_t));
     }
 
     // if realloc fails, we have container->array == NULL.
@@ -12859,7 +12850,7 @@ void array_container_union(const array_container_t *array_1,
         array_container_grow(out, max_cardinality, false);
     }
     out->cardinality = (int32_t)fast_union_uint16(
-        array_1->array, card_1, array_2->array, card_2, out->array);
+            array_1->array, card_1, array_2->array, card_2, out->array);
 }
 
 /* Computes the  difference of array1 and array2 and write the result
@@ -12875,12 +12866,12 @@ void array_container_andnot(const array_container_t *array_1,
     if ((croaring_hardware_support() & ROARING_SUPPORTS_AVX2) &&
         (out != array_1) && (out != array_2)) {
         out->cardinality = difference_vector16(
-            array_1->array, array_1->cardinality, array_2->array,
-            array_2->cardinality, out->array);
+                array_1->array, array_1->cardinality, array_2->array,
+                array_2->cardinality, out->array);
     } else {
         out->cardinality =
-            difference_uint16(array_1->array, array_1->cardinality,
-                              array_2->array, array_2->cardinality, out->array);
+                difference_uint16(array_1->array, array_1->cardinality,
+                                  array_2->array, array_2->cardinality, out->array);
     }
 #else
     out->cardinality =
@@ -12906,12 +12897,12 @@ void array_container_xor(const array_container_t *array_1,
 #if CROARING_IS_X64
     if (croaring_hardware_support() & ROARING_SUPPORTS_AVX2) {
         out->cardinality =
-            xor_vector16(array_1->array, array_1->cardinality, array_2->array,
-                         array_2->cardinality, out->array);
+                xor_vector16(array_1->array, array_1->cardinality, array_2->array,
+                             array_2->cardinality, out->array);
     } else {
         out->cardinality =
-            xor_uint16(array_1->array, array_1->cardinality, array_2->array,
-                       array_2->cardinality, out->array);
+                xor_uint16(array_1->array, array_1->cardinality, array_2->array,
+                           array_2->cardinality, out->array);
     }
 #else
     out->cardinality =
@@ -12947,18 +12938,18 @@ void array_container_intersection(const array_container_t *array1,
 
     if (card_1 * threshold < card_2) {
         out->cardinality = intersect_skewed_uint16(
-            array1->array, card_1, array2->array, card_2, out->array);
+                array1->array, card_1, array2->array, card_2, out->array);
     } else if (card_2 * threshold < card_1) {
         out->cardinality = intersect_skewed_uint16(
-            array2->array, card_2, array1->array, card_1, out->array);
+                array2->array, card_2, array1->array, card_1, out->array);
     } else {
 #if CROARING_IS_X64
         if (croaring_hardware_support() & ROARING_SUPPORTS_AVX2) {
             out->cardinality = intersect_vector16(
-                array1->array, card_1, array2->array, card_2, out->array);
+                    array1->array, card_1, array2->array, card_2, out->array);
         } else {
             out->cardinality = intersect_uint16(
-                array1->array, card_1, array2->array, card_2, out->array);
+                    array1->array, card_1, array2->array, card_2, out->array);
         }
 #else
         out->cardinality = intersect_uint16(array1->array, card_1,
@@ -13021,18 +13012,18 @@ void array_container_intersection_inplace(array_container_t *src_1,
     const int threshold = 64;  // subject to tuning
     if (card_1 * threshold < card_2) {
         src_1->cardinality = intersect_skewed_uint16(
-            src_1->array, card_1, src_2->array, card_2, src_1->array);
+                src_1->array, card_1, src_2->array, card_2, src_1->array);
     } else if (card_2 * threshold < card_1) {
         src_1->cardinality = intersect_skewed_uint16(
-            src_2->array, card_2, src_1->array, card_1, src_1->array);
+                src_2->array, card_2, src_1->array, card_1, src_1->array);
     } else {
 #if CROARING_IS_X64
         if (croaring_hardware_support() & ROARING_SUPPORTS_AVX2) {
             src_1->cardinality = intersect_vector16_inplace(
-                src_1->array, card_1, src_2->array, card_2);
+                    src_1->array, card_1, src_2->array, card_2);
         } else {
             src_1->cardinality = intersect_uint16(
-                src_1->array, card_1, src_2->array, card_2, src_1->array);
+                    src_1->array, card_1, src_2->array, card_2, src_1->array);
         }
 #else
         src_1->cardinality = intersect_uint16(
@@ -13054,7 +13045,7 @@ int array_container_to_uint32_array(void *vout, const array_container_t *cont,
 #endif
     if (support & ROARING_SUPPORTS_AVX2) {
         return array_container_to_uint32_array_vector16(
-            vout, cont->array, cont->cardinality, base);
+                vout, cont->array, cont->cardinality, base);
     }
 #endif  // CROARING_IS_X64
     int outpos = 0;
@@ -13245,7 +13236,7 @@ namespace internal {
 #endif
 
 extern inline int bitset_container_cardinality(
-    const bitset_container_t *bitset);
+        const bitset_container_t *bitset);
 extern inline void bitset_container_set(bitset_container_t *bitset,
                                         uint16_t pos);
 // unused at this time:
@@ -13275,7 +13266,7 @@ void bitset_container_set_all(bitset_container_t *bitset) {
 /* Create a new bitset. Return NULL in case of failure. */
 bitset_container_t *bitset_container_create(void) {
     bitset_container_t *bitset =
-        (bitset_container_t *)roaring_malloc(sizeof(bitset_container_t));
+            (bitset_container_t *)roaring_malloc(sizeof(bitset_container_t));
 
     if (!bitset) {
         return NULL;
@@ -13293,7 +13284,7 @@ bitset_container_t *bitset_container_create(void) {
     }
 #endif
     bitset->words = (uint64_t *)roaring_aligned_malloc(
-        align_size, sizeof(uint64_t) * BITSET_CONTAINER_SIZE_IN_WORDS);
+            align_size, sizeof(uint64_t) * BITSET_CONTAINER_SIZE_IN_WORDS);
     if (!bitset->words) {
         roaring_free(bitset);
         return NULL;
@@ -13323,8 +13314,8 @@ void bitset_container_add_from_range(bitset_container_t *bitset, uint32_t min,
         bitset->cardinality = (max - min + step - 1) / step;
         if (firstword == endword) {
             bitset->words[firstword] |=
-                mask & (((~UINT64_C(0)) << (min % 64)) &
-                        ((~UINT64_C(0)) >> ((~max + 1) % 64)));
+                    mask & (((~UINT64_C(0)) << (min % 64)) &
+                            ((~UINT64_C(0)) >> ((~max + 1) % 64)));
             return;
         }
         bitset->words[firstword] = mask & ((~UINT64_C(0)) << (min % 64));
@@ -13352,7 +13343,7 @@ void bitset_container_free(bitset_container_t *bitset) {
 ALLOW_UNALIGNED
 bitset_container_t *bitset_container_clone(const bitset_container_t *src) {
     bitset_container_t *bitset =
-        (bitset_container_t *)roaring_malloc(sizeof(bitset_container_t));
+            (bitset_container_t *)roaring_malloc(sizeof(bitset_container_t));
 
     if (!bitset) {
         return NULL;
@@ -13369,7 +13360,7 @@ bitset_container_t *bitset_container_clone(const bitset_container_t *src) {
     }
 #endif
     bitset->words = (uint64_t *)roaring_aligned_malloc(
-        align_size, sizeof(uint64_t) * BITSET_CONTAINER_SIZE_IN_WORDS);
+            align_size, sizeof(uint64_t) * BITSET_CONTAINER_SIZE_IN_WORDS);
     if (!bitset->words) {
         roaring_free(bitset);
         return NULL;
@@ -13447,7 +13438,7 @@ void bitset_container_set_range(bitset_container_t *bitset, uint32_t begin,
                                 uint32_t end) {
     bitset_set_range(bitset->words, begin, end);
     bitset->cardinality =
-        bitset_container_compute_cardinality(bitset);  // could be smarter
+            bitset_container_compute_cardinality(bitset);  // could be smarter
 }
 
 bool bitset_container_intersect(const bitset_container_t *src_1,
@@ -13462,15 +13453,15 @@ bool bitset_container_intersect(const bitset_container_t *src_1,
 }
 
 #if CROARING_IS_X64
-#ifndef CROARING_WORDS_IN_AVX2_REG
-#define CROARING_WORDS_IN_AVX2_REG sizeof(__m256i) / sizeof(uint64_t)
+#ifndef WORDS_IN_AVX2_REG
+#define WORDS_IN_AVX2_REG sizeof(__m256i) / sizeof(uint64_t)
 #endif
 #ifndef WORDS_IN_AVX512_REG
 #define WORDS_IN_AVX512_REG sizeof(__m512i) / sizeof(uint64_t)
 #endif
 /* Get the number of bits set (force computation) */
 static inline int _scalar_bitset_container_compute_cardinality(
-    const bitset_container_t *bitset) {
+        const bitset_container_t *bitset) {
     const uint64_t *words = bitset->words;
     int32_t sum = 0;
     for (int i = 0; i < BITSET_CONTAINER_SIZE_IN_WORDS; i += 4) {
@@ -13487,17 +13478,17 @@ int bitset_container_compute_cardinality(const bitset_container_t *bitset) {
 #if CROARING_COMPILER_SUPPORTS_AVX512
     if (support & ROARING_SUPPORTS_AVX512) {
         return (int)avx512_vpopcount(
-            (const __m512i *)bitset->words,
-            BITSET_CONTAINER_SIZE_IN_WORDS / (WORDS_IN_AVX512_REG));
+                (const __m512i *)bitset->words,
+                BITSET_CONTAINER_SIZE_IN_WORDS / (WORDS_IN_AVX512_REG));
     } else
 #endif  // CROARING_COMPILER_SUPPORTS_AVX512
-        if (support & ROARING_SUPPORTS_AVX2) {
-            return (int)avx2_harley_seal_popcount256(
+    if (support & ROARING_SUPPORTS_AVX2) {
+        return (int)avx2_harley_seal_popcount256(
                 (const __m256i *)bitset->words,
-                BITSET_CONTAINER_SIZE_IN_WORDS / (CROARING_WORDS_IN_AVX2_REG));
-        } else {
-            return _scalar_bitset_container_compute_cardinality(bitset);
-        }
+                BITSET_CONTAINER_SIZE_IN_WORDS / (WORDS_IN_AVX2_REG));
+    } else {
+        return _scalar_bitset_container_compute_cardinality(bitset);
+    }
 }
 
 #elif defined(CROARING_USENEON)
@@ -13543,7 +13534,7 @@ int bitset_container_compute_cardinality(const bitset_container_t *bitset) {
 
 #if CROARING_IS_X64
 
-#define CROARING_BITSET_CONTAINER_FN_REPEAT 8
+#define BITSET_CONTAINER_FN_REPEAT 8
 #ifndef WORDS_IN_AVX512_REG
 #define WORDS_IN_AVX512_REG sizeof(__m512i) / sizeof(uint64_t)
 #endif  // WORDS_IN_AVX512_REG
@@ -13551,7 +13542,7 @@ int bitset_container_compute_cardinality(const bitset_container_t *bitset) {
 /* Computes a binary operation (eg union) on bitset1 and bitset2 and write the
    result to bitsetout */
 // clang-format off
-#define CROARING_AVX512_BITSET_CONTAINER_FN1(before, opname, opsymbol, avx_intrinsic,   \
+#define AVX512_BITSET_CONTAINER_FN1(before, opname, opsymbol, avx_intrinsic,   \
                                 neon_intrinsic, after)                         \
   static inline int _avx512_bitset_container_##opname##_nocard(                \
       const bitset_container_t *src_1, const bitset_container_t *src_2,        \
@@ -13605,7 +13596,7 @@ int bitset_container_compute_cardinality(const bitset_container_t *bitset) {
     return dst->cardinality;                                            \
   }
 
-#define CROARING_AVX512_BITSET_CONTAINER_FN2(before, opname, opsymbol, avx_intrinsic,           \
+#define AVX512_BITSET_CONTAINER_FN2(before, opname, opsymbol, avx_intrinsic,           \
                                 neon_intrinsic, after)                                 \
   /* next, a version that updates cardinality*/                                        \
   static inline int _avx512_bitset_container_##opname(const bitset_container_t *src_1, \
@@ -13619,7 +13610,7 @@ int bitset_container_compute_cardinality(const bitset_container_t *bitset) {
     return dst->cardinality;                                                            \
   }
 
-#define CROARING_AVX512_BITSET_CONTAINER_FN3(before, opname, opsymbol, avx_intrinsic,            \
+#define AVX512_BITSET_CONTAINER_FN3(before, opname, opsymbol, avx_intrinsic,            \
                                 neon_intrinsic, after)                                  \
   /* next, a version that just computes the cardinality*/                               \
   static inline int _avx512_bitset_container_##opname##_justcard(                       \
@@ -13634,85 +13625,85 @@ int bitset_container_compute_cardinality(const bitset_container_t *bitset) {
 // we duplicate the function because other containers use the "or" term, makes API more consistent
 #if CROARING_COMPILER_SUPPORTS_AVX512
 CROARING_TARGET_AVX512
-CROARING_AVX512_BITSET_CONTAINER_FN1(CROARING_TARGET_AVX512, or,    |, _mm512_or_si512, vorrq_u64, CROARING_UNTARGET_AVX512)
+AVX512_BITSET_CONTAINER_FN1(CROARING_TARGET_AVX512, or,    |, _mm512_or_si512, vorrq_u64, CROARING_UNTARGET_AVX512)
 CROARING_UNTARGET_AVX512
 CROARING_TARGET_AVX512
-CROARING_AVX512_BITSET_CONTAINER_FN1(CROARING_TARGET_AVX512, union, |, _mm512_or_si512, vorrq_u64, CROARING_UNTARGET_AVX512)
+AVX512_BITSET_CONTAINER_FN1(CROARING_TARGET_AVX512, union, |, _mm512_or_si512, vorrq_u64, CROARING_UNTARGET_AVX512)
 CROARING_UNTARGET_AVX512
 
 // we duplicate the function because other containers use the "intersection" term, makes API more consistent
 CROARING_TARGET_AVX512
-CROARING_AVX512_BITSET_CONTAINER_FN1(CROARING_TARGET_AVX512, and,          &, _mm512_and_si512, vandq_u64, CROARING_UNTARGET_AVX512)
+AVX512_BITSET_CONTAINER_FN1(CROARING_TARGET_AVX512, and,          &, _mm512_and_si512, vandq_u64, CROARING_UNTARGET_AVX512)
 CROARING_UNTARGET_AVX512
 CROARING_TARGET_AVX512
-CROARING_AVX512_BITSET_CONTAINER_FN1(CROARING_TARGET_AVX512, intersection, &, _mm512_and_si512, vandq_u64, CROARING_UNTARGET_AVX512)
+AVX512_BITSET_CONTAINER_FN1(CROARING_TARGET_AVX512, intersection, &, _mm512_and_si512, vandq_u64, CROARING_UNTARGET_AVX512)
 CROARING_UNTARGET_AVX512
 
 CROARING_TARGET_AVX512
-CROARING_AVX512_BITSET_CONTAINER_FN1(CROARING_TARGET_AVX512, xor,    ^,  _mm512_xor_si512,    veorq_u64, CROARING_UNTARGET_AVX512)
+AVX512_BITSET_CONTAINER_FN1(CROARING_TARGET_AVX512, xor,    ^,  _mm512_xor_si512,    veorq_u64, CROARING_UNTARGET_AVX512)
 CROARING_UNTARGET_AVX512
 CROARING_TARGET_AVX512
-CROARING_AVX512_BITSET_CONTAINER_FN1(CROARING_TARGET_AVX512, andnot, &~, _mm512_andnot_si512, vbicq_u64, CROARING_UNTARGET_AVX512)
+AVX512_BITSET_CONTAINER_FN1(CROARING_TARGET_AVX512, andnot, &~, _mm512_andnot_si512, vbicq_u64, CROARING_UNTARGET_AVX512)
 CROARING_UNTARGET_AVX512
 
 // we duplicate the function because other containers use the "or" term, makes API more consistent
 CROARING_TARGET_AVX512
-CROARING_AVX512_BITSET_CONTAINER_FN2(CROARING_TARGET_AVX512, or,    |, _mm512_or_si512, vorrq_u64, CROARING_UNTARGET_AVX512)
+AVX512_BITSET_CONTAINER_FN2(CROARING_TARGET_AVX512, or,    |, _mm512_or_si512, vorrq_u64, CROARING_UNTARGET_AVX512)
 CROARING_UNTARGET_AVX512
 CROARING_TARGET_AVX512
-CROARING_AVX512_BITSET_CONTAINER_FN2(CROARING_TARGET_AVX512, union, |, _mm512_or_si512, vorrq_u64, CROARING_UNTARGET_AVX512)
+AVX512_BITSET_CONTAINER_FN2(CROARING_TARGET_AVX512, union, |, _mm512_or_si512, vorrq_u64, CROARING_UNTARGET_AVX512)
 CROARING_UNTARGET_AVX512
 
 // we duplicate the function because other containers use the "intersection" term, makes API more consistent
 CROARING_TARGET_AVX512
-CROARING_AVX512_BITSET_CONTAINER_FN2(CROARING_TARGET_AVX512, and,          &, _mm512_and_si512, vandq_u64, CROARING_UNTARGET_AVX512)
+AVX512_BITSET_CONTAINER_FN2(CROARING_TARGET_AVX512, and,          &, _mm512_and_si512, vandq_u64, CROARING_UNTARGET_AVX512)
 CROARING_UNTARGET_AVX512
 CROARING_TARGET_AVX512
-CROARING_AVX512_BITSET_CONTAINER_FN2(CROARING_TARGET_AVX512, intersection, &, _mm512_and_si512, vandq_u64, CROARING_UNTARGET_AVX512)
+AVX512_BITSET_CONTAINER_FN2(CROARING_TARGET_AVX512, intersection, &, _mm512_and_si512, vandq_u64, CROARING_UNTARGET_AVX512)
 CROARING_UNTARGET_AVX512
 
 CROARING_TARGET_AVX512
-CROARING_AVX512_BITSET_CONTAINER_FN2(CROARING_TARGET_AVX512, xor,    ^,  _mm512_xor_si512,    veorq_u64, CROARING_UNTARGET_AVX512)
+AVX512_BITSET_CONTAINER_FN2(CROARING_TARGET_AVX512, xor,    ^,  _mm512_xor_si512,    veorq_u64, CROARING_UNTARGET_AVX512)
 CROARING_UNTARGET_AVX512
 CROARING_TARGET_AVX512
-CROARING_AVX512_BITSET_CONTAINER_FN2(CROARING_TARGET_AVX512, andnot, &~, _mm512_andnot_si512, vbicq_u64, CROARING_UNTARGET_AVX512)
+AVX512_BITSET_CONTAINER_FN2(CROARING_TARGET_AVX512, andnot, &~, _mm512_andnot_si512, vbicq_u64, CROARING_UNTARGET_AVX512)
 CROARING_UNTARGET_AVX512
 
 // we duplicate the function because other containers use the "or" term, makes API more consistent
 CROARING_TARGET_AVX512
-CROARING_AVX512_BITSET_CONTAINER_FN3(CROARING_TARGET_AVX512, or,    |, _mm512_or_si512, vorrq_u64, CROARING_UNTARGET_AVX512)
+AVX512_BITSET_CONTAINER_FN3(CROARING_TARGET_AVX512, or,    |, _mm512_or_si512, vorrq_u64, CROARING_UNTARGET_AVX512)
 CROARING_UNTARGET_AVX512
 CROARING_TARGET_AVX512
-CROARING_AVX512_BITSET_CONTAINER_FN3(CROARING_TARGET_AVX512, union, |, _mm512_or_si512, vorrq_u64, CROARING_UNTARGET_AVX512)
+AVX512_BITSET_CONTAINER_FN3(CROARING_TARGET_AVX512, union, |, _mm512_or_si512, vorrq_u64, CROARING_UNTARGET_AVX512)
 CROARING_UNTARGET_AVX512
 
 // we duplicate the function because other containers use the "intersection" term, makes API more consistent
 CROARING_TARGET_AVX512
-CROARING_AVX512_BITSET_CONTAINER_FN3(CROARING_TARGET_AVX512, and,          &, _mm512_and_si512, vandq_u64, CROARING_UNTARGET_AVX512)
+AVX512_BITSET_CONTAINER_FN3(CROARING_TARGET_AVX512, and,          &, _mm512_and_si512, vandq_u64, CROARING_UNTARGET_AVX512)
 CROARING_UNTARGET_AVX512
 CROARING_TARGET_AVX512
-CROARING_AVX512_BITSET_CONTAINER_FN3(CROARING_TARGET_AVX512, intersection, &, _mm512_and_si512, vandq_u64, CROARING_UNTARGET_AVX512)
+AVX512_BITSET_CONTAINER_FN3(CROARING_TARGET_AVX512, intersection, &, _mm512_and_si512, vandq_u64, CROARING_UNTARGET_AVX512)
 CROARING_UNTARGET_AVX512
 
 CROARING_TARGET_AVX512
-CROARING_AVX512_BITSET_CONTAINER_FN3(CROARING_TARGET_AVX512, xor,    ^,  _mm512_xor_si512,    veorq_u64, CROARING_UNTARGET_AVX512)
+AVX512_BITSET_CONTAINER_FN3(CROARING_TARGET_AVX512, xor,    ^,  _mm512_xor_si512,    veorq_u64, CROARING_UNTARGET_AVX512)
 CROARING_UNTARGET_AVX512
 CROARING_TARGET_AVX512
-CROARING_AVX512_BITSET_CONTAINER_FN3(CROARING_TARGET_AVX512, andnot, &~, _mm512_andnot_si512, vbicq_u64, CROARING_UNTARGET_AVX512)
+AVX512_BITSET_CONTAINER_FN3(CROARING_TARGET_AVX512, andnot, &~, _mm512_andnot_si512, vbicq_u64, CROARING_UNTARGET_AVX512)
 CROARING_UNTARGET_AVX512
 #endif // CROARING_COMPILER_SUPPORTS_AVX512
 
-#ifndef CROARING_WORDS_IN_AVX2_REG
-#define CROARING_WORDS_IN_AVX2_REG sizeof(__m256i) / sizeof(uint64_t)
-#endif // CROARING_WORDS_IN_AVX2_REG
-#define CROARING_LOOP_SIZE                    \
+#ifndef WORDS_IN_AVX2_REG
+#define WORDS_IN_AVX2_REG sizeof(__m256i) / sizeof(uint64_t)
+#endif // WORDS_IN_AVX2_REG
+#define LOOP_SIZE                    \
     BITSET_CONTAINER_SIZE_IN_WORDS / \
-        ((CROARING_WORDS_IN_AVX2_REG)*CROARING_BITSET_CONTAINER_FN_REPEAT)
+        ((WORDS_IN_AVX2_REG)*BITSET_CONTAINER_FN_REPEAT)
 
 /* Computes a binary operation (eg union) on bitset1 and bitset2 and write the
    result to bitsetout */
 // clang-format off
-#define CROARING_AVX_BITSET_CONTAINER_FN1(before, opname, opsymbol, avx_intrinsic,               \
+#define AVX_BITSET_CONTAINER_FN1(before, opname, opsymbol, avx_intrinsic,               \
                                 neon_intrinsic, after)                                \
   static inline int _avx2_bitset_container_##opname##_nocard(                                \
       const bitset_container_t *src_1, const bitset_container_t *src_2,        \
@@ -13723,7 +13714,7 @@ CROARING_UNTARGET_AVX512
     uint8_t *out = (uint8_t *)dst->words;                                      \
     const int innerloop = 8;                                                   \
     for (size_t i = 0;                                                         \
-         i < BITSET_CONTAINER_SIZE_IN_WORDS / (CROARING_WORDS_IN_AVX2_REG);             \
+         i < BITSET_CONTAINER_SIZE_IN_WORDS / (WORDS_IN_AVX2_REG);             \
          i += innerloop) {                                                     \
       __m256i A1, A2, AO;                                                      \
       A1 = _mm256_lddqu_si256((const __m256i *)(words_1));                     \
@@ -13766,7 +13757,7 @@ CROARING_UNTARGET_AVX512
     return dst->cardinality;                                                   \
   }
 
-#define CROARING_AVX_BITSET_CONTAINER_FN2(before, opname, opsymbol, avx_intrinsic,               \
+#define AVX_BITSET_CONTAINER_FN2(before, opname, opsymbol, avx_intrinsic,               \
                                 neon_intrinsic, after)                                \
   /* next, a version that updates cardinality*/                                \
   static inline int _avx2_bitset_container_##opname(const bitset_container_t *src_1,         \
@@ -13777,11 +13768,11 @@ CROARING_UNTARGET_AVX512
     __m256i *out = (__m256i *)dst->words;                                      \
     dst->cardinality = (int32_t)avx2_harley_seal_popcount256andstore_##opname( \
         words_2, words_1, out,                                                 \
-        BITSET_CONTAINER_SIZE_IN_WORDS / (CROARING_WORDS_IN_AVX2_REG));                 \
+        BITSET_CONTAINER_SIZE_IN_WORDS / (WORDS_IN_AVX2_REG));                 \
     return dst->cardinality;                                                   \
   }                                                                            \
 
-#define CROARING_AVX_BITSET_CONTAINER_FN3(before, opname, opsymbol, avx_intrinsic,               \
+#define AVX_BITSET_CONTAINER_FN3(before, opname, opsymbol, avx_intrinsic,               \
                                 neon_intrinsic, after)                                \
   /* next, a version that just computes the cardinality*/                      \
   static inline int _avx2_bitset_container_##opname##_justcard(                              \
@@ -13789,77 +13780,77 @@ CROARING_UNTARGET_AVX512
     const __m256i *__restrict__ data1 = (const __m256i *)src_1->words;         \
     const __m256i *__restrict__ data2 = (const __m256i *)src_2->words;         \
     return (int)avx2_harley_seal_popcount256_##opname(                         \
-        data2, data1, BITSET_CONTAINER_SIZE_IN_WORDS / (CROARING_WORDS_IN_AVX2_REG));   \
+        data2, data1, BITSET_CONTAINER_SIZE_IN_WORDS / (WORDS_IN_AVX2_REG));   \
   }
 
 
 // we duplicate the function because other containers use the "or" term, makes API more consistent
 CROARING_TARGET_AVX2
-CROARING_AVX_BITSET_CONTAINER_FN1(CROARING_TARGET_AVX2, or,    |, _mm256_or_si256, vorrq_u64, CROARING_UNTARGET_AVX2)
+AVX_BITSET_CONTAINER_FN1(CROARING_TARGET_AVX2, or,    |, _mm256_or_si256, vorrq_u64, CROARING_UNTARGET_AVX2)
 CROARING_UNTARGET_AVX2
 CROARING_TARGET_AVX2
-CROARING_AVX_BITSET_CONTAINER_FN1(CROARING_TARGET_AVX2, union, |, _mm256_or_si256, vorrq_u64, CROARING_UNTARGET_AVX2)
+AVX_BITSET_CONTAINER_FN1(CROARING_TARGET_AVX2, union, |, _mm256_or_si256, vorrq_u64, CROARING_UNTARGET_AVX2)
 CROARING_UNTARGET_AVX2
 
 // we duplicate the function because other containers use the "intersection" term, makes API more consistent
 CROARING_TARGET_AVX2
-CROARING_AVX_BITSET_CONTAINER_FN1(CROARING_TARGET_AVX2, and,          &, _mm256_and_si256, vandq_u64, CROARING_UNTARGET_AVX2)
+AVX_BITSET_CONTAINER_FN1(CROARING_TARGET_AVX2, and,          &, _mm256_and_si256, vandq_u64, CROARING_UNTARGET_AVX2)
 CROARING_UNTARGET_AVX2
 CROARING_TARGET_AVX2
-CROARING_AVX_BITSET_CONTAINER_FN1(CROARING_TARGET_AVX2, intersection, &, _mm256_and_si256, vandq_u64, CROARING_UNTARGET_AVX2)
+AVX_BITSET_CONTAINER_FN1(CROARING_TARGET_AVX2, intersection, &, _mm256_and_si256, vandq_u64, CROARING_UNTARGET_AVX2)
 CROARING_UNTARGET_AVX2
 
 CROARING_TARGET_AVX2
-CROARING_AVX_BITSET_CONTAINER_FN1(CROARING_TARGET_AVX2, xor,    ^,  _mm256_xor_si256,    veorq_u64, CROARING_UNTARGET_AVX2)
+AVX_BITSET_CONTAINER_FN1(CROARING_TARGET_AVX2, xor,    ^,  _mm256_xor_si256,    veorq_u64, CROARING_UNTARGET_AVX2)
 CROARING_UNTARGET_AVX2
 CROARING_TARGET_AVX2
-CROARING_AVX_BITSET_CONTAINER_FN1(CROARING_TARGET_AVX2, andnot, &~, _mm256_andnot_si256, vbicq_u64, CROARING_UNTARGET_AVX2)
+AVX_BITSET_CONTAINER_FN1(CROARING_TARGET_AVX2, andnot, &~, _mm256_andnot_si256, vbicq_u64, CROARING_UNTARGET_AVX2)
 CROARING_UNTARGET_AVX2
 
 // we duplicate the function because other containers use the "or" term, makes API more consistent
 CROARING_TARGET_AVX2
-CROARING_AVX_BITSET_CONTAINER_FN2(CROARING_TARGET_AVX2, or,    |, _mm256_or_si256, vorrq_u64, CROARING_UNTARGET_AVX2)
+AVX_BITSET_CONTAINER_FN2(CROARING_TARGET_AVX2, or,    |, _mm256_or_si256, vorrq_u64, CROARING_UNTARGET_AVX2)
 CROARING_UNTARGET_AVX2
 CROARING_TARGET_AVX2
-CROARING_AVX_BITSET_CONTAINER_FN2(CROARING_TARGET_AVX2, union, |, _mm256_or_si256, vorrq_u64, CROARING_UNTARGET_AVX2)
+AVX_BITSET_CONTAINER_FN2(CROARING_TARGET_AVX2, union, |, _mm256_or_si256, vorrq_u64, CROARING_UNTARGET_AVX2)
 CROARING_UNTARGET_AVX2
 
 // we duplicate the function because other containers use the "intersection" term, makes API more consistent
 CROARING_TARGET_AVX2
-CROARING_AVX_BITSET_CONTAINER_FN2(CROARING_TARGET_AVX2, and,          &, _mm256_and_si256, vandq_u64, CROARING_UNTARGET_AVX2)
+AVX_BITSET_CONTAINER_FN2(CROARING_TARGET_AVX2, and,          &, _mm256_and_si256, vandq_u64, CROARING_UNTARGET_AVX2)
 CROARING_UNTARGET_AVX2
 CROARING_TARGET_AVX2
-CROARING_AVX_BITSET_CONTAINER_FN2(CROARING_TARGET_AVX2, intersection, &, _mm256_and_si256, vandq_u64, CROARING_UNTARGET_AVX2)
+AVX_BITSET_CONTAINER_FN2(CROARING_TARGET_AVX2, intersection, &, _mm256_and_si256, vandq_u64, CROARING_UNTARGET_AVX2)
 CROARING_UNTARGET_AVX2
 
 CROARING_TARGET_AVX2
-CROARING_AVX_BITSET_CONTAINER_FN2(CROARING_TARGET_AVX2, xor,    ^,  _mm256_xor_si256,    veorq_u64, CROARING_UNTARGET_AVX2)
+AVX_BITSET_CONTAINER_FN2(CROARING_TARGET_AVX2, xor,    ^,  _mm256_xor_si256,    veorq_u64, CROARING_UNTARGET_AVX2)
 CROARING_UNTARGET_AVX2
 CROARING_TARGET_AVX2
-CROARING_AVX_BITSET_CONTAINER_FN2(CROARING_TARGET_AVX2, andnot, &~, _mm256_andnot_si256, vbicq_u64, CROARING_UNTARGET_AVX2)
+AVX_BITSET_CONTAINER_FN2(CROARING_TARGET_AVX2, andnot, &~, _mm256_andnot_si256, vbicq_u64, CROARING_UNTARGET_AVX2)
 CROARING_UNTARGET_AVX2
 
 // we duplicate the function because other containers use the "or" term, makes API more consistent
 CROARING_TARGET_AVX2
-CROARING_AVX_BITSET_CONTAINER_FN3(CROARING_TARGET_AVX2, or,    |, _mm256_or_si256, vorrq_u64, CROARING_UNTARGET_AVX2)
+AVX_BITSET_CONTAINER_FN3(CROARING_TARGET_AVX2, or,    |, _mm256_or_si256, vorrq_u64, CROARING_UNTARGET_AVX2)
 CROARING_UNTARGET_AVX2
 CROARING_TARGET_AVX2
-CROARING_AVX_BITSET_CONTAINER_FN3(CROARING_TARGET_AVX2, union, |, _mm256_or_si256, vorrq_u64, CROARING_UNTARGET_AVX2)
+AVX_BITSET_CONTAINER_FN3(CROARING_TARGET_AVX2, union, |, _mm256_or_si256, vorrq_u64, CROARING_UNTARGET_AVX2)
 CROARING_UNTARGET_AVX2
 
 // we duplicate the function because other containers use the "intersection" term, makes API more consistent
 CROARING_TARGET_AVX2
-CROARING_AVX_BITSET_CONTAINER_FN3(CROARING_TARGET_AVX2, and,          &, _mm256_and_si256, vandq_u64, CROARING_UNTARGET_AVX2)
+AVX_BITSET_CONTAINER_FN3(CROARING_TARGET_AVX2, and,          &, _mm256_and_si256, vandq_u64, CROARING_UNTARGET_AVX2)
 CROARING_UNTARGET_AVX2
 CROARING_TARGET_AVX2
-CROARING_AVX_BITSET_CONTAINER_FN3(CROARING_TARGET_AVX2, intersection, &, _mm256_and_si256, vandq_u64, CROARING_UNTARGET_AVX2)
+AVX_BITSET_CONTAINER_FN3(CROARING_TARGET_AVX2, intersection, &, _mm256_and_si256, vandq_u64, CROARING_UNTARGET_AVX2)
 CROARING_UNTARGET_AVX2
 
 CROARING_TARGET_AVX2
-CROARING_AVX_BITSET_CONTAINER_FN3(CROARING_TARGET_AVX2, xor,    ^,  _mm256_xor_si256,    veorq_u64, CROARING_UNTARGET_AVX2)
+AVX_BITSET_CONTAINER_FN3(CROARING_TARGET_AVX2, xor,    ^,  _mm256_xor_si256,    veorq_u64, CROARING_UNTARGET_AVX2)
 CROARING_UNTARGET_AVX2
 CROARING_TARGET_AVX2
-CROARING_AVX_BITSET_CONTAINER_FN3(CROARING_TARGET_AVX2, andnot, &~, _mm256_andnot_si256, vbicq_u64, CROARING_UNTARGET_AVX2)
+AVX_BITSET_CONTAINER_FN3(CROARING_TARGET_AVX2, andnot, &~, _mm256_andnot_si256, vbicq_u64, CROARING_UNTARGET_AVX2)
 CROARING_UNTARGET_AVX2
 
 
@@ -13921,7 +13912,7 @@ SCALAR_BITSET_CONTAINER_FN(xor,    ^,  _mm256_xor_si256,    veorq_u64)
 SCALAR_BITSET_CONTAINER_FN(andnot, &~, _mm256_andnot_si256, vbicq_u64)
 
 #if CROARING_COMPILER_SUPPORTS_AVX512
-#define CROARING_BITSET_CONTAINER_FN(opname, opsymbol, avx_intrinsic, neon_intrinsic)   \
+#define BITSET_CONTAINER_FN(opname, opsymbol, avx_intrinsic, neon_intrinsic)   \
   int bitset_container_##opname(const bitset_container_t *src_1,               \
                                 const bitset_container_t *src_2,               \
                                 bitset_container_t *dst) {                     \
@@ -13964,7 +13955,7 @@ SCALAR_BITSET_CONTAINER_FN(andnot, &~, _mm256_andnot_si256, vbicq_u64)
 #else // CROARING_COMPILER_SUPPORTS_AVX512
 
 
-#define CROARING_BITSET_CONTAINER_FN(opname, opsymbol, avx_intrinsic, neon_intrinsic)   \
+#define BITSET_CONTAINER_FN(opname, opsymbol, avx_intrinsic, neon_intrinsic)   \
   int bitset_container_##opname(const bitset_container_t *src_1,               \
                                 const bitset_container_t *src_2,               \
                                 bitset_container_t *dst) {                     \
@@ -13996,7 +13987,7 @@ SCALAR_BITSET_CONTAINER_FN(andnot, &~, _mm256_andnot_si256, vbicq_u64)
 
 #elif defined(CROARING_USENEON)
 
-#define CROARING_BITSET_CONTAINER_FN(opname, opsymbol, avx_intrinsic, neon_intrinsic)  \
+#define BITSET_CONTAINER_FN(opname, opsymbol, avx_intrinsic, neon_intrinsic)  \
 int bitset_container_##opname(const bitset_container_t *src_1,                \
                               const bitset_container_t *src_2,                \
                               bitset_container_t *dst) {                      \
@@ -14084,7 +14075,7 @@ int bitset_container_##opname##_justcard(const bitset_container_t *src_1,     \
 
 #else
 
-#define CROARING_BITSET_CONTAINER_FN(opname, opsymbol, avx_intrinsic, neon_intrinsic)  \
+#define BITSET_CONTAINER_FN(opname, opsymbol, avx_intrinsic, neon_intrinsic)  \
 int bitset_container_##opname(const bitset_container_t *src_1,            \
                               const bitset_container_t *src_2,            \
                               bitset_container_t *dst) {                  \
@@ -14132,40 +14123,40 @@ int bitset_container_##opname##_justcard(const bitset_container_t *src_1, \
 #endif // CROARING_IS_X64
 
 // we duplicate the function because other containers use the "or" term, makes API more consistent
-CROARING_BITSET_CONTAINER_FN(or,    |, _mm256_or_si256, vorrq_u64)
-CROARING_BITSET_CONTAINER_FN(union, |, _mm256_or_si256, vorrq_u64)
+BITSET_CONTAINER_FN(or,    |, _mm256_or_si256, vorrq_u64)
+BITSET_CONTAINER_FN(union, |, _mm256_or_si256, vorrq_u64)
 
 // we duplicate the function because other containers use the "intersection" term, makes API more consistent
-CROARING_BITSET_CONTAINER_FN(and,          &, _mm256_and_si256, vandq_u64)
-CROARING_BITSET_CONTAINER_FN(intersection, &, _mm256_and_si256, vandq_u64)
+BITSET_CONTAINER_FN(and,          &, _mm256_and_si256, vandq_u64)
+BITSET_CONTAINER_FN(intersection, &, _mm256_and_si256, vandq_u64)
 
-CROARING_BITSET_CONTAINER_FN(xor,    ^,  _mm256_xor_si256,    veorq_u64)
-CROARING_BITSET_CONTAINER_FN(andnot, &~, _mm256_andnot_si256, vbicq_u64)
+BITSET_CONTAINER_FN(xor,    ^,  _mm256_xor_si256,    veorq_u64)
+BITSET_CONTAINER_FN(andnot, &~, _mm256_andnot_si256, vbicq_u64)
 // clang-format On
 
 
 ALLOW_UNALIGNED
 int bitset_container_to_uint32_array(
-    uint32_t *out,
-    const bitset_container_t *bc,
-    uint32_t base
+        uint32_t *out,
+        const bitset_container_t *bc,
+        uint32_t base
 ){
 #if CROARING_IS_X64
-   int support = croaring_hardware_support();
+    int support = croaring_hardware_support();
 #if CROARING_COMPILER_SUPPORTS_AVX512
-   if(( support & ROARING_SUPPORTS_AVX512 ) &&  (bc->cardinality >= 8192))  // heuristic
-		return (int) bitset_extract_setbits_avx512(bc->words,
-                BITSET_CONTAINER_SIZE_IN_WORDS, out, bc->cardinality, base);
-   else
+    if(( support & ROARING_SUPPORTS_AVX512 ) &&  (bc->cardinality >= 8192))  // heuristic
+        return (int) bitset_extract_setbits_avx512(bc->words,
+                                                   BITSET_CONTAINER_SIZE_IN_WORDS, out, bc->cardinality, base);
+    else
 #endif
-   if(( support & ROARING_SUPPORTS_AVX2 ) &&  (bc->cardinality >= 8192))  // heuristic
-		return (int) bitset_extract_setbits_avx2(bc->words,
-                BITSET_CONTAINER_SIZE_IN_WORDS, out, bc->cardinality, base);
-	else
-		return (int) bitset_extract_setbits(bc->words,
-                BITSET_CONTAINER_SIZE_IN_WORDS, out, base);
+    if(( support & ROARING_SUPPORTS_AVX2 ) &&  (bc->cardinality >= 8192))  // heuristic
+        return (int) bitset_extract_setbits_avx2(bc->words,
+                                                 BITSET_CONTAINER_SIZE_IN_WORDS, out, bc->cardinality, base);
+    else
+        return (int) bitset_extract_setbits(bc->words,
+                                            BITSET_CONTAINER_SIZE_IN_WORDS, out, base);
 #else
-	return (int) bitset_extract_setbits(bc->words,
+    return (int) bitset_extract_setbits(bc->words,
                 BITSET_CONTAINER_SIZE_IN_WORDS, out, base);
 #endif
 }
@@ -14174,25 +14165,25 @@ int bitset_container_to_uint32_array(
  * Print this container using printf (useful for debugging).
  */
 void bitset_container_printf(const bitset_container_t * v) {
-	printf("{");
-	uint32_t base = 0;
-	bool iamfirst = true;// TODO: rework so that this is not necessary yet still readable
-	for (int i = 0; i < BITSET_CONTAINER_SIZE_IN_WORDS; ++i) {
-		uint64_t w = v->words[i];
-		while (w != 0) {
-			uint64_t t = w & (~w + 1);
-			int r = roaring_trailing_zeroes(w);
-			if(iamfirst) {// predicted to be false
-				printf("%u",base + r);
-				iamfirst = false;
-			} else {
-				printf(",%u",base + r);
-			}
-			w ^= t;
-		}
-		base += 64;
-	}
-	printf("}");
+    printf("{");
+    uint32_t base = 0;
+    bool iamfirst = true;// TODO: rework so that this is not necessary yet still readable
+    for (int i = 0; i < BITSET_CONTAINER_SIZE_IN_WORDS; ++i) {
+        uint64_t w = v->words[i];
+        while (w != 0) {
+            uint64_t t = w & (~w + 1);
+            int r = roaring_trailing_zeroes(w);
+            if(iamfirst) {// predicted to be false
+                printf("%u",base + r);
+                iamfirst = false;
+            } else {
+                printf(",%u",base + r);
+            }
+            w ^= t;
+        }
+        base += 64;
+    }
+    printf("}");
 }
 
 
@@ -14200,22 +14191,22 @@ void bitset_container_printf(const bitset_container_t * v) {
  * Print this container using printf as a comma-separated list of 32-bit integers starting at base.
  */
 void bitset_container_printf_as_uint32_array(const bitset_container_t * v, uint32_t base) {
-	bool iamfirst = true;// TODO: rework so that this is not necessary yet still readable
-	for (int i = 0; i < BITSET_CONTAINER_SIZE_IN_WORDS; ++i) {
-		uint64_t w = v->words[i];
-		while (w != 0) {
-			uint64_t t = w & (~w + 1);
-			int r = roaring_trailing_zeroes(w);
-			if(iamfirst) {// predicted to be false
-				printf("%u", r + base);
-				iamfirst = false;
-			} else {
-				printf(",%u",r + base);
-			}
-			w ^= t;
-		}
-		base += 64;
-	}
+    bool iamfirst = true;// TODO: rework so that this is not necessary yet still readable
+    for (int i = 0; i < BITSET_CONTAINER_SIZE_IN_WORDS; ++i) {
+        uint64_t w = v->words[i];
+        while (w != 0) {
+            uint64_t t = w & (~w + 1);
+            int r = roaring_trailing_zeroes(w);
+            if(iamfirst) {// predicted to be false
+                printf("%u", r + base);
+                iamfirst = false;
+            } else {
+                printf(",%u",r + base);
+            }
+            w ^= t;
+        }
+        base += 64;
+    }
 }
 
 /*
@@ -14245,63 +14236,63 @@ bool bitset_container_validate(const bitset_container_t *v, const char **reason)
 
 // TODO: use the fast lower bound, also
 int bitset_container_number_of_runs(bitset_container_t *bc) {
-  int num_runs = 0;
-  uint64_t next_word = bc->words[0];
+    int num_runs = 0;
+    uint64_t next_word = bc->words[0];
 
-  for (int i = 0; i < BITSET_CONTAINER_SIZE_IN_WORDS-1; ++i) {
+    for (int i = 0; i < BITSET_CONTAINER_SIZE_IN_WORDS-1; ++i) {
+        uint64_t word = next_word;
+        next_word = bc->words[i+1];
+        num_runs += roaring_hamming((~word) & (word << 1)) + ( (word >> 63) & ~next_word);
+    }
+
     uint64_t word = next_word;
-    next_word = bc->words[i+1];
-    num_runs += roaring_hamming((~word) & (word << 1)) + ( (word >> 63) & ~next_word);
-  }
-
-  uint64_t word = next_word;
-  num_runs += roaring_hamming((~word) & (word << 1));
-  if((word & 0x8000000000000000ULL) != 0)
-    num_runs++;
-  return num_runs;
+    num_runs += roaring_hamming((~word) & (word << 1));
+    if((word & 0x8000000000000000ULL) != 0)
+        num_runs++;
+    return num_runs;
 }
 
 
 int32_t bitset_container_write(const bitset_container_t *container,
-                                  char *buf) {
-	memcpy(buf, container->words, BITSET_CONTAINER_SIZE_IN_WORDS * sizeof(uint64_t));
-	return bitset_container_size_in_bytes(container);
+                               char *buf) {
+    memcpy(buf, container->words, BITSET_CONTAINER_SIZE_IN_WORDS * sizeof(uint64_t));
+    return bitset_container_size_in_bytes(container);
 }
 
 
 int32_t bitset_container_read(int32_t cardinality, bitset_container_t *container,
-		const char *buf)  {
-	container->cardinality = cardinality;
-	memcpy(container->words, buf, BITSET_CONTAINER_SIZE_IN_WORDS * sizeof(uint64_t));
-	return bitset_container_size_in_bytes(container);
+                              const char *buf)  {
+    container->cardinality = cardinality;
+    memcpy(container->words, buf, BITSET_CONTAINER_SIZE_IN_WORDS * sizeof(uint64_t));
+    return bitset_container_size_in_bytes(container);
 }
 
 bool bitset_container_iterate(const bitset_container_t *cont, uint32_t base, roaring_iterator iterator, void *ptr) {
-  for (int32_t i = 0; i < BITSET_CONTAINER_SIZE_IN_WORDS; ++i ) {
-    uint64_t w = cont->words[i];
-    while (w != 0) {
-      uint64_t t = w & (~w + 1);
-      int r = roaring_trailing_zeroes(w);
-      if(!iterator(r + base, ptr)) return false;
-      w ^= t;
+    for (int32_t i = 0; i < BITSET_CONTAINER_SIZE_IN_WORDS; ++i ) {
+        uint64_t w = cont->words[i];
+        while (w != 0) {
+            uint64_t t = w & (~w + 1);
+            int r = roaring_trailing_zeroes(w);
+            if(!iterator(r + base, ptr)) return false;
+            w ^= t;
+        }
+        base += 64;
     }
-    base += 64;
-  }
-  return true;
+    return true;
 }
 
 bool bitset_container_iterate64(const bitset_container_t *cont, uint32_t base, roaring_iterator64 iterator, uint64_t high_bits, void *ptr) {
-  for (int32_t i = 0; i < BITSET_CONTAINER_SIZE_IN_WORDS; ++i ) {
-    uint64_t w = cont->words[i];
-    while (w != 0) {
-      uint64_t t = w & (~w + 1);
-      int r = roaring_trailing_zeroes(w);
-      if(!iterator(high_bits | (uint64_t)(r + base), ptr)) return false;
-      w ^= t;
+    for (int32_t i = 0; i < BITSET_CONTAINER_SIZE_IN_WORDS; ++i ) {
+        uint64_t w = cont->words[i];
+        while (w != 0) {
+            uint64_t t = w & (~w + 1);
+            int r = roaring_trailing_zeroes(w);
+            if(!iterator(high_bits | (uint64_t)(r + base), ptr)) return false;
+            w ^= t;
+        }
+        base += 64;
     }
-    base += 64;
-  }
-  return true;
+    return true;
 }
 
 #if CROARING_IS_X64
@@ -14309,17 +14300,17 @@ bool bitset_container_iterate64(const bitset_container_t *cont, uint32_t base, r
 CROARING_TARGET_AVX512
 ALLOW_UNALIGNED
 static inline bool _avx512_bitset_container_equals(const bitset_container_t *container1, const bitset_container_t *container2) {
-  const __m512i *ptr1 = (const __m512i*)container1->words;
-  const __m512i *ptr2 = (const __m512i*)container2->words;
-  for (size_t i = 0; i < BITSET_CONTAINER_SIZE_IN_WORDS*sizeof(uint64_t)/64; i++) {
-      __m512i r1 = _mm512_loadu_si512(ptr1+i);
-      __m512i r2 = _mm512_loadu_si512(ptr2+i);
-      __mmask64 mask = _mm512_cmpeq_epi8_mask(r1, r2);
-      if ((uint64_t)mask != UINT64_MAX) {
-          return false;
-      }
-  }
-	return true;
+    const __m512i *ptr1 = (const __m512i*)container1->words;
+    const __m512i *ptr2 = (const __m512i*)container2->words;
+    for (size_t i = 0; i < BITSET_CONTAINER_SIZE_IN_WORDS*sizeof(uint64_t)/64; i++) {
+        __m512i r1 = _mm512_loadu_si512(ptr1+i);
+        __m512i r2 = _mm512_loadu_si512(ptr2+i);
+        __mmask64 mask = _mm512_cmpeq_epi8_mask(r1, r2);
+        if ((uint64_t)mask != UINT64_MAX) {
+            return false;
+        }
+    }
+    return true;
 }
 CROARING_UNTARGET_AVX512
 #endif // CROARING_COMPILER_SUPPORTS_AVX512
@@ -14329,58 +14320,58 @@ static inline bool _avx2_bitset_container_equals(const bitset_container_t *conta
     const __m256i *ptr1 = (const __m256i*)container1->words;
     const __m256i *ptr2 = (const __m256i*)container2->words;
     for (size_t i = 0; i < BITSET_CONTAINER_SIZE_IN_WORDS*sizeof(uint64_t)/32; i++) {
-      __m256i r1 = _mm256_loadu_si256(ptr1+i);
-      __m256i r2 = _mm256_loadu_si256(ptr2+i);
-      int mask = _mm256_movemask_epi8(_mm256_cmpeq_epi8(r1, r2));
-      if ((uint32_t)mask != UINT32_MAX) {
-          return false;
-      }
-  }
-	return true;
+        __m256i r1 = _mm256_loadu_si256(ptr1+i);
+        __m256i r2 = _mm256_loadu_si256(ptr2+i);
+        int mask = _mm256_movemask_epi8(_mm256_cmpeq_epi8(r1, r2));
+        if ((uint32_t)mask != UINT32_MAX) {
+            return false;
+        }
+    }
+    return true;
 }
 CROARING_UNTARGET_AVX2
 #endif // CROARING_IS_X64
 
 ALLOW_UNALIGNED
 bool bitset_container_equals(const bitset_container_t *container1, const bitset_container_t *container2) {
-  if((container1->cardinality != BITSET_UNKNOWN_CARDINALITY) && (container2->cardinality != BITSET_UNKNOWN_CARDINALITY)) {
-    if(container1->cardinality != container2->cardinality) {
-      return false;
+    if((container1->cardinality != BITSET_UNKNOWN_CARDINALITY) && (container2->cardinality != BITSET_UNKNOWN_CARDINALITY)) {
+        if(container1->cardinality != container2->cardinality) {
+            return false;
+        }
+        if (container1->cardinality == INT32_C(0x10000)) {
+            return true;
+        }
     }
-    if (container1->cardinality == INT32_C(0x10000)) {
-      return true;
-    }
-  }
 #if CROARING_IS_X64
-  int support = croaring_hardware_support();
+    int support = croaring_hardware_support();
 #if CROARING_COMPILER_SUPPORTS_AVX512
-  if( support & ROARING_SUPPORTS_AVX512 ) {
-    return _avx512_bitset_container_equals(container1, container2);
-  }
-  else
+    if( support & ROARING_SUPPORTS_AVX512 ) {
+        return _avx512_bitset_container_equals(container1, container2);
+    }
+    else
 #endif
-  if( support & ROARING_SUPPORTS_AVX2 ) {
-    return _avx2_bitset_container_equals(container1, container2);
-  }
+    if( support & ROARING_SUPPORTS_AVX2 ) {
+        return _avx2_bitset_container_equals(container1, container2);
+    }
 #endif
-  return memcmp(container1->words,
-                container2->words,
-                BITSET_CONTAINER_SIZE_IN_WORDS*sizeof(uint64_t)) == 0;
+    return memcmp(container1->words,
+                  container2->words,
+                  BITSET_CONTAINER_SIZE_IN_WORDS*sizeof(uint64_t)) == 0;
 }
 
 bool bitset_container_is_subset(const bitset_container_t *container1,
-                          const bitset_container_t *container2) {
+                                const bitset_container_t *container2) {
     if((container1->cardinality != BITSET_UNKNOWN_CARDINALITY) && (container2->cardinality != BITSET_UNKNOWN_CARDINALITY)) {
         if(container1->cardinality > container2->cardinality) {
             return false;
         }
     }
     for(int32_t i = 0; i < BITSET_CONTAINER_SIZE_IN_WORDS; ++i ) {
-		if((container1->words[i] & container2->words[i]) != container1->words[i]) {
-			return false;
-		}
-	}
-	return true;
+        if((container1->words[i] & container2->words[i]) != container1->words[i]) {
+            return false;
+        }
+    }
+    return true;
 }
 
 bool bitset_container_select(const bitset_container_t *container, uint32_t *start_rank, uint32_t rank, uint32_t *element) {
@@ -14417,98 +14408,98 @@ bool bitset_container_select(const bitset_container_t *container, uint32_t *star
 
 /* Returns the smallest value (assumes not empty) */
 uint16_t bitset_container_minimum(const bitset_container_t *container) {
-  for (int32_t i = 0; i < BITSET_CONTAINER_SIZE_IN_WORDS; ++i ) {
-    uint64_t w = container->words[i];
-    if (w != 0) {
-      int r = roaring_trailing_zeroes(w);
-      return r + i * 64;
+    for (int32_t i = 0; i < BITSET_CONTAINER_SIZE_IN_WORDS; ++i ) {
+        uint64_t w = container->words[i];
+        if (w != 0) {
+            int r = roaring_trailing_zeroes(w);
+            return r + i * 64;
+        }
     }
-  }
-  return UINT16_MAX;
+    return UINT16_MAX;
 }
 
 /* Returns the largest value (assumes not empty) */
 uint16_t bitset_container_maximum(const bitset_container_t *container) {
-  for (int32_t i = BITSET_CONTAINER_SIZE_IN_WORDS - 1; i > 0; --i ) {
-    uint64_t w = container->words[i];
-    if (w != 0) {
-      int r = roaring_leading_zeroes(w);
-      return i * 64 + 63  - r;
+    for (int32_t i = BITSET_CONTAINER_SIZE_IN_WORDS - 1; i > 0; --i ) {
+        uint64_t w = container->words[i];
+        if (w != 0) {
+            int r = roaring_leading_zeroes(w);
+            return i * 64 + 63  - r;
+        }
     }
-  }
-  return 0;
+    return 0;
 }
 
 /* Returns the number of values equal or smaller than x */
 int bitset_container_rank(const bitset_container_t *container, uint16_t x) {
-  // credit: aqrit
-  int sum = 0;
-  int i = 0;
-  for (int end = x / 64; i < end; i++){
-    sum += roaring_hamming(container->words[i]);
-  }
-  uint64_t lastword = container->words[i];
-  uint64_t lastpos = UINT64_C(1) << (x % 64);
-  uint64_t mask = lastpos + lastpos - 1; // smear right
-  sum += roaring_hamming(lastword & mask);
-  return sum;
-}
-
-uint32_t bitset_container_rank_many(const bitset_container_t *container, uint64_t start_rank, const uint32_t* begin, const uint32_t* end, uint64_t* ans){
-  const uint16_t high = (uint16_t)((*begin) >> 16);
-  int i = 0;
-  int sum = 0;
-  const uint32_t* iter = begin;
-  for(; iter != end; iter++) {
-      uint32_t x = *iter;
-      uint16_t xhigh = (uint16_t)(x >> 16);
-      if(xhigh != high) return iter - begin; // stop at next container
-
-      uint16_t xlow = (uint16_t)x;
-      for(int count = xlow / 64; i < count; i++){
-        sum += roaring_hamming(container->words[i]);
-      }
-      uint64_t lastword = container->words[i];
-      uint64_t lastpos = UINT64_C(1) << (xlow % 64);
-      uint64_t mask = lastpos + lastpos - 1; // smear right
-      *(ans++) = start_rank + sum + roaring_hamming(lastword & mask);
-  }
-  return iter - begin;
-}
-
-
-/* Returns the index of x , if not exsist return -1 */
-int bitset_container_get_index(const bitset_container_t *container, uint16_t x) {
-  if (bitset_container_get(container, x)) {
     // credit: aqrit
     int sum = 0;
     int i = 0;
     for (int end = x / 64; i < end; i++){
-      sum += roaring_hamming(container->words[i]);
+        sum += roaring_hamming(container->words[i]);
     }
     uint64_t lastword = container->words[i];
     uint64_t lastpos = UINT64_C(1) << (x % 64);
     uint64_t mask = lastpos + lastpos - 1; // smear right
     sum += roaring_hamming(lastword & mask);
-    return sum - 1;
-  } else {
-    return -1;
-  }
+    return sum;
+}
+
+uint32_t bitset_container_rank_many(const bitset_container_t *container, uint64_t start_rank, const uint32_t* begin, const uint32_t* end, uint64_t* ans){
+    const uint16_t high = (uint16_t)((*begin) >> 16);
+    int i = 0;
+    int sum = 0;
+    const uint32_t* iter = begin;
+    for(; iter != end; iter++) {
+        uint32_t x = *iter;
+        uint16_t xhigh = (uint16_t)(x >> 16);
+        if(xhigh != high) return iter - begin; // stop at next container
+
+        uint16_t xlow = (uint16_t)x;
+        for(int count = xlow / 64; i < count; i++){
+            sum += roaring_hamming(container->words[i]);
+        }
+        uint64_t lastword = container->words[i];
+        uint64_t lastpos = UINT64_C(1) << (xlow % 64);
+        uint64_t mask = lastpos + lastpos - 1; // smear right
+        *(ans++) = start_rank + sum + roaring_hamming(lastword & mask);
+    }
+    return iter - begin;
+}
+
+
+/* Returns the index of x , if not exsist return -1 */
+int bitset_container_get_index(const bitset_container_t *container, uint16_t x) {
+    if (bitset_container_get(container, x)) {
+        // credit: aqrit
+        int sum = 0;
+        int i = 0;
+        for (int end = x / 64; i < end; i++){
+            sum += roaring_hamming(container->words[i]);
+        }
+        uint64_t lastword = container->words[i];
+        uint64_t lastpos = UINT64_C(1) << (x % 64);
+        uint64_t mask = lastpos + lastpos - 1; // smear right
+        sum += roaring_hamming(lastword & mask);
+        return sum - 1;
+    } else {
+        return -1;
+    }
 }
 
 /* Returns the index of the first value equal or larger than x, or -1 */
 int bitset_container_index_equalorlarger(const bitset_container_t *container, uint16_t x) {
-  uint32_t x32 = x;
-  uint32_t k = x32 / 64;
-  uint64_t word = container->words[k];
-  const int diff = x32 - k * 64; // in [0,64)
-  word = (word >> diff) << diff; // a mask is faster, but we don't care
-  while(word == 0) {
-    k++;
-    if(k == BITSET_CONTAINER_SIZE_IN_WORDS) return -1;
-    word = container->words[k];
-  }
-  return k * 64 + roaring_trailing_zeroes(word);
+    uint32_t x32 = x;
+    uint32_t k = x32 / 64;
+    uint64_t word = container->words[k];
+    const int diff = x32 - k * 64; // in [0,64)
+    word = (word >> diff) << diff; // a mask is faster, but we don't care
+    while(word == 0) {
+        k++;
+        if(k == BITSET_CONTAINER_SIZE_IN_WORDS) return -1;
+        word = container->words[k];
+    }
+    return k * 64 + roaring_trailing_zeroes(word);
 }
 
 #ifdef __cplusplus
@@ -14537,10 +14528,10 @@ static inline uint32_t minimum_uint32(uint32_t a, uint32_t b) {
 }
 
 extern inline const container_t *container_unwrap_shared(
-    const container_t *candidate_shared_container, uint8_t *type);
+        const container_t *candidate_shared_container, uint8_t *type);
 
 extern inline container_t *container_mutable_unwrap_shared(
-    container_t *candidate_shared_container, uint8_t *type);
+        container_t *candidate_shared_container, uint8_t *type);
 
 extern inline int container_get_cardinality(const container_t *c,
                                             uint8_t typecode);
@@ -14627,7 +14618,7 @@ bool container_internal_validate(const container_t *container, uint8_t typecode,
     // are nested
     if (typecode == SHARED_CONTAINER_TYPE) {
         const shared_container_t *shared_container =
-            const_CAST_shared(container);
+                const_CAST_shared(container);
         if (croaring_refcount_get(&shared_container->counter) == 0) {
             *reason = "shared container has zero refcount";
             return false;
@@ -14696,7 +14687,7 @@ container_t *get_copy_of_container(container_t *c, uint8_t *typecode,
         assert(*typecode != SHARED_CONTAINER_TYPE);
 
         if ((shared_container = (shared_container_t *)roaring_malloc(
-                 sizeof(shared_container_t))) == NULL) {
+                sizeof(shared_container_t))) == NULL) {
             return NULL;
         }
 
@@ -14821,21 +14812,21 @@ roaring_container_iterator_t container_init_iterator(const container_t *c,
             int32_t index = wordindex * 64 + roaring_trailing_zeroes(word);
             *value = index;
             return ROARING_INIT_ROARING_CONTAINER_ITERATOR_T{
-                .index = index,
+                    .index = index,
             };
         }
         case ARRAY_CONTAINER_TYPE: {
             const array_container_t *ac = const_CAST_array(c);
             *value = ac->array[0];
             return ROARING_INIT_ROARING_CONTAINER_ITERATOR_T{
-                .index = 0,
+                    .index = 0,
             };
         }
         case RUN_CONTAINER_TYPE: {
             const run_container_t *rc = const_CAST_run(c);
             *value = rc->runs[0].value;
             return ROARING_INIT_ROARING_CONTAINER_ITERATOR_T{
-                .index = 0,
+                    .index = 0,
             };
         }
         default:
@@ -14858,10 +14849,10 @@ roaring_container_iterator_t container_init_iterator_last(const container_t *c,
             }
             // word is non-zero
             int32_t index =
-                wordindex * 64 + (63 - roaring_leading_zeroes(word));
+                    wordindex * 64 + (63 - roaring_leading_zeroes(word));
             *value = index;
             return ROARING_INIT_ROARING_CONTAINER_ITERATOR_T{
-                .index = index,
+                    .index = index,
             };
         }
         case ARRAY_CONTAINER_TYPE: {
@@ -14869,7 +14860,7 @@ roaring_container_iterator_t container_init_iterator_last(const container_t *c,
             int32_t index = ac->cardinality - 1;
             *value = ac->array[index];
             return ROARING_INIT_ROARING_CONTAINER_ITERATOR_T{
-                .index = index,
+                    .index = index,
             };
         }
         case RUN_CONTAINER_TYPE: {
@@ -14878,7 +14869,7 @@ roaring_container_iterator_t container_init_iterator_last(const container_t *c,
             const rle16_t *last_run = &rc->runs[run_index];
             *value = last_run->value + last_run->length;
             return ROARING_INIT_ROARING_CONTAINER_ITERATOR_T{
-                .index = run_index,
+                    .index = run_index,
             };
         }
         default:
@@ -14902,7 +14893,7 @@ bool container_iterator_next(const container_t *c, uint8_t typecode,
             }
 
             uint64_t word =
-                bc->words[wordindex] & (UINT64_MAX << (it->index % 64));
+                    bc->words[wordindex] & (UINT64_MAX << (it->index % 64));
             // next part could be optimized/simplified
             while (word == 0 &&
                    (wordindex + 1 < BITSET_CONTAINER_SIZE_IN_WORDS)) {
@@ -14932,7 +14923,7 @@ bool container_iterator_next(const container_t *c, uint8_t typecode,
 
             const run_container_t *rc = const_CAST_run(c);
             uint32_t limit =
-                rc->runs[it->index].value + rc->runs[it->index].length;
+                    rc->runs[it->index].value + rc->runs[it->index].length;
             if (*value < limit) {
                 (*value)++;
                 return true;
@@ -14964,7 +14955,7 @@ bool container_iterator_prev(const container_t *c, uint8_t typecode,
             const bitset_container_t *bc = const_CAST_bitset(c);
             int32_t wordindex = it->index / 64;
             uint64_t word =
-                bc->words[wordindex] & (UINT64_MAX >> (63 - (it->index % 64)));
+                    bc->words[wordindex] & (UINT64_MAX >> (63 - (it->index % 64)));
 
             while (word == 0 && --wordindex >= 0) {
                 word = bc->words[wordindex];
@@ -15060,7 +15051,7 @@ bool container_iterator_read_into_uint32(const container_t *c, uint8_t typecode,
             const bitset_container_t *bc = const_CAST_bitset(c);
             uint32_t wordindex = it->index / 64;
             uint64_t word =
-                bc->words[wordindex] & (UINT64_MAX << (it->index % 64));
+                    bc->words[wordindex] & (UINT64_MAX << (it->index % 64));
             do {
                 // Read set bits.
                 while (word != 0 && *consumed < count) {
@@ -15088,7 +15079,7 @@ bool container_iterator_read_into_uint32(const container_t *c, uint8_t typecode,
         case ARRAY_CONTAINER_TYPE: {
             const array_container_t *ac = const_CAST_array(c);
             uint32_t num_values =
-                minimum_uint32(ac->cardinality - it->index, count);
+                    minimum_uint32(ac->cardinality - it->index, count);
             for (uint32_t i = 0; i < num_values; i++) {
                 buf[i] = high16 | ac->array[it->index + i];
             }
@@ -15104,9 +15095,9 @@ bool container_iterator_read_into_uint32(const container_t *c, uint8_t typecode,
             const run_container_t *rc = const_CAST_run(c);
             do {
                 uint32_t largest_run_value =
-                    rc->runs[it->index].value + rc->runs[it->index].length;
+                        rc->runs[it->index].value + rc->runs[it->index].length;
                 uint32_t num_values = minimum_uint32(
-                    largest_run_value - *value_out + 1, count - *consumed);
+                        largest_run_value - *value_out + 1, count - *consumed);
                 for (uint32_t i = 0; i < num_values; i++) {
                     buf[i] = high16 | (*value_out + i);
                 }
@@ -15149,7 +15140,7 @@ bool container_iterator_read_into_uint64(const container_t *c, uint8_t typecode,
             const bitset_container_t *bc = const_CAST_bitset(c);
             uint32_t wordindex = it->index / 64;
             uint64_t word =
-                bc->words[wordindex] & (UINT64_MAX << (it->index % 64));
+                    bc->words[wordindex] & (UINT64_MAX << (it->index % 64));
             do {
                 // Read set bits.
                 while (word != 0 && *consumed < count) {
@@ -15177,7 +15168,7 @@ bool container_iterator_read_into_uint64(const container_t *c, uint8_t typecode,
         case ARRAY_CONTAINER_TYPE: {
             const array_container_t *ac = const_CAST_array(c);
             uint32_t num_values =
-                minimum_uint32(ac->cardinality - it->index, count);
+                    minimum_uint32(ac->cardinality - it->index, count);
             for (uint32_t i = 0; i < num_values; i++) {
                 buf[i] = high48 | ac->array[it->index + i];
             }
@@ -15193,9 +15184,9 @@ bool container_iterator_read_into_uint64(const container_t *c, uint8_t typecode,
             const run_container_t *rc = const_CAST_run(c);
             do {
                 uint32_t largest_run_value =
-                    rc->runs[it->index].value + rc->runs[it->index].length;
+                        rc->runs[it->index].value + rc->runs[it->index].length;
                 uint32_t num_values = minimum_uint32(
-                    largest_run_value - *value_out + 1, count - *consumed);
+                        largest_run_value - *value_out + 1, count - *consumed);
                 for (uint32_t i = 0; i < num_values; i++) {
                     buf[i] = high48 | (*value_out + i);
                 }
@@ -15270,7 +15261,7 @@ bitset_container_t *bitset_container_from_run(const run_container_t *arr) {
 
 array_container_t *array_container_from_run(const run_container_t *arr) {
     array_container_t *answer =
-        array_container_create_given_capacity(run_container_cardinality(arr));
+            array_container_create_given_capacity(run_container_cardinality(arr));
     answer->cardinality = 0;
     for (int rlepos = 0; rlepos < arr->n_runs; ++rlepos) {
         int run_start = arr->runs[rlepos].value;
@@ -15285,14 +15276,14 @@ array_container_t *array_container_from_run(const run_container_t *arr) {
 
 array_container_t *array_container_from_bitset(const bitset_container_t *bits) {
     array_container_t *result =
-        array_container_create_given_capacity(bits->cardinality);
+            array_container_create_given_capacity(bits->cardinality);
     result->cardinality = bits->cardinality;
 #if CROARING_IS_X64
 #if CROARING_COMPILER_SUPPORTS_AVX512
     if (croaring_hardware_support() & ROARING_SUPPORTS_AVX512) {
         bitset_extract_setbits_avx512_uint16(
-            bits->words, BITSET_CONTAINER_SIZE_IN_WORDS, result->array,
-            bits->cardinality, 0);
+                bits->words, BITSET_CONTAINER_SIZE_IN_WORDS, result->array,
+                bits->cardinality, 0);
     } else
 #endif
     {
@@ -15300,7 +15291,7 @@ array_container_t *array_container_from_bitset(const bitset_container_t *bits) {
         // (bitset_extract_setbits_sse_uint16)
         // because of the sparsity of the data
         bitset_extract_setbits_uint16(
-            bits->words, BITSET_CONTAINER_SIZE_IN_WORDS, result->array, 0);
+                bits->words, BITSET_CONTAINER_SIZE_IN_WORDS, result->array, 0);
     }
 #else
     // If the system is not x64, then we have no accelerated function.
@@ -15385,16 +15376,16 @@ container_t *convert_to_bitset_or_array_container(run_container_t *rc,
 container_t *convert_run_to_efficient_container(run_container_t *c,
                                                 uint8_t *typecode_after) {
     int32_t size_as_run_container =
-        run_container_serialized_size_in_bytes(c->n_runs);
+            run_container_serialized_size_in_bytes(c->n_runs);
 
     int32_t size_as_bitset_container =
-        bitset_container_serialized_size_in_bytes();
+            bitset_container_serialized_size_in_bytes();
     int32_t card = run_container_cardinality(c);
     int32_t size_as_array_container =
-        array_container_serialized_size_in_bytes(card);
+            array_container_serialized_size_in_bytes(card);
 
     int32_t min_size_non_run =
-        size_as_bitset_container < size_as_array_container
+            size_as_bitset_container < size_as_array_container
             ? size_as_bitset_container
             : size_as_array_container;
     if (size_as_run_container <= min_size_non_run) {  // no conversion
@@ -15432,7 +15423,7 @@ container_t *convert_run_to_efficient_container(run_container_t *c,
 
 // like convert_run_to_efficient_container but frees the old result if needed
 container_t *convert_run_to_efficient_container_and_free(
-    run_container_t *c, uint8_t *typecode_after) {
+        run_container_t *c, uint8_t *typecode_after) {
     container_t *answer = convert_run_to_efficient_container(c, typecode_after);
     if (answer != c) run_container_free(c);
     return answer;
@@ -15449,7 +15440,7 @@ container_t *convert_run_optimize(container_t *c, uint8_t typecode_original,
                                   uint8_t *typecode_after) {
     if (typecode_original == RUN_CONTAINER_TYPE) {
         container_t *newc =
-            convert_run_to_efficient_container(CAST_run(c), typecode_after);
+                convert_run_to_efficient_container(CAST_run(c), typecode_after);
         if (newc != c) {
             container_free(c, typecode_original);
         }
@@ -15459,10 +15450,10 @@ container_t *convert_run_optimize(container_t *c, uint8_t typecode_original,
         array_container_t *c_qua_array = CAST_array(c);
         int32_t n_runs = array_container_number_of_runs(c_qua_array);
         int32_t size_as_run_container =
-            run_container_serialized_size_in_bytes(n_runs);
+                run_container_serialized_size_in_bytes(n_runs);
         int32_t card = array_container_cardinality(c_qua_array);
         int32_t size_as_array_container =
-            array_container_serialized_size_in_bytes(card);
+                array_container_serialized_size_in_bytes(card);
 
         if (size_as_run_container >= size_as_array_container) {
             *typecode_after = ARRAY_CONTAINER_TYPE;
@@ -15495,9 +15486,9 @@ container_t *convert_run_optimize(container_t *c, uint8_t typecode_original,
         bitset_container_t *c_qua_bitset = CAST_bitset(c);
         int32_t n_runs = bitset_container_number_of_runs(c_qua_bitset);
         int32_t size_as_run_container =
-            run_container_serialized_size_in_bytes(n_runs);
+                run_container_serialized_size_in_bytes(n_runs);
         int32_t size_as_bitset_container =
-            bitset_container_serialized_size_in_bytes();
+                bitset_container_serialized_size_in_bytes();
 
         if (size_as_bitset_container <= size_as_run_container) {
             // no conversion needed.
@@ -15565,7 +15556,7 @@ container_t *container_from_run_range(const run_container_t *run, uint32_t min,
     }
     union_cardinality += max - min + 1;
     union_cardinality -=
-        bitset_lenrange_cardinality(bitset->words, min, max - min);
+            bitset_lenrange_cardinality(bitset->words, min, max - min);
     bitset_set_lenrange(bitset->words, min, max - min);
     bitset->cardinality = union_cardinality;
     if (bitset->cardinality <= DEFAULT_MAX_SIZE) {
@@ -15639,8 +15630,8 @@ bool bitset_array_container_andnot(const bitset_container_t *src_1,
     bitset_container_t *result = bitset_container_create();
     bitset_container_copy(src_1, result);
     result->cardinality =
-        (int32_t)bitset_clear_list(result->words, (uint64_t)result->cardinality,
-                                   src_2->array, (uint64_t)src_2->cardinality);
+            (int32_t)bitset_clear_list(result->words, (uint64_t)result->cardinality,
+                                       src_2->array, (uint64_t)src_2->cardinality);
 
     // do required type conversions.
     if (result->cardinality <= DEFAULT_MAX_SIZE) {
@@ -15664,8 +15655,8 @@ bool bitset_array_container_iandnot(bitset_container_t *src_1,
                                     container_t **dst) {
     *dst = src_1;
     src_1->cardinality =
-        (int32_t)bitset_clear_list(src_1->words, (uint64_t)src_1->cardinality,
-                                   src_2->array, (uint64_t)src_2->cardinality);
+            (int32_t)bitset_clear_list(src_1->words, (uint64_t)src_1->cardinality,
+                                       src_2->array, (uint64_t)src_2->cardinality);
 
     if (src_1->cardinality <= DEFAULT_MAX_SIZE) {
         *dst = array_container_from_bitset(src_1);
@@ -15703,7 +15694,7 @@ bool run_bitset_container_andnot(const run_container_t *src_1,
         *dst = answer;
         return false;
     } else {  // we guess it will be a bitset, though have to check guess when
-              // done
+        // done
         bitset_container_t *answer = bitset_container_clone(src_2);
 
         uint32_t last_pos = 0;
@@ -15816,7 +15807,7 @@ static int run_array_array_subtract(const run_container_t *rc,
                                     array_container_t *a_out) {
     int out_card = 0;
     int32_t in_array_pos =
-        -1;  // since advanceUntil always assumes we start the search AFTER this
+            -1;  // since advanceUntil always assumes we start the search AFTER this
 
     for (int rlepos = 0; rlepos < rc->n_runs; rlepos++) {
         int32_t start = rc->runs[rlepos].value;
@@ -15841,7 +15832,7 @@ static int run_array_array_subtract(const run_container_t *rc,
                         a_out->array[out_card++] = (uint16_t)i;
                     else  // 0 should ensure  we don't match
                         next_nonincluded =
-                            (in_array_pos + 1 >= a_in->cardinality)
+                                (in_array_pos + 1 >= a_in->cardinality)
                                 ? 0
                                 : a_in->array[++in_array_pos];
                 in_array_pos--;  // see again
@@ -15870,7 +15861,7 @@ int run_array_container_andnot(const run_container_t *src_1,
         }
         // Java's "lazyandNot.toEfficientContainer" thing
         run_container_t *answer = run_container_create_given_capacity(
-            card + array_container_cardinality(src_2));
+                card + array_container_cardinality(src_2));
 
         int rlepos = 0;
         int xrlepos = 0;  // "x" is src_2
@@ -15883,7 +15874,7 @@ int run_array_container_andnot(const run_container_t *src_1,
             if (end <= xstart) {
                 // output the first run
                 answer->runs[answer->n_runs++] =
-                    CROARING_MAKE_RLE16(start, end - start - 1);
+                        MAKE_RLE16(start, end - start - 1);
                 rlepos++;
                 if (rlepos < src_1->n_runs) {
                     start = src_1->runs[rlepos].value;
@@ -15898,7 +15889,7 @@ int run_array_container_andnot(const run_container_t *src_1,
             } else {
                 if (start < xstart) {
                     answer->runs[answer->n_runs++] =
-                        CROARING_MAKE_RLE16(start, xstart - start - 1);
+                            MAKE_RLE16(start, xstart - start - 1);
                 }
                 if (xstart + 1 < end) {
                     start = xstart + 1;
@@ -15912,8 +15903,7 @@ int run_array_container_andnot(const run_container_t *src_1,
             }
         }
         if (rlepos < src_1->n_runs) {
-            answer->runs[answer->n_runs++] =
-                CROARING_MAKE_RLE16(start, end - start - 1);
+            answer->runs[answer->n_runs++] = MAKE_RLE16(start, end - start - 1);
             rlepos++;
             if (rlepos < src_1->n_runs) {
                 memcpy(answer->runs + answer->n_runs, src_1->runs + rlepos,
@@ -16162,8 +16152,8 @@ bool run_container_equals_bitset(const run_container_t* container1,
                                  const bitset_container_t* container2) {
     int run_card = run_container_cardinality(container1);
     int bitset_card = (container2->cardinality != BITSET_UNKNOWN_CARDINALITY)
-                          ? container2->cardinality
-                          : bitset_container_compute_cardinality(container2);
+                      ? container2->cardinality
+                      : bitset_container_compute_cardinality(container2);
     if (bitset_card != run_card) {
         return false;
     }
@@ -16237,7 +16227,7 @@ void array_bitset_container_intersection(const array_container_t *src_1,
 
 /* Compute the size of the intersection of src_1 and src_2. */
 int array_bitset_container_intersection_cardinality(
-    const array_container_t *src_1, const bitset_container_t *src_2) {
+        const array_container_t *src_1, const bitset_container_t *src_2) {
     int32_t newcard = 0;
     const int32_t origcard = src_1->cardinality;
     for (int i = 0; i < origcard; ++i) {
@@ -16330,7 +16320,7 @@ bool run_bitset_container_intersection(const run_container_t *src_1,
                  ++runValue) {
                 answer->array[answer->cardinality] = (uint16_t)runValue;
                 answer->cardinality +=
-                    bitset_container_contains(src_2, runValue);
+                        bitset_container_contains(src_2, runValue);
             }
         }
         return false;
@@ -16428,7 +16418,7 @@ int array_run_container_intersection_cardinality(const array_container_t *src_1,
 /* Compute the intersection  between src_1 and src_2
  **/
 int run_bitset_container_intersection_cardinality(
-    const run_container_t *src_1, const bitset_container_t *src_2) {
+        const run_container_t *src_1, const bitset_container_t *src_2) {
     if (run_container_is_full(src_1)) {
         return bitset_container_cardinality(src_2);
     }
@@ -16436,7 +16426,7 @@ int run_bitset_container_intersection_cardinality(
     for (int32_t rlepos = 0; rlepos < src_1->n_runs; ++rlepos) {
         rle16_t rle = src_1->runs[rlepos];
         answer +=
-            bitset_lenrange_cardinality(src_2->words, rle.value, rle.length);
+                bitset_lenrange_cardinality(src_2->words, rle.value, rle.length);
     }
     return answer;
 }
@@ -16508,15 +16498,15 @@ bool bitset_bitset_container_intersection(const bitset_container_t *src_1,
     if (*dst != NULL) {
         CAST_array(*dst)->cardinality = newCardinality;
         bitset_extract_intersection_setbits_uint16(
-            src_1->words, src_2->words, BITSET_CONTAINER_SIZE_IN_WORDS,
-            CAST_array(*dst)->array, 0);
+                src_1->words, src_2->words, BITSET_CONTAINER_SIZE_IN_WORDS,
+                CAST_array(*dst)->array, 0);
     }
     return false;  // not a bitset
 }
 
 bool bitset_bitset_container_intersection_inplace(
-    bitset_container_t *src_1, const bitset_container_t *src_2,
-    container_t **dst) {
+        bitset_container_t *src_1, const bitset_container_t *src_2,
+        container_t **dst) {
     const int newCardinality = bitset_container_and_justcard(src_1, src_2);
     if (newCardinality > DEFAULT_MAX_SIZE) {
         *dst = src_1;
@@ -16528,8 +16518,8 @@ bool bitset_bitset_container_intersection_inplace(
     if (*dst != NULL) {
         CAST_array(*dst)->cardinality = newCardinality;
         bitset_extract_intersection_setbits_uint16(
-            src_1->words, src_2->words, BITSET_CONTAINER_SIZE_IN_WORDS,
-            CAST_array(*dst)->array, 0);
+                src_1->words, src_2->words, BITSET_CONTAINER_SIZE_IN_WORDS,
+                CAST_array(*dst)->array, 0);
     }
     return false;  // not a bitset
 }
@@ -16641,19 +16631,19 @@ bool array_container_negation_range(const array_container_t *src,
     }
 
     int32_t start_index =
-        binarySearch(src->array, src->cardinality, (uint16_t)range_start);
+            binarySearch(src->array, src->cardinality, (uint16_t)range_start);
     if (start_index < 0) start_index = -start_index - 1;
 
     int32_t last_index =
-        binarySearch(src->array, src->cardinality, (uint16_t)(range_end - 1));
+            binarySearch(src->array, src->cardinality, (uint16_t)(range_end - 1));
     if (last_index < 0) last_index = -last_index - 2;
 
     const int32_t current_values_in_range = last_index - start_index + 1;
     const int32_t span_to_be_flipped = range_end - range_start;
     const int32_t new_values_in_range =
-        span_to_be_flipped - current_values_in_range;
+            span_to_be_flipped - current_values_in_range;
     const int32_t cardinality_change =
-        new_values_in_range - current_values_in_range;
+            new_values_in_range - current_values_in_range;
     const int32_t new_cardinality = src->cardinality + cardinality_change;
 
     if (new_cardinality > DEFAULT_MAX_SIZE) {
@@ -16666,7 +16656,7 @@ bool array_container_negation_range(const array_container_t *src,
     }
 
     array_container_t *arr =
-        array_container_create_given_capacity(new_cardinality);
+            array_container_create_given_capacity(new_cardinality);
     *dst = (container_t *)arr;
     if (new_cardinality == 0) {
         arr->cardinality = new_cardinality;
@@ -16781,7 +16771,7 @@ int run_container_negation_range(const run_container_t *src,
     }
 
     run_container_t *ans = run_container_create_given_capacity(
-        src->n_runs + 1);  // src->n_runs + 1);
+            src->n_runs + 1);  // src->n_runs + 1);
     int k = 0;
     for (; k < src->n_runs && src->runs[k].value < range_start; ++k) {
         ans->runs[k] = src->runs[k];
@@ -16789,7 +16779,7 @@ int run_container_negation_range(const run_container_t *src,
     }
 
     run_container_smart_append_exclusive(
-        ans, (uint16_t)range_start, (uint16_t)(range_end - range_start - 1));
+            ans, (uint16_t)range_start, (uint16_t)(range_end - range_start - 1));
 
     for (; k < src->n_runs; ++k) {
         run_container_smart_append_exclusive(ans, src->runs[k].value,
@@ -16831,15 +16821,15 @@ int run_container_negation_range_inplace(run_container_t *src,
 
         if (range_start > 0)
             last_val_before_range =
-                run_container_contains(src, (uint16_t)(range_start - 1));
+                    run_container_contains(src, (uint16_t)(range_start - 1));
         first_val_in_range = run_container_contains(src, (uint16_t)range_start);
 
         if (last_val_before_range == first_val_in_range) {
             last_val_in_range =
-                run_container_contains(src, (uint16_t)(range_end - 1));
+                    run_container_contains(src, (uint16_t)(range_end - 1));
             if (range_end != 0x10000)
                 first_val_past_range =
-                    run_container_contains(src, (uint16_t)range_end);
+                        run_container_contains(src, (uint16_t)range_end);
 
             if (last_val_in_range ==
                 first_val_past_range) {  // no space for inplace
@@ -16863,12 +16853,12 @@ int run_container_negation_range_inplace(run_container_t *src,
     }
 
     // as with Java implementation, use locals to give self a buffer of depth 1
-    rle16_t buffered = CROARING_MAKE_RLE16(0, 0);
+    rle16_t buffered = MAKE_RLE16(0, 0);
     rle16_t next = buffered;
     if (k < my_nbr_runs) buffered = src->runs[k];
 
     run_container_smart_append_exclusive(
-        ans, (uint16_t)range_start, (uint16_t)(range_end - range_start - 1));
+            ans, (uint16_t)range_start, (uint16_t)(range_end - range_start - 1));
 
     for (; k < my_nbr_runs; ++k) {
         if (k + 1 < my_nbr_runs) next = src->runs[k + 1];
@@ -16968,7 +16958,7 @@ bool run_container_is_subset_bitset(const run_container_t* container1,
         }
     } else {
         int32_t card = bitset_container_compute_cardinality(
-            container2);  // modify container2?
+                container2);  // modify container2?
         if (card < run_container_cardinality(container1)) {
             return false;
         }
@@ -17058,7 +17048,7 @@ void array_bitset_container_union(const array_container_t *src_1,
                                   bitset_container_t *dst) {
     if (src_2 != dst) bitset_container_copy(src_2, dst);
     dst->cardinality = (int32_t)bitset_set_list_withcard(
-        dst->words, dst->cardinality, src_1->array, src_1->cardinality);
+            dst->words, dst->cardinality, src_1->array, src_1->cardinality);
 }
 
 /* Compute the union of src_1 and src_2 and write the result to
@@ -17114,7 +17104,7 @@ void array_run_container_union(const array_container_t *src_1,
         rlepos++;
     } else {
         previousrle =
-            run_container_append_value_first(dst, src_1->array[arraypos]);
+                run_container_append_value_first(dst, src_1->array[arraypos]);
         arraypos++;
     }
     while ((rlepos < src_2->n_runs) && (arraypos < src_1->cardinality)) {
@@ -17165,7 +17155,7 @@ void array_run_container_inplace_union(const array_container_t *src_1,
         rlepos++;
     } else {
         previousrle =
-            run_container_append_value_first(src_2, src_1->array[arraypos]);
+                run_container_append_value_first(src_2, src_1->array[arraypos]);
         arraypos++;
     }
 
@@ -17212,8 +17202,8 @@ bool array_array_container_union(const array_container_t *src_1,
         bitset_container_t *ourbitset = CAST_bitset(*dst);
         bitset_set_list(ourbitset->words, src_1->array, src_1->cardinality);
         ourbitset->cardinality = (int32_t)bitset_set_list_withcard(
-            ourbitset->words, src_1->cardinality, src_2->array,
-            src_2->cardinality);
+                ourbitset->words, src_1->cardinality, src_2->array,
+                src_2->cardinality);
         if (ourbitset->cardinality <= DEFAULT_MAX_SIZE) {
             // need to convert!
             *dst = array_container_from_bitset(ourbitset);
@@ -17232,7 +17222,7 @@ bool array_array_container_inplace_union(array_container_t *src_1,
     if (totalCardinality <= DEFAULT_MAX_SIZE) {
         if (src_1->capacity < totalCardinality) {
             *dst = array_container_create_given_capacity(
-                2 * totalCardinality);  // be purposefully generous
+                    2 * totalCardinality);  // be purposefully generous
             if (*dst != NULL) {
                 array_container_union(src_1, src_2, CAST_array(*dst));
             } else {
@@ -17247,8 +17237,8 @@ bool array_array_container_inplace_union(array_container_t *src_1,
             // https://github.com/RoaringBitmap/CRoaring/pull/452
             // See report https://github.com/RoaringBitmap/CRoaring/issues/476
             src_1->cardinality = (int32_t)union_uint16(
-                src_1->array + src_2->cardinality, src_1->cardinality,
-                src_2->array, src_2->cardinality, src_1->array);
+                    src_1->array + src_2->cardinality, src_1->cardinality,
+                    src_2->array, src_2->cardinality, src_1->array);
             return false;  // not a bitset
         }
     }
@@ -17258,8 +17248,8 @@ bool array_array_container_inplace_union(array_container_t *src_1,
         bitset_container_t *ourbitset = CAST_bitset(*dst);
         bitset_set_list(ourbitset->words, src_1->array, src_1->cardinality);
         ourbitset->cardinality = (int32_t)bitset_set_list_withcard(
-            ourbitset->words, src_1->cardinality, src_2->array,
-            src_2->cardinality);
+                ourbitset->words, src_1->cardinality, src_2->array,
+                src_2->cardinality);
         if (ourbitset->cardinality <= DEFAULT_MAX_SIZE) {
             // need to convert!
             if (src_1->capacity < ourbitset->cardinality) {
@@ -17334,7 +17324,7 @@ bool array_array_container_lazy_inplace_union(array_container_t *src_1,
     if (totalCardinality <= ARRAY_LAZY_LOWERBOUND) {
         if (src_1->capacity < totalCardinality) {
             *dst = array_container_create_given_capacity(
-                2 * totalCardinality);  // be purposefully generous
+                    2 * totalCardinality);  // be purposefully generous
             if (*dst != NULL) {
                 array_container_union(src_1, src_2, CAST_array(*dst));
             } else {
@@ -17383,8 +17373,8 @@ bool array_array_container_lazy_inplace_union(array_container_t *src_1,
               haven't read is safe, and we don't care the data already read.
             */
             src_1->cardinality = (int32_t)fast_union_uint16(
-                src_1->array + src_2->cardinality, src_1->cardinality,
-                src_2->array, src_2->cardinality, src_1->array);
+                    src_1->array + src_2->cardinality, src_1->cardinality,
+                    src_2->array, src_2->cardinality, src_1->array);
             return false;  // not a bitset
         }
     }
@@ -17429,7 +17419,7 @@ bool array_bitset_container_xor(const array_container_t *src_1,
     bitset_container_t *result = bitset_container_create();
     bitset_container_copy(src_2, result);
     result->cardinality = (int32_t)bitset_flip_list_withcard(
-        result->words, result->cardinality, src_1->array, src_1->cardinality);
+            result->words, result->cardinality, src_1->array, src_1->cardinality);
 
     // do required type conversions.
     if (result->cardinality <= DEFAULT_MAX_SIZE) {
@@ -17518,7 +17508,7 @@ int array_run_container_xor(const array_container_t *src_1,
         array_run_container_lazy_xor(src_1, src_2, ans);  // keeps runs.
         uint8_t typecode_after;
         *dst =
-            convert_run_to_efficient_container_and_free(ans, &typecode_after);
+                convert_run_to_efficient_container_and_free(ans, &typecode_after);
         return typecode_after;
     }
 
@@ -17600,7 +17590,7 @@ bool array_array_container_xor(const array_container_t *src_1,
                                const array_container_t *src_2,
                                container_t **dst) {
     int totalCardinality =
-        src_1->cardinality + src_2->cardinality;  // upper bound
+            src_1->cardinality + src_2->cardinality;  // upper bound
     if (totalCardinality <= DEFAULT_MAX_SIZE) {
         *dst = array_container_create_given_capacity(totalCardinality);
         array_container_xor(src_1, src_2, CAST_array(*dst));
@@ -17610,7 +17600,7 @@ bool array_array_container_xor(const array_container_t *src_1,
     bool returnval = true;  // expect a bitset
     bitset_container_t *ourbitset = CAST_bitset(*dst);
     ourbitset->cardinality = (uint32_t)bitset_flip_list_withcard(
-        ourbitset->words, src_1->cardinality, src_2->array, src_2->cardinality);
+            ourbitset->words, src_1->cardinality, src_2->array, src_2->cardinality);
     if (ourbitset->cardinality <= DEFAULT_MAX_SIZE) {
         // need to convert!
         *dst = array_container_from_bitset(ourbitset);
@@ -17687,7 +17677,7 @@ bool bitset_array_container_ixor(bitset_container_t *src_1,
                                  container_t **dst) {
     *dst = src_1;
     src_1->cardinality = (uint32_t)bitset_flip_list_withcard(
-        src_1->words, src_1->cardinality, src_2->array, src_2->cardinality);
+            src_1->words, src_1->cardinality, src_2->array, src_2->cardinality);
 
     if (src_1->cardinality <= DEFAULT_MAX_SIZE) {
         *dst = array_container_from_bitset(src_1);
@@ -17898,7 +17888,7 @@ int run_container_shrink_to_fit(run_container_t *src) {
     src->capacity = src->n_runs;
     rle16_t *oldruns = src->runs;
     src->runs =
-        (rle16_t *)roaring_realloc(oldruns, src->capacity * sizeof(rle16_t));
+            (rle16_t *)roaring_realloc(oldruns, src->capacity * sizeof(rle16_t));
     if (src->runs == NULL) roaring_free(oldruns);  // should never happen?
     return savings;
 }
@@ -17963,7 +17953,7 @@ void run_container_offset(const run_container_t *c, container_t **loc,
         if (lo != NULL) {
             // Add the missing run to 'lo', exhausting length.
             lo->runs[lo->n_runs - 1].length =
-                (1 << 16) - lo->runs[lo->n_runs - 1].value - 1;
+                    (1 << 16) - lo->runs[lo->n_runs - 1].value - 1;
         }
 
         if (hi != NULL) {
@@ -17986,9 +17976,9 @@ void run_container_free(run_container_t *run) {
 
 void run_container_grow(run_container_t *run, int32_t min, bool copy) {
     int32_t newCapacity = (run->capacity == 0)   ? RUN_DEFAULT_INIT_SIZE
-                          : run->capacity < 64   ? run->capacity * 2
-                          : run->capacity < 1024 ? run->capacity * 3 / 2
-                                                 : run->capacity * 5 / 4;
+                                                 : run->capacity < 64   ? run->capacity * 2
+                                                                        : run->capacity < 1024 ? run->capacity * 3 / 2
+                                                                                               : run->capacity * 5 / 4;
     if (newCapacity < min) newCapacity = min;
     run->capacity = newCapacity;
     assert(run->capacity >= min);
@@ -18247,7 +18237,7 @@ void run_container_intersection(const run_container_t *src_1,
             }
             dst->runs[dst->n_runs].value = (uint16_t)lateststart;
             dst->runs[dst->n_runs].length =
-                (uint16_t)(earliestend - lateststart - 1);
+                    (uint16_t)(earliestend - lateststart - 1);
             dst->n_runs++;
         }
     }
@@ -18382,8 +18372,7 @@ void run_container_andnot(const run_container_t *src_1,
     while ((rlepos1 < src_1->n_runs) && (rlepos2 < src_2->n_runs)) {
         if (end <= start2) {
             // output the first run
-            dst->runs[dst->n_runs++] =
-                CROARING_MAKE_RLE16(start, end - start - 1);
+            dst->runs[dst->n_runs++] = MAKE_RLE16(start, end - start - 1);
             rlepos1++;
             if (rlepos1 < src_1->n_runs) {
                 start = src_1->runs[rlepos1].value;
@@ -18399,7 +18388,7 @@ void run_container_andnot(const run_container_t *src_1,
         } else {
             if (start < start2) {
                 dst->runs[dst->n_runs++] =
-                    CROARING_MAKE_RLE16(start, start2 - start - 1);
+                        MAKE_RLE16(start, start2 - start - 1);
             }
             if (end2 < end) {
                 start = end2;
@@ -18413,7 +18402,7 @@ void run_container_andnot(const run_container_t *src_1,
         }
     }
     if (rlepos1 < src_1->n_runs) {
-        dst->runs[dst->n_runs++] = CROARING_MAKE_RLE16(start, end - start - 1);
+        dst->runs[dst->n_runs++] = MAKE_RLE16(start, end - start - 1);
         rlepos1++;
         if (rlepos1 < src_1->n_runs) {
             memcpy(dst->runs + dst->n_runs, src_1->runs + rlepos1,
@@ -18615,7 +18604,7 @@ void run_container_smart_append_exclusive(run_container_t *src,
 
     if (!src->n_runs ||
         (start > (old_end = last_run->value + last_run->length + 1))) {
-        *appended_last_run = CROARING_MAKE_RLE16(start, length);
+        *appended_last_run = MAKE_RLE16(start, length);
         src->n_runs++;
         return;
     }
@@ -18629,10 +18618,10 @@ void run_container_smart_append_exclusive(run_container_t *src,
     if (start == last_run->value) {
         // wipe out previous
         if (new_end < old_end) {
-            *last_run = CROARING_MAKE_RLE16(new_end, old_end - new_end - 1);
+            *last_run = MAKE_RLE16(new_end, old_end - new_end - 1);
             return;
         } else if (new_end > old_end) {
-            *last_run = CROARING_MAKE_RLE16(old_end, new_end - old_end - 1);
+            *last_run = MAKE_RLE16(old_end, new_end - old_end - 1);
             return;
         } else {
             src->n_runs--;
@@ -18641,12 +18630,10 @@ void run_container_smart_append_exclusive(run_container_t *src,
     }
     last_run->length = start - last_run->value - 1;
     if (new_end < old_end) {
-        *appended_last_run =
-            CROARING_MAKE_RLE16(new_end, old_end - new_end - 1);
+        *appended_last_run = MAKE_RLE16(new_end, old_end - new_end - 1);
         src->n_runs++;
     } else if (new_end > old_end) {
-        *appended_last_run =
-            CROARING_MAKE_RLE16(old_end, new_end - old_end - 1);
+        *appended_last_run = MAKE_RLE16(old_end, new_end - old_end - 1);
         src->n_runs++;
     }
 }
@@ -18744,7 +18731,7 @@ CROARING_TARGET_AVX512
 ALLOW_UNALIGNED
 /* Get the cardinality of `run'. Requires an actual computation. */
 static inline int _avx512_run_container_cardinality(
-    const run_container_t *run) {
+        const run_container_t *run) {
     const int32_t n_runs = run->n_runs;
     const rle16_t *runs = run->runs;
 
@@ -18817,7 +18804,7 @@ CROARING_UNTARGET_AVX2
 
 /* Get the cardinality of `run'. Requires an actual computation. */
 static inline int _scalar_run_container_cardinality(
-    const run_container_t *run) {
+        const run_container_t *run) {
     const int32_t n_runs = run->n_runs;
     const rle16_t *runs = run->runs;
 
@@ -18836,7 +18823,7 @@ int run_container_cardinality(const run_container_t *run) {
         return _avx512_run_container_cardinality(run);
     } else
 #endif
-        if (croaring_hardware_support() & ROARING_SUPPORTS_AVX2) {
+    if (croaring_hardware_support() & ROARING_SUPPORTS_AVX2) {
         return _avx2_run_container_cardinality(run);
     } else {
         return _scalar_run_container_cardinality(run);
@@ -18845,7 +18832,6 @@ int run_container_cardinality(const run_container_t *run) {
 #else
 
 /* Get the cardinality of `run'. Requires an actual computation. */
-ALLOW_UNALIGNED
 int run_container_cardinality(const run_container_t *run) {
     const int32_t n_runs = run->n_runs;
     const rle16_t *runs = run->runs;
@@ -18969,8 +18955,8 @@ enum croaring_instruction_set {
 
 #if CROARING_COMPILER_SUPPORTS_AVX512
 unsigned int CROARING_AVX512_REQUIRED =
-    (CROARING_AVX512F | CROARING_AVX512DQ | CROARING_AVX512BW |
-     CROARING_AVX512VBMI2 | CROARING_AVX512BITALG | CROARING_AVX512VPOPCNTDQ);
+        (CROARING_AVX512F | CROARING_AVX512DQ | CROARING_AVX512BW |
+         CROARING_AVX512VBMI2 | CROARING_AVX512BITALG | CROARING_AVX512VPOPCNTDQ);
 #endif
 
 #if defined(__x86_64__) || defined(_M_AMD64)  // x64
@@ -19017,32 +19003,32 @@ static inline uint32_t dynamic_croaring_detect_supported_architectures(void) {
     uint32_t host_isa = 0x0;
     // Can be found on Intel ISA Reference for CPUID
     static uint32_t cpuid_avx2_bit =
-        1 << 5;  ///< @private Bit 5 of EBX for EAX=0x7
+            1 << 5;  ///< @private Bit 5 of EBX for EAX=0x7
     static uint32_t cpuid_bmi1_bit =
-        1 << 3;  ///< @private bit 3 of EBX for EAX=0x7
+            1 << 3;  ///< @private bit 3 of EBX for EAX=0x7
     static uint32_t cpuid_bmi2_bit =
-        1 << 8;  ///< @private bit 8 of EBX for EAX=0x7
+            1 << 8;  ///< @private bit 8 of EBX for EAX=0x7
     static uint32_t cpuid_avx512f_bit =
-        1 << 16;  ///< @private bit 16 of EBX for EAX=0x7
+            1 << 16;  ///< @private bit 16 of EBX for EAX=0x7
     static uint32_t cpuid_avx512dq_bit =
-        1 << 17;  ///< @private bit 17 of EBX for EAX=0x7
+            1 << 17;  ///< @private bit 17 of EBX for EAX=0x7
     static uint32_t cpuid_avx512bw_bit =
-        1 << 30;  ///< @private bit 30 of EBX for EAX=0x7
+            1 << 30;  ///< @private bit 30 of EBX for EAX=0x7
     static uint32_t cpuid_avx512vbmi2_bit =
-        1 << 6;  ///< @private bit 6 of ECX for EAX=0x7
+            1 << 6;  ///< @private bit 6 of ECX for EAX=0x7
     static uint32_t cpuid_avx512bitalg_bit =
-        1 << 12;  ///< @private bit 12 of ECX for EAX=0x7
+            1 << 12;  ///< @private bit 12 of ECX for EAX=0x7
     static uint32_t cpuid_avx512vpopcntdq_bit =
-        1 << 14;  ///< @private bit 14 of ECX for EAX=0x7
+            1 << 14;  ///< @private bit 14 of ECX for EAX=0x7
     static uint64_t cpuid_avx256_saved = 1 << 2;  ///< @private bit 2 = AVX
     static uint64_t cpuid_avx512_saved =
-        7 << 5;  ///< @private bits 5,6,7 = opmask, ZMM_hi256, hi16_ZMM
+            7 << 5;  ///< @private bits 5,6,7 = opmask, ZMM_hi256, hi16_ZMM
     static uint32_t cpuid_sse42_bit =
-        1 << 20;  ///< @private bit 20 of ECX for EAX=0x1
+            1 << 20;  ///< @private bit 20 of ECX for EAX=0x1
     static uint32_t cpuid_osxsave =
-        (1 << 26) | (1 << 27);  ///< @private bits 26+27 of ECX for EAX=0x1
+            (1 << 26) | (1 << 27);  ///< @private bits 26+27 of ECX for EAX=0x1
     static uint32_t cpuid_pclmulqdq_bit =
-        1 << 1;  ///< @private bit  1 of ECX for EAX=0x1
+            1 << 1;  ///< @private bit  1 of ECX for EAX=0x1
 
     // EBX for EAX=0x1
     eax = 0x1;
@@ -19182,9 +19168,9 @@ int croaring_hardware_support(void) {
 int croaring_hardware_support(void) {
     static
 #if CROARING_ATOMIC_IMPL == CROARING_ATOMIC_IMPL_C
-        _Atomic
+    _Atomic
 #endif
-        int support = 0xFFFFFFF;
+    int support = 0xFFFFFFF;
     if (support == 0xFFFFFFF) {
         bool has_avx2 = (croaring_detect_supported_architectures() &
                          CROARING_AVX2) == CROARING_AVX2;
@@ -19242,12 +19228,12 @@ static void roaring_bitmap_aligned_free(void* memblock) {
 }
 
 static roaring_memory_t global_memory_hook = {
-    .malloc = malloc,
-    .realloc = realloc,
-    .calloc = calloc,
-    .free = free,
-    .aligned_malloc = roaring_bitmap_aligned_malloc,
-    .aligned_free = roaring_bitmap_aligned_free,
+        .malloc = malloc,
+        .realloc = realloc,
+        .calloc = calloc,
+        .free = free,
+        .aligned_malloc = roaring_bitmap_aligned_malloc,
+        .aligned_free = roaring_bitmap_aligned_free,
 };
 
 void roaring_init_memory_hook(roaring_memory_t memory_hook) {
@@ -19295,10 +19281,14 @@ namespace api {
 #define CROARING_SERIALIZATION_CONTAINER 2
 extern inline int roaring_trailing_zeroes(unsigned long long input_num);
 extern inline int roaring_leading_zeroes(unsigned long long input_num);
+#ifndef _WIN32
 extern inline void roaring_bitmap_init_cleared(roaring_bitmap_t *r);
+#endif
 extern inline bool roaring_bitmap_get_copy_on_write(const roaring_bitmap_t *r);
+#ifndef _WIN32
 extern inline void roaring_bitmap_set_copy_on_write(roaring_bitmap_t *r,
                                                     bool cow);
+#endif
 extern inline roaring_bitmap_t *roaring_bitmap_create(void);
 extern inline void roaring_bitmap_add_range(roaring_bitmap_t *r, uint64_t min,
                                             uint64_t max);
@@ -19342,7 +19332,7 @@ static inline container_t *containerptr_roaring_bitmap_add(roaring_bitmap_t *r,
     } else {
         array_container_t *new_ac = array_container_create();
         container_t *c =
-            container_add(new_ac, val & 0xFFFF, ARRAY_CONTAINER_TYPE, type);
+                container_add(new_ac, val & 0xFFFF, ARRAY_CONTAINER_TYPE, type);
         // we could just assume that it stays an array container
         ra_insert_new_key_value_at(ra, -i - 1, hb, c, *type);
         *index = -i - 1;
@@ -19352,7 +19342,7 @@ static inline container_t *containerptr_roaring_bitmap_add(roaring_bitmap_t *r,
 
 roaring_bitmap_t *roaring_bitmap_create_with_capacity(uint32_t cap) {
     roaring_bitmap_t *ans =
-        (roaring_bitmap_t *)roaring_malloc(sizeof(roaring_bitmap_t));
+            (roaring_bitmap_t *)roaring_malloc(sizeof(roaring_bitmap_t));
     if (!ans) {
         return NULL;
     }
@@ -19376,7 +19366,7 @@ static inline void add_bulk_impl(roaring_bitmap_t *r,
         uint8_t typecode;
         int idx;
         context->container =
-            containerptr_roaring_bitmap_add(r, val, &typecode, &idx);
+                containerptr_roaring_bitmap_add(r, val, &typecode, &idx);
         context->typecode = typecode;
         context->idx = idx;
         context->key = key;
@@ -19386,7 +19376,7 @@ static inline void add_bulk_impl(roaring_bitmap_t *r,
         // insertion directly, bypassing the roaring_bitmap_add call
         uint8_t new_typecode;
         container_t *container2 = container_add(
-            context->container, val & 0xFFFF, context->typecode, &new_typecode);
+                context->container, val & 0xFFFF, context->typecode, &new_typecode);
         if (container2 != context->container) {
             // rare instance when we need to change the container type
             container_free(context->container, context->typecode);
@@ -19443,11 +19433,11 @@ bool roaring_bitmap_contains_bulk(const roaring_bitmap_t *r,
         }
         uint8_t typecode;
         context->container = ra_get_container_at_index(
-            &r->high_low_container, (uint16_t)idx, &typecode);
+                &r->high_low_container, (uint16_t)idx, &typecode);
         context->typecode = typecode;
         context->idx = idx;
         context->key =
-            ra_get_key_at_index(&r->high_low_container, (uint16_t)idx);
+                ra_get_key_at_index(&r->high_low_container, (uint16_t)idx);
         // ra_advance_until finds the next key >= the target, we found a later
         // container.
         if (context->key != key) {
@@ -19469,7 +19459,7 @@ roaring_bitmap_t *roaring_bitmap_of(size_t n_args, ...) {
     // todo: could be greatly optimized but we do not expect this call to ever
     // include long lists
     roaring_bitmap_t *answer = roaring_bitmap_create();
-    roaring_bulk_context_t context = {0, 0, 0, 0};
+    roaring_bulk_context_t context = {0};
     va_list ap;
     va_start(ap, n_args);
     for (size_t i = 0; i < n_args; i++) {
@@ -19503,10 +19493,10 @@ roaring_bitmap_t *roaring_bitmap_from_range(uint64_t min, uint64_t max,
         uint32_t key = (uint32_t)min_tmp >> 16;
         uint32_t container_min = min_tmp & 0xFFFF;
         uint32_t container_max =
-            (uint32_t)minimum_uint64(max - (key << 16), 1 << 16);
+                (uint32_t)minimum_uint64(max - (key << 16), 1 << 16);
         uint8_t type;
         container_t *container = container_from_range(
-            &type, container_min, container_max, (uint16_t)step);
+                &type, container_min, container_max, (uint16_t)step);
         ra_append(&answer->high_low_container, (uint16_t)key, container, type);
         uint32_t gap = container_max - container_min + step - 1;
         min_tmp += gap - (gap % step);
@@ -19528,9 +19518,9 @@ void roaring_bitmap_add_range_closed(roaring_bitmap_t *r, uint32_t min,
 
     int32_t num_required_containers = max_key - min_key + 1;
     int32_t suffix_length =
-        count_greater(ra->keys, ra->size, (uint16_t)max_key);
+            count_greater(ra->keys, ra->size, (uint16_t)max_key);
     int32_t prefix_length =
-        count_less(ra->keys, ra->size - suffix_length, (uint16_t)min_key);
+            count_less(ra->keys, ra->size - suffix_length, (uint16_t)min_key);
     int32_t common_length = ra->size - prefix_length - suffix_length;
 
     if (num_required_containers > common_length) {
@@ -19550,8 +19540,8 @@ void roaring_bitmap_add_range_closed(roaring_bitmap_t *r, uint32_t min,
         if (src >= 0 && ra->keys[src] == key) {
             ra_unshare_container_at_index(ra, (uint16_t)src);
             new_container =
-                container_add_range(ra->containers[src], ra->typecodes[src],
-                                    container_min, container_max, &new_type);
+                    container_add_range(ra->containers[src], ra->typecodes[src],
+                                        container_min, container_max, &new_type);
             if (new_container != ra->containers[src]) {
                 container_free(ra->containers[src], ra->typecodes[src]);
             }
@@ -19581,15 +19571,15 @@ void roaring_bitmap_remove_range_closed(roaring_bitmap_t *r, uint32_t min,
     int32_t dst = src;
     while (src < ra->size && ra->keys[src] <= max_key) {
         uint32_t container_min =
-            (min_key == ra->keys[src]) ? (min & 0xffff) : 0;
+                (min_key == ra->keys[src]) ? (min & 0xffff) : 0;
         uint32_t container_max =
-            (max_key == ra->keys[src]) ? (max & 0xffff) : 0xffff;
+                (max_key == ra->keys[src]) ? (max & 0xffff) : 0xffff;
         ra_unshare_container_at_index(ra, (uint16_t)src);
         container_t *new_container;
         uint8_t new_type;
         new_container =
-            container_remove_range(ra->containers[src], ra->typecodes[src],
-                                   container_min, container_max, &new_type);
+                container_remove_range(ra->containers[src], ra->typecodes[src],
+                                       container_min, container_max, &new_type);
         if (new_container != ra->containers[src]) {
             container_free(ra->containers[src], ra->typecodes[src]);
         }
@@ -19631,7 +19621,7 @@ void roaring_bitmap_printf_describe(const roaring_bitmap_t *r) {
         if (ra->typecodes[i] == SHARED_CONTAINER_TYPE) {
             printf("(shared count = %" PRIu32 " )",
                    croaring_refcount_get(
-                       &(CAST_shared(ra->containers[i])->counter)));
+                           &(CAST_shared(ra->containers[i])->counter)));
         }
 
         if (i + 1 < ra->size) {
@@ -19639,6 +19629,20 @@ void roaring_bitmap_printf_describe(const roaring_bitmap_t *r) {
         }
     }
     printf("}");
+}
+
+typedef struct min_max_sum_s {
+    uint32_t min;
+    uint32_t max;
+    uint64_t sum;
+} min_max_sum_t;
+
+static bool min_max_sum_fnc(uint32_t value, void *param) {
+    min_max_sum_t *mms = (min_max_sum_t *)param;
+    if (value > mms->max) mms->max = value;
+    if (value < mms->min) mms->min = value;
+    mms->sum += value;
+    return true;  // we always process all data points
 }
 
 /**
@@ -19651,17 +19655,23 @@ void roaring_bitmap_statistics(const roaring_bitmap_t *r,
 
     memset(stat, 0, sizeof(*stat));
     stat->n_containers = ra->size;
-    stat->min_value = roaring_bitmap_minimum(r);
-    stat->max_value = roaring_bitmap_maximum(r);
+    stat->cardinality = roaring_bitmap_get_cardinality(r);
+    min_max_sum_t mms;
+    mms.min = UINT32_C(0xFFFFFFFF);
+    mms.max = UINT32_C(0);
+    mms.sum = 0;
+    roaring_iterate(r, &min_max_sum_fnc, &mms);
+    stat->min_value = mms.min;
+    stat->max_value = mms.max;
+    stat->sum_value = mms.sum;
 
     for (int i = 0; i < ra->size; ++i) {
         uint8_t truetype =
-            get_container_type(ra->containers[i], ra->typecodes[i]);
+                get_container_type(ra->containers[i], ra->typecodes[i]);
         uint32_t card =
-            container_get_cardinality(ra->containers[i], ra->typecodes[i]);
+                container_get_cardinality(ra->containers[i], ra->typecodes[i]);
         uint32_t sbytes =
-            container_size_in_bytes(ra->containers[i], ra->typecodes[i]);
-        stat->cardinality += card;
+                container_size_in_bytes(ra->containers[i], ra->typecodes[i]);
         switch (truetype) {
             case BITSET_CONTAINER_TYPE:
                 stat->n_bitset_containers++;
@@ -19760,7 +19770,7 @@ bool roaring_bitmap_internal_validate(const roaring_bitmap_t *r,
 
 roaring_bitmap_t *roaring_bitmap_copy(const roaring_bitmap_t *r) {
     roaring_bitmap_t *ans =
-        (roaring_bitmap_t *)roaring_malloc(sizeof(roaring_bitmap_t));
+            (roaring_bitmap_t *)roaring_malloc(sizeof(roaring_bitmap_t));
     if (!ans) {
         return NULL;
     }
@@ -19808,10 +19818,10 @@ void roaring_bitmap_add(roaring_bitmap_t *r, uint32_t val) {
     if (i >= 0) {
         ra_unshare_container_at_index(ra, (uint16_t)i);
         container_t *container =
-            ra_get_container_at_index(ra, (uint16_t)i, &typecode);
+                ra_get_container_at_index(ra, (uint16_t)i, &typecode);
         uint8_t newtypecode = typecode;
         container_t *container2 =
-            container_add(container, val & 0xFFFF, typecode, &newtypecode);
+                container_add(container, val & 0xFFFF, typecode, &newtypecode);
         if (container2 != container) {
             container_free(container, typecode);
             ra_set_container_at_index(&r->high_low_container, i, container2,
@@ -19820,7 +19830,7 @@ void roaring_bitmap_add(roaring_bitmap_t *r, uint32_t val) {
     } else {
         array_container_t *newac = array_container_create();
         container_t *container =
-            container_add(newac, val & 0xFFFF, ARRAY_CONTAINER_TYPE, &typecode);
+                container_add(newac, val & 0xFFFF, ARRAY_CONTAINER_TYPE, &typecode);
         // we could just assume that it stays an array container
         ra_insert_new_key_value_at(&r->high_low_container, -i - 1, hb,
                                    container, typecode);
@@ -19835,14 +19845,14 @@ bool roaring_bitmap_add_checked(roaring_bitmap_t *r, uint32_t val) {
     if (i >= 0) {
         ra_unshare_container_at_index(&r->high_low_container, (uint16_t)i);
         container_t *container = ra_get_container_at_index(
-            &r->high_low_container, (uint16_t)i, &typecode);
+                &r->high_low_container, (uint16_t)i, &typecode);
 
         const int oldCardinality =
-            container_get_cardinality(container, typecode);
+                container_get_cardinality(container, typecode);
 
         uint8_t newtypecode = typecode;
         container_t *container2 =
-            container_add(container, val & 0xFFFF, typecode, &newtypecode);
+                container_add(container, val & 0xFFFF, typecode, &newtypecode);
         if (container2 != container) {
             container_free(container, typecode);
             ra_set_container_at_index(&r->high_low_container, i, container2,
@@ -19850,14 +19860,14 @@ bool roaring_bitmap_add_checked(roaring_bitmap_t *r, uint32_t val) {
             result = true;
         } else {
             const int newCardinality =
-                container_get_cardinality(container, newtypecode);
+                    container_get_cardinality(container, newtypecode);
 
             result = oldCardinality != newCardinality;
         }
     } else {
         array_container_t *newac = array_container_create();
         container_t *container =
-            container_add(newac, val & 0xFFFF, ARRAY_CONTAINER_TYPE, &typecode);
+                container_add(newac, val & 0xFFFF, ARRAY_CONTAINER_TYPE, &typecode);
         // we could just assume that it stays an array container
         ra_insert_new_key_value_at(&r->high_low_container, -i - 1, hb,
                                    container, typecode);
@@ -19874,10 +19884,10 @@ void roaring_bitmap_remove(roaring_bitmap_t *r, uint32_t val) {
     if (i >= 0) {
         ra_unshare_container_at_index(&r->high_low_container, (uint16_t)i);
         container_t *container = ra_get_container_at_index(
-            &r->high_low_container, (uint16_t)i, &typecode);
+                &r->high_low_container, (uint16_t)i, &typecode);
         uint8_t newtypecode = typecode;
         container_t *container2 =
-            container_remove(container, val & 0xFFFF, typecode, &newtypecode);
+                container_remove(container, val & 0xFFFF, typecode, &newtypecode);
         if (container2 != container) {
             container_free(container, typecode);
             ra_set_container_at_index(&r->high_low_container, i, container2,
@@ -19900,14 +19910,14 @@ bool roaring_bitmap_remove_checked(roaring_bitmap_t *r, uint32_t val) {
     if (i >= 0) {
         ra_unshare_container_at_index(&r->high_low_container, (uint16_t)i);
         container_t *container = ra_get_container_at_index(
-            &r->high_low_container, (uint16_t)i, &typecode);
+                &r->high_low_container, (uint16_t)i, &typecode);
 
         const int oldCardinality =
-            container_get_cardinality(container, typecode);
+                container_get_cardinality(container, typecode);
 
         uint8_t newtypecode = typecode;
         container_t *container2 =
-            container_remove(container, val & 0xFFFF, typecode, &newtypecode);
+                container_remove(container, val & 0xFFFF, typecode, &newtypecode);
         if (container2 != container) {
             container_free(container, typecode);
             ra_set_container_at_index(&r->high_low_container, i, container2,
@@ -19915,7 +19925,7 @@ bool roaring_bitmap_remove_checked(roaring_bitmap_t *r, uint32_t val) {
         }
 
         const int newCardinality =
-            container_get_cardinality(container2, newtypecode);
+                container_get_cardinality(container2, newtypecode);
 
         if (newCardinality != 0) {
             ra_set_container_at_index(&r->high_low_container, i, container2,
@@ -19935,7 +19945,7 @@ void roaring_bitmap_remove_many(roaring_bitmap_t *r, size_t n_args,
         return;
     }
     int32_t pos =
-        -1;  // position of the container used in the previous iteration
+            -1;  // position of the container used in the previous iteration
     for (size_t i = 0; i < n_args; i++) {
         uint16_t key = (uint16_t)(vals[i] >> 16);
         if (pos < 0 || key != r->high_low_container.keys[pos]) {
@@ -19945,8 +19955,8 @@ void roaring_bitmap_remove_many(roaring_bitmap_t *r, size_t n_args,
             uint8_t new_typecode;
             container_t *new_container;
             new_container = container_remove(
-                r->high_low_container.containers[pos], vals[i] & 0xffff,
-                r->high_low_container.typecodes[pos], &new_typecode);
+                    r->high_low_container.containers[pos], vals[i] & 0xffff,
+                    r->high_low_container.typecodes[pos], &new_typecode);
             if (new_container != r->high_low_container.containers[pos]) {
                 container_free(r->high_low_container.containers[pos],
                                r->high_low_container.typecodes[pos]);
@@ -19968,7 +19978,7 @@ roaring_bitmap_t *roaring_bitmap_and(const roaring_bitmap_t *x1,
                                      const roaring_bitmap_t *x2) {
     uint8_t result_type = 0;
     const int length1 = x1->high_low_container.size,
-              length2 = x2->high_low_container.size;
+            length2 = x2->high_low_container.size;
     uint32_t neededcap = length1 > length2 ? length2 : length1;
     roaring_bitmap_t *answer = roaring_bitmap_create_with_capacity(neededcap);
     roaring_bitmap_set_copy_on_write(answer, is_cow(x1) || is_cow(x2));
@@ -19977,9 +19987,9 @@ roaring_bitmap_t *roaring_bitmap_and(const roaring_bitmap_t *x1,
 
     while (pos1 < length1 && pos2 < length2) {
         const uint16_t s1 =
-            ra_get_key_at_index(&x1->high_low_container, (uint16_t)pos1);
+                ra_get_key_at_index(&x1->high_low_container, (uint16_t)pos1);
         const uint16_t s2 =
-            ra_get_key_at_index(&x2->high_low_container, (uint16_t)pos2);
+                ra_get_key_at_index(&x2->high_low_container, (uint16_t)pos2);
 
         if (s1 == s2) {
             uint8_t type1, type2;
@@ -20017,7 +20027,7 @@ roaring_bitmap_t *roaring_bitmap_or_many(size_t number,
         return roaring_bitmap_copy(x[0]);
     }
     roaring_bitmap_t *answer =
-        roaring_bitmap_lazy_or(x[0], x[1], LAZY_OR_BITSET_CONVERSION);
+            roaring_bitmap_lazy_or(x[0], x[1], LAZY_OR_BITSET_CONVERSION);
     for (size_t i = 2; i < number; i++) {
         roaring_bitmap_lazy_or_inplace(answer, x[i], LAZY_OR_BITSET_CONVERSION);
     }
@@ -20056,9 +20066,9 @@ void roaring_bitmap_and_inplace(roaring_bitmap_t *x1,
     // have to be freed.
     while (pos1 < length1 && pos2 < length2) {
         const uint16_t s1 =
-            ra_get_key_at_index(&x1->high_low_container, (uint16_t)pos1);
+                ra_get_key_at_index(&x1->high_low_container, (uint16_t)pos1);
         const uint16_t s2 =
-            ra_get_key_at_index(&x2->high_low_container, (uint16_t)pos2);
+                ra_get_key_at_index(&x2->high_low_container, (uint16_t)pos2);
 
         if (s1 == s2) {
             uint8_t type1, type2, result_type;
@@ -20073,12 +20083,12 @@ void roaring_bitmap_and_inplace(roaring_bitmap_t *x1,
             // computation in place which is likely less efficient than avoiding
             // in place entirely and always generating a new container.
             container_t *c =
-                (type1 == SHARED_CONTAINER_TYPE)
+                    (type1 == SHARED_CONTAINER_TYPE)
                     ? container_and(c1, type1, c2, type2, &result_type)
                     : container_iand(c1, type1, c2, type2, &result_type);
 
             if (c != c1) {  // in this instance a new container was created, and
-                            // we need to free the old one
+                // we need to free the old one
                 container_free(c1, type1);
             }
             if (container_nonzero_cardinality(c, result_type)) {
@@ -20114,7 +20124,7 @@ roaring_bitmap_t *roaring_bitmap_or(const roaring_bitmap_t *x1,
                                     const roaring_bitmap_t *x2) {
     uint8_t result_type = 0;
     const int length1 = x1->high_low_container.size,
-              length2 = x2->high_low_container.size;
+            length2 = x2->high_low_container.size;
     if (0 == length1) {
         return roaring_bitmap_copy(x2);
     }
@@ -20122,7 +20132,7 @@ roaring_bitmap_t *roaring_bitmap_or(const roaring_bitmap_t *x1,
         return roaring_bitmap_copy(x1);
     }
     roaring_bitmap_t *answer =
-        roaring_bitmap_create_with_capacity(length1 + length2);
+            roaring_bitmap_create_with_capacity(length1 + length2);
     roaring_bitmap_set_copy_on_write(answer, is_cow(x1) || is_cow(x2));
     int pos1 = 0, pos2 = 0;
     uint8_t type1, type2;
@@ -20211,14 +20221,14 @@ void roaring_bitmap_or_inplace(roaring_bitmap_t *x1,
                                                         (uint16_t)pos1, &type1);
             if (!container_is_full(c1, type1)) {
                 container_t *c2 = ra_get_container_at_index(
-                    &x2->high_low_container, (uint16_t)pos2, &type2);
+                        &x2->high_low_container, (uint16_t)pos2, &type2);
                 container_t *c =
-                    (type1 == SHARED_CONTAINER_TYPE)
+                        (type1 == SHARED_CONTAINER_TYPE)
                         ? container_or(c1, type1, c2, type2, &result_type)
                         : container_ior(c1, type1, c2, type2, &result_type);
 
                 if (c != c1) {  // in this instance a new container was created,
-                                // and we need to free the old one
+                    // and we need to free the old one
                     container_free(c1, type1);
                 }
                 ra_set_container_at_index(&x1->high_low_container, pos1, c,
@@ -20265,7 +20275,7 @@ roaring_bitmap_t *roaring_bitmap_xor(const roaring_bitmap_t *x1,
                                      const roaring_bitmap_t *x2) {
     uint8_t result_type = 0;
     const int length1 = x1->high_low_container.size,
-              length2 = x2->high_low_container.size;
+            length2 = x2->high_low_container.size;
     if (0 == length1) {
         return roaring_bitmap_copy(x2);
     }
@@ -20273,7 +20283,7 @@ roaring_bitmap_t *roaring_bitmap_xor(const roaring_bitmap_t *x1,
         return roaring_bitmap_copy(x1);
     }
     roaring_bitmap_t *answer =
-        roaring_bitmap_create_with_capacity(length1 + length2);
+            roaring_bitmap_create_with_capacity(length1 + length2);
     roaring_bitmap_set_copy_on_write(answer, is_cow(x1) || is_cow(x2));
     int pos1 = 0, pos2 = 0;
     uint8_t type1, type2;
@@ -20431,7 +20441,7 @@ roaring_bitmap_t *roaring_bitmap_andnot(const roaring_bitmap_t *x1,
                                         const roaring_bitmap_t *x2) {
     uint8_t result_type = 0;
     const int length1 = x1->high_low_container.size,
-              length2 = x2->high_low_container.size;
+            length2 = x2->high_low_container.size;
     if (0 == length1) {
         roaring_bitmap_t *empty_bitmap = roaring_bitmap_create();
         roaring_bitmap_set_copy_on_write(empty_bitmap,
@@ -20458,7 +20468,7 @@ roaring_bitmap_t *roaring_bitmap_andnot(const roaring_bitmap_t *x1,
             container_t *c2 = ra_get_container_at_index(&x2->high_low_container,
                                                         (uint16_t)pos2, &type2);
             container_t *c =
-                container_andnot(c1, type1, c2, type2, &result_type);
+                    container_andnot(c1, type1, c2, type2, &result_type);
 
             if (container_nonzero_cardinality(c, result_type)) {
                 ra_append(&answer->high_low_container, s1, c, result_type);
@@ -20471,7 +20481,7 @@ roaring_bitmap_t *roaring_bitmap_andnot(const roaring_bitmap_t *x1,
             if (pos2 == length2) break;
         } else if (s1 < s2) {  // s1 < s2
             const int next_pos1 =
-                ra_advance_until(&x1->high_low_container, s2, pos1);
+                    ra_advance_until(&x1->high_low_container, s2, pos1);
             ra_append_copy_range(&answer->high_low_container,
                                  &x1->high_low_container, pos1, next_pos1,
                                  is_cow(x1));
@@ -20553,10 +20563,10 @@ void roaring_bitmap_andnot_inplace(roaring_bitmap_t *x1,
         } else if (s1 < s2) {  // s1 < s2
             if (pos1 != intersection_size) {
                 container_t *c1 = ra_get_container_at_index(
-                    &x1->high_low_container, (uint16_t)pos1, &type1);
+                        &x1->high_low_container, (uint16_t)pos1, &type1);
 
                 ra_replace_key_and_container_at_index(
-                    &x1->high_low_container, intersection_size, s1, c1, type1);
+                        &x1->high_low_container, intersection_size, s1, c1, type1);
             }
             intersection_size++;
             pos1++;
@@ -20623,7 +20633,7 @@ uint64_t roaring_bitmap_range_cardinality(const roaring_bitmap_t *r,
                                    range_end & 0xffff);
         } else {
             card +=
-                container_get_cardinality(ra->containers[i], ra->typecodes[i]);
+                    container_get_cardinality(ra->containers[i], ra->typecodes[i]);
         }
         if ((range_start & 0xffff) != 0) {
             card -= container_rank(ra->containers[i], ra->typecodes[i],
@@ -20638,7 +20648,7 @@ uint64_t roaring_bitmap_range_cardinality(const roaring_bitmap_t *r,
         uint16_t key = ra->keys[i];
         if (key < maxhb) {
             card +=
-                container_get_cardinality(ra->containers[i], ra->typecodes[i]);
+                    container_get_cardinality(ra->containers[i], ra->typecodes[i]);
         } else if (key == maxhb) {
             card += container_rank(ra->containers[i], ra->typecodes[i],
                                    range_end & 0xffff);
@@ -20674,8 +20684,8 @@ bool roaring_bitmap_run_optimize(roaring_bitmap_t *r) {
     for (int i = 0; i < r->high_low_container.size; i++) {
         uint8_t type_original, type_after;
         ra_unshare_container_at_index(
-            &r->high_low_container,
-            (uint16_t)i);  // TODO: this introduces extra cloning!
+                &r->high_low_container,
+                (uint16_t)i);  // TODO: this introduces extra cloning!
         container_t *c = ra_get_container_at_index(&r->high_low_container,
                                                    (uint16_t)i, &type_original);
         container_t *c1 = convert_run_optimize(c, type_original, &type_after);
@@ -20715,7 +20725,7 @@ bool roaring_bitmap_remove_run_compression(roaring_bitmap_t *r) {
                 run_container_t *truec = CAST_run(CAST_shared(c)->container);
                 int32_t card = run_container_cardinality(truec);
                 container_t *c1 = convert_to_bitset_or_array_container(
-                    truec, card, &type_after);
+                        truec, card, &type_after);
                 shared_container_free(CAST_shared(c));  // frees run as needed
                 ra_set_container_at_index(&r->high_low_container, i, c1,
                                           type_after);
@@ -20723,7 +20733,7 @@ bool roaring_bitmap_remove_run_compression(roaring_bitmap_t *r) {
             } else {
                 int32_t card = run_container_cardinality(CAST_run(c));
                 container_t *c1 = convert_to_bitset_or_array_container(
-                    CAST_run(c), card, &type_after);
+                        CAST_run(c), card, &type_after);
                 run_container_free(CAST_run(c));
                 ra_set_container_at_index(&r->high_low_container, i, c1,
                                           type_after);
@@ -20744,7 +20754,7 @@ size_t roaring_bitmap_serialize(const roaring_bitmap_t *r, char *buf) {
         buf[0] = CROARING_SERIALIZATION_ARRAY_UINT32;
         memcpy(buf + 1, &cardinality, sizeof(uint32_t));
         roaring_bitmap_to_uint32_array(
-            r, (uint32_t *)(buf + 1 + sizeof(uint32_t)));
+                r, (uint32_t *)(buf + 1 + sizeof(uint32_t)));
         return 1 + (size_t)sizeasarray;
     }
 }
@@ -20752,7 +20762,7 @@ size_t roaring_bitmap_serialize(const roaring_bitmap_t *r, char *buf) {
 size_t roaring_bitmap_size_in_bytes(const roaring_bitmap_t *r) {
     size_t portablesize = roaring_bitmap_portable_size_in_bytes(r);
     uint64_t sizeasarray =
-        roaring_bitmap_get_cardinality(r) * sizeof(uint32_t) + sizeof(uint32_t);
+            roaring_bitmap_get_cardinality(r) * sizeof(uint32_t) + sizeof(uint32_t);
     return portablesize < sizeasarray ? portablesize + 1
                                       : (size_t)sizeasarray + 1;
 }
@@ -20764,7 +20774,7 @@ size_t roaring_bitmap_portable_size_in_bytes(const roaring_bitmap_t *r) {
 roaring_bitmap_t *roaring_bitmap_portable_deserialize_safe(const char *buf,
                                                            size_t maxbytes) {
     roaring_bitmap_t *ans =
-        (roaring_bitmap_t *)roaring_malloc(sizeof(roaring_bitmap_t));
+            (roaring_bitmap_t *)roaring_malloc(sizeof(roaring_bitmap_t));
     if (ans == NULL) {
         return NULL;
     }
@@ -20805,13 +20815,13 @@ roaring_bitmap_t *roaring_bitmap_deserialize(const void *buf) {
         memcpy(&card, bufaschar + 1, sizeof(uint32_t));
 
         const uint32_t *elems =
-            (const uint32_t *)(bufaschar + 1 + sizeof(uint32_t));
+                (const uint32_t *)(bufaschar + 1 + sizeof(uint32_t));
 
         roaring_bitmap_t *bitmap = roaring_bitmap_create();
         if (bitmap == NULL) {
             return NULL;
         }
-        roaring_bulk_context_t context = {0, 0, 0, 0};
+        roaring_bulk_context_t context = {0};
         for (uint32_t i = 0; i < card; i++) {
             // elems may not be aligned, read with memcpy
             uint32_t elem;
@@ -20848,13 +20858,13 @@ roaring_bitmap_t *roaring_bitmap_deserialize_safe(const void *buf,
         }
 
         const uint32_t *elems =
-            (const uint32_t *)(bufaschar + 1 + sizeof(uint32_t));
+                (const uint32_t *)(bufaschar + 1 + sizeof(uint32_t));
 
         roaring_bitmap_t *bitmap = roaring_bitmap_create();
         if (bitmap == NULL) {
             return NULL;
         }
-        roaring_bulk_context_t context = {0, 0, 0, 0};
+        roaring_bulk_context_t context = {0};
         for (uint32_t i = 0; i < card; i++) {
             // elems may not be aligned, read with memcpy
             uint32_t elem;
@@ -20905,7 +20915,7 @@ bool roaring_iterate64(const roaring_bitmap_t *r, roaring_iterator64 iterator,
  * 2. At a container, with the high bits set, `has_value = true`.
  */
 CROARING_WARN_UNUSED static bool iter_new_container_partial_init(
-    roaring_uint32_iterator_t *newit) {
+        roaring_uint32_iterator_t *newit) {
     newit->current_value = 0;
     if (newit->container_index >= newit->parent->high_low_container.size ||
         newit->container_index < 0) {
@@ -20918,15 +20928,15 @@ CROARING_WARN_UNUSED static bool iter_new_container_partial_init(
     // and have to worry about the (easily predicted) container_unwrap_shared
     // call.
     newit->container =
-        newit->parent->high_low_container.containers[newit->container_index];
+            newit->parent->high_low_container.containers[newit->container_index];
     newit->typecode =
-        newit->parent->high_low_container.typecodes[newit->container_index];
+            newit->parent->high_low_container.typecodes[newit->container_index];
     newit->highbits =
-        ((uint32_t)
-             newit->parent->high_low_container.keys[newit->container_index])
-        << 16;
+            ((uint32_t)
+                    newit->parent->high_low_container.keys[newit->container_index])
+                    << 16;
     newit->container =
-        container_unwrap_shared(newit->container, &(newit->typecode));
+            container_unwrap_shared(newit->container, &(newit->typecode));
     return true;
 }
 
@@ -20935,11 +20945,11 @@ CROARING_WARN_UNUSED static bool iter_new_container_partial_init(
  * iterator points at, if available.
  */
 CROARING_WARN_UNUSED static bool loadfirstvalue(
-    roaring_uint32_iterator_t *newit) {
+        roaring_uint32_iterator_t *newit) {
     if (iter_new_container_partial_init(newit)) {
         uint16_t value = 0;
         newit->container_it =
-            container_init_iterator(newit->container, newit->typecode, &value);
+                container_init_iterator(newit->container, newit->typecode, &value);
         newit->current_value = newit->highbits | value;
     }
     return newit->has_value;
@@ -20950,11 +20960,11 @@ CROARING_WARN_UNUSED static bool loadfirstvalue(
  * iterator points at, if available.
  */
 CROARING_WARN_UNUSED static bool loadlastvalue(
-    roaring_uint32_iterator_t *newit) {
+        roaring_uint32_iterator_t *newit) {
     if (iter_new_container_partial_init(newit)) {
         uint16_t value = 0;
         newit->container_it = container_init_iterator_last(
-            newit->container, newit->typecode, &value);
+                newit->container, newit->typecode, &value);
         newit->current_value = newit->highbits | value;
     }
     return newit->has_value;
@@ -20966,7 +20976,7 @@ CROARING_WARN_UNUSED static bool loadlastvalue(
  * a value exists within the current container.
  */
 CROARING_WARN_UNUSED static bool loadfirstvalue_largeorequal(
-    roaring_uint32_iterator_t *newit, uint32_t val) {
+        roaring_uint32_iterator_t *newit, uint32_t val) {
     bool partial_init = iter_new_container_partial_init(newit);
     assert(partial_init);
     if (!partial_init) {
@@ -20974,10 +20984,10 @@ CROARING_WARN_UNUSED static bool loadfirstvalue_largeorequal(
     }
     uint16_t value = 0;
     newit->container_it =
-        container_init_iterator(newit->container, newit->typecode, &value);
+            container_init_iterator(newit->container, newit->typecode, &value);
     bool found = container_iterator_lower_bound(
-        newit->container, newit->typecode, &newit->container_it, &value,
-        val & 0xFFFF);
+            newit->container, newit->typecode, &newit->container_it, &value,
+            val & 0xFFFF);
     assert(found);
     if (!found) {
         return false;
@@ -21002,18 +21012,18 @@ void roaring_iterator_init_last(const roaring_bitmap_t *r,
 
 roaring_uint32_iterator_t *roaring_iterator_create(const roaring_bitmap_t *r) {
     roaring_uint32_iterator_t *newit =
-        (roaring_uint32_iterator_t *)roaring_malloc(
-            sizeof(roaring_uint32_iterator_t));
+            (roaring_uint32_iterator_t *)roaring_malloc(
+                    sizeof(roaring_uint32_iterator_t));
     if (newit == NULL) return NULL;
     roaring_iterator_init(r, newit);
     return newit;
 }
 
 roaring_uint32_iterator_t *roaring_uint32_iterator_copy(
-    const roaring_uint32_iterator_t *it) {
+        const roaring_uint32_iterator_t *it) {
     roaring_uint32_iterator_t *newit =
-        (roaring_uint32_iterator_t *)roaring_malloc(
-            sizeof(roaring_uint32_iterator_t));
+            (roaring_uint32_iterator_t *)roaring_malloc(
+                    sizeof(roaring_uint32_iterator_t));
     memcpy(newit, it, sizeof(roaring_uint32_iterator_t));
     return newit;
 }
@@ -21024,8 +21034,8 @@ bool roaring_uint32_iterator_move_equalorlarger(roaring_uint32_iterator_t *it,
     const int i = ra_get_index(&it->parent->high_low_container, hb);
     if (i >= 0) {
         uint32_t lowvalue =
-            container_maximum(it->parent->high_low_container.containers[i],
-                              it->parent->high_low_container.typecodes[i]);
+                container_maximum(it->parent->high_low_container.containers[i],
+                                  it->parent->high_low_container.typecodes[i]);
         uint16_t lb = val & 0xFFFF;
         if (lowvalue < lb) {
             // will have to load first value of next container
@@ -21087,8 +21097,8 @@ uint32_t roaring_uint32_iterator_read(roaring_uint32_iterator_t *it,
         uint32_t consumed;
         uint16_t low16 = (uint16_t)it->current_value;
         bool has_value = container_iterator_read_into_uint32(
-            it->container, it->typecode, &it->container_it, it->highbits, buf,
-            count - ret, &consumed, &low16);
+                it->container, it->typecode, &it->container_it, it->highbits, buf,
+                count - ret, &consumed, &low16);
         ret += consumed;
         buf += consumed;
         if (has_value) {
@@ -21150,9 +21160,9 @@ bool roaring_bitmap_is_subset(const roaring_bitmap_t *r1,
         if (s1 == s2) {
             uint8_t type1, type2;
             container_t *c1 =
-                ra_get_container_at_index(ra1, (uint16_t)pos1, &type1);
+                    ra_get_container_at_index(ra1, (uint16_t)pos1, &type1);
             container_t *c2 =
-                ra_get_container_at_index(ra2, (uint16_t)pos2, &type2);
+                    ra_get_container_at_index(ra2, (uint16_t)pos2, &type2);
             if (!container_is_subset(c1, type1, c2, type2)) return false;
             ++pos1;
             ++pos2;
@@ -21177,10 +21187,10 @@ static void insert_flipped_container(roaring_array_t *ans_arr,
     container_t *flipped_container = NULL;
     if (i >= 0) {
         container_t *container_to_flip =
-            ra_get_container_at_index(x1_arr, (uint16_t)i, &ctype_in);
+                ra_get_container_at_index(x1_arr, (uint16_t)i, &ctype_in);
         flipped_container =
-            container_not_range(container_to_flip, ctype_in, (uint32_t)lb_start,
-                                (uint32_t)(lb_end + 1), &ctype_out);
+                container_not_range(container_to_flip, ctype_in, (uint32_t)lb_start,
+                                    (uint32_t)(lb_end + 1), &ctype_out);
 
         if (container_get_cardinality(flipped_container, ctype_out))
             ra_insert_new_key_value_at(ans_arr, -j - 1, hb, flipped_container,
@@ -21190,7 +21200,7 @@ static void insert_flipped_container(roaring_array_t *ans_arr,
         }
     } else {
         flipped_container = container_range_of_ones(
-            (uint32_t)lb_start, (uint32_t)(lb_end + 1), &ctype_out);
+                (uint32_t)lb_start, (uint32_t)(lb_end + 1), &ctype_out);
         ra_insert_new_key_value_at(ans_arr, -j - 1, hb, flipped_container,
                                    ctype_out);
     }
@@ -21203,10 +21213,10 @@ static void inplace_flip_container(roaring_array_t *x1_arr, uint16_t hb,
     container_t *flipped_container = NULL;
     if (i >= 0) {
         container_t *container_to_flip =
-            ra_get_container_at_index(x1_arr, (uint16_t)i, &ctype_in);
+                ra_get_container_at_index(x1_arr, (uint16_t)i, &ctype_in);
         flipped_container = container_inot_range(
-            container_to_flip, ctype_in, (uint32_t)lb_start,
-            (uint32_t)(lb_end + 1), &ctype_out);
+                container_to_flip, ctype_in, (uint32_t)lb_start,
+                (uint32_t)(lb_end + 1), &ctype_out);
         // if a new container was created, the old one was already freed
         if (container_get_cardinality(flipped_container, ctype_out)) {
             ra_set_container_at_index(x1_arr, i, flipped_container, ctype_out);
@@ -21217,7 +21227,7 @@ static void inplace_flip_container(roaring_array_t *x1_arr, uint16_t hb,
 
     } else {
         flipped_container = container_range_of_ones(
-            (uint32_t)lb_start, (uint32_t)(lb_end + 1), &ctype_out);
+                (uint32_t)lb_start, (uint32_t)(lb_end + 1), &ctype_out);
         ra_insert_new_key_value_at(x1_arr, -i - 1, hb, flipped_container,
                                    ctype_out);
     }
@@ -21232,9 +21242,9 @@ static void insert_fully_flipped_container(roaring_array_t *ans_arr,
     container_t *flipped_container = NULL;
     if (i >= 0) {
         container_t *container_to_flip =
-            ra_get_container_at_index(x1_arr, (uint16_t)i, &ctype_in);
+                ra_get_container_at_index(x1_arr, (uint16_t)i, &ctype_in);
         flipped_container =
-            container_not(container_to_flip, ctype_in, &ctype_out);
+                container_not(container_to_flip, ctype_in, &ctype_out);
         if (container_get_cardinality(flipped_container, ctype_out))
             ra_insert_new_key_value_at(ans_arr, -j - 1, hb, flipped_container,
                                        ctype_out);
@@ -21254,9 +21264,9 @@ static void inplace_fully_flip_container(roaring_array_t *x1_arr, uint16_t hb) {
     container_t *flipped_container = NULL;
     if (i >= 0) {
         container_t *container_to_flip =
-            ra_get_container_at_index(x1_arr, (uint16_t)i, &ctype_in);
+                ra_get_container_at_index(x1_arr, (uint16_t)i, &ctype_in);
         flipped_container =
-            container_inot(container_to_flip, ctype_in, &ctype_out);
+                container_inot(container_to_flip, ctype_in, &ctype_out);
 
         if (container_get_cardinality(flipped_container, ctype_out)) {
             ra_set_container_at_index(x1_arr, i, flipped_container, ctype_out);
@@ -21483,7 +21493,7 @@ roaring_bitmap_t *roaring_bitmap_lazy_or(const roaring_bitmap_t *x1,
                                          const bool bitsetconversion) {
     uint8_t result_type = 0;
     const int length1 = x1->high_low_container.size,
-              length2 = x2->high_low_container.size;
+            length2 = x2->high_low_container.size;
     if (0 == length1) {
         return roaring_bitmap_copy(x2);
     }
@@ -21491,7 +21501,7 @@ roaring_bitmap_t *roaring_bitmap_lazy_or(const roaring_bitmap_t *x1,
         return roaring_bitmap_copy(x1);
     }
     roaring_bitmap_t *answer =
-        roaring_bitmap_create_with_capacity(length1 + length2);
+            roaring_bitmap_create_with_capacity(length1 + length2);
     roaring_bitmap_set_copy_on_write(answer, is_cow(x1) || is_cow(x2));
     int pos1 = 0, pos2 = 0;
     uint8_t type1, type2;
@@ -21508,7 +21518,7 @@ roaring_bitmap_t *roaring_bitmap_lazy_or(const roaring_bitmap_t *x1,
                 (get_container_type(c1, type1) != BITSET_CONTAINER_TYPE) &&
                 (get_container_type(c2, type2) != BITSET_CONTAINER_TYPE)) {
                 container_t *newc1 =
-                    container_mutable_unwrap_shared(c1, &type1);
+                        container_mutable_unwrap_shared(c1, &type1);
                 newc1 = container_to_bitset(newc1, type1);
                 type1 = BITSET_CONTAINER_TYPE;
                 c = container_lazy_ior(newc1, type1, c2, type2, &result_type);
@@ -21605,12 +21615,12 @@ void roaring_bitmap_lazy_or_inplace(roaring_bitmap_t *x1,
                 }
 
                 container_t *c2 = ra_get_container_at_index(
-                    &x2->high_low_container, (uint16_t)pos2, &type2);
+                        &x2->high_low_container, (uint16_t)pos2, &type2);
                 container_t *c =
-                    container_lazy_ior(c1, type1, c2, type2, &result_type);
+                        container_lazy_ior(c1, type1, c2, type2, &result_type);
 
                 if (c != c1) {  // in this instance a new container was created,
-                                // and we need to free the old one
+                    // and we need to free the old one
                     container_free(c1, type1);
                 }
 
@@ -21657,7 +21667,7 @@ roaring_bitmap_t *roaring_bitmap_lazy_xor(const roaring_bitmap_t *x1,
                                           const roaring_bitmap_t *x2) {
     uint8_t result_type = 0;
     const int length1 = x1->high_low_container.size,
-              length2 = x2->high_low_container.size;
+            length2 = x2->high_low_container.size;
     if (0 == length1) {
         return roaring_bitmap_copy(x2);
     }
@@ -21665,7 +21675,7 @@ roaring_bitmap_t *roaring_bitmap_lazy_xor(const roaring_bitmap_t *x1,
         return roaring_bitmap_copy(x1);
     }
     roaring_bitmap_t *answer =
-        roaring_bitmap_create_with_capacity(length1 + length2);
+            roaring_bitmap_create_with_capacity(length1 + length2);
     roaring_bitmap_set_copy_on_write(answer, is_cow(x1) || is_cow(x2));
     int pos1 = 0, pos2 = 0;
     uint8_t type1, type2;
@@ -21678,7 +21688,7 @@ roaring_bitmap_t *roaring_bitmap_lazy_xor(const roaring_bitmap_t *x1,
             container_t *c2 = ra_get_container_at_index(&x2->high_low_container,
                                                         (uint16_t)pos2, &type2);
             container_t *c =
-                container_lazy_xor(c1, type1, c2, type2, &result_type);
+                    container_lazy_xor(c1, type1, c2, type2, &result_type);
 
             if (container_nonzero_cardinality(c, result_type)) {
                 ra_append(&answer->high_low_container, s1, c, result_type);
@@ -21838,8 +21848,8 @@ uint64_t roaring_bitmap_rank(const roaring_bitmap_t *bm, uint32_t x) {
         uint32_t key = bm->high_low_container.keys[i];
         if (xhigh > key) {
             size +=
-                container_get_cardinality(bm->high_low_container.containers[i],
-                                          bm->high_low_container.typecodes[i]);
+                    container_get_cardinality(bm->high_low_container.containers[i],
+                                              bm->high_low_container.typecodes[i]);
         } else if (xhigh == key) {
             return size + container_rank(bm->high_low_container.containers[i],
                                          bm->high_low_container.typecodes[i],
@@ -21862,13 +21872,13 @@ void roaring_bitmap_rank_many(const roaring_bitmap_t *bm, const uint32_t *begin,
         uint32_t key = bm->high_low_container.keys[i];
         if (xhigh > key) {
             size +=
-                container_get_cardinality(bm->high_low_container.containers[i],
-                                          bm->high_low_container.typecodes[i]);
+                    container_get_cardinality(bm->high_low_container.containers[i],
+                                              bm->high_low_container.typecodes[i]);
             i++;
         } else if (xhigh == key) {
             uint32_t consumed = container_rank_many(
-                bm->high_low_container.containers[i],
-                bm->high_low_container.typecodes[i], size, iter, end, ans);
+                    bm->high_low_container.containers[i],
+                    bm->high_low_container.typecodes[i], size, iter, end, ans);
             iter += consumed;
             ans += consumed;
         } else {
@@ -21891,12 +21901,12 @@ int64_t roaring_bitmap_get_index(const roaring_bitmap_t *bm, uint32_t x) {
         uint32_t key = bm->high_low_container.keys[i];
         if (xhigh > key) {
             index +=
-                container_get_cardinality(bm->high_low_container.containers[i],
-                                          bm->high_low_container.typecodes[i]);
+                    container_get_cardinality(bm->high_low_container.containers[i],
+                                              bm->high_low_container.typecodes[i]);
         } else if (xhigh == key) {
             int32_t low_idx = container_get_index(
-                bm->high_low_container.containers[high_idx],
-                bm->high_low_container.typecodes[high_idx], x & 0xFFFF);
+                    bm->high_low_container.containers[high_idx],
+                    bm->high_low_container.typecodes[high_idx], x & 0xFFFF);
             if (low_idx < 0) return -1;
             return index + low_idx;
         } else {
@@ -21928,11 +21938,11 @@ uint32_t roaring_bitmap_minimum(const roaring_bitmap_t *bm) {
 uint32_t roaring_bitmap_maximum(const roaring_bitmap_t *bm) {
     if (bm->high_low_container.size > 0) {
         container_t *container =
-            bm->high_low_container.containers[bm->high_low_container.size - 1];
+                bm->high_low_container.containers[bm->high_low_container.size - 1];
         uint8_t typecode =
-            bm->high_low_container.typecodes[bm->high_low_container.size - 1];
+                bm->high_low_container.typecodes[bm->high_low_container.size - 1];
         uint32_t key =
-            bm->high_low_container.keys[bm->high_low_container.size - 1];
+                bm->high_low_container.keys[bm->high_low_container.size - 1];
         uint32_t lowvalue = container_maximum(container, typecode);
         return lowvalue | (key << 16);
     }
@@ -21951,7 +21961,7 @@ bool roaring_bitmap_select(const roaring_bitmap_t *bm, uint32_t rank,
         container = bm->high_low_container.containers[i];
         typecode = bm->high_low_container.typecodes[i];
         valid =
-            container_select(container, typecode, &start_rank, rank, element);
+                container_select(container, typecode, &start_rank, rank, element);
         i++;
     }
 
@@ -21966,15 +21976,15 @@ bool roaring_bitmap_select(const roaring_bitmap_t *bm, uint32_t rank,
 bool roaring_bitmap_intersect(const roaring_bitmap_t *x1,
                               const roaring_bitmap_t *x2) {
     const int length1 = x1->high_low_container.size,
-              length2 = x2->high_low_container.size;
+            length2 = x2->high_low_container.size;
     uint64_t answer = 0;
     int pos1 = 0, pos2 = 0;
 
     while (pos1 < length1 && pos2 < length2) {
         const uint16_t s1 =
-            ra_get_key_at_index(&x1->high_low_container, (uint16_t)pos1);
+                ra_get_key_at_index(&x1->high_low_container, (uint16_t)pos1);
         const uint16_t s2 =
-            ra_get_key_at_index(&x2->high_low_container, (uint16_t)pos2);
+                ra_get_key_at_index(&x2->high_low_container, (uint16_t)pos2);
 
         if (s1 == s2) {
             uint8_t type1, type2;
@@ -22016,14 +22026,14 @@ bool roaring_bitmap_intersect_with_range(const roaring_bitmap_t *bm, uint64_t x,
 uint64_t roaring_bitmap_and_cardinality(const roaring_bitmap_t *x1,
                                         const roaring_bitmap_t *x2) {
     const int length1 = x1->high_low_container.size,
-              length2 = x2->high_low_container.size;
+            length2 = x2->high_low_container.size;
     uint64_t answer = 0;
     int pos1 = 0, pos2 = 0;
     while (pos1 < length1 && pos2 < length2) {
         const uint16_t s1 =
-            ra_get_key_at_index(&x1->high_low_container, (uint16_t)pos1);
+                ra_get_key_at_index(&x1->high_low_container, (uint16_t)pos1);
         const uint16_t s2 =
-            ra_get_key_at_index(&x2->high_low_container, (uint16_t)pos2);
+                ra_get_key_at_index(&x2->high_low_container, (uint16_t)pos2);
 
         if (s1 == s2) {
             uint8_t type1, type2;
@@ -22120,7 +22130,7 @@ bool roaring_bitmap_contains_range(const roaring_bitmap_t *r,
     const uint32_t lb_re = ((range_end - 1) & 0xFFFF) + 1;
     uint8_t type;
     container_t *c =
-        ra_get_container_at_index(&r->high_low_container, (uint16_t)is, &type);
+            ra_get_container_at_index(&r->high_low_container, (uint16_t)is, &type);
     if (hb_rs == hb_re) {
         return container_contains_range(c, lb_rs, lb_re, type);
     }
@@ -22144,7 +22154,7 @@ bool roaring_bitmap_contains_range(const roaring_bitmap_t *r,
 bool roaring_bitmap_is_strict_subset(const roaring_bitmap_t *r1,
                                      const roaring_bitmap_t *r2) {
     return (roaring_bitmap_get_cardinality(r2) >
-                roaring_bitmap_get_cardinality(r1) &&
+            roaring_bitmap_get_cardinality(r1) &&
             roaring_bitmap_is_subset(r1, r2));
 }
 
@@ -22192,7 +22202,7 @@ size_t roaring_bitmap_frozen_size_in_bytes(const roaring_bitmap_t *rb) {
             }
             case ARRAY_CONTAINER_TYPE: {
                 const array_container_t *ac =
-                    const_CAST_array(ra->containers[i]);
+                        const_CAST_array(ra->containers[i]);
                 num_bytes += ac->cardinality * sizeof(uint16_t);
                 break;
             }
@@ -22226,7 +22236,7 @@ void roaring_bitmap_frozen_serialize(const roaring_bitmap_t *rb, char *buf) {
         switch (ra->typecodes[i]) {
             case BITSET_CONTAINER_TYPE: {
                 bitset_zone_size +=
-                    BITSET_CONTAINER_SIZE_IN_WORDS * sizeof(uint64_t);
+                        BITSET_CONTAINER_SIZE_IN_WORDS * sizeof(uint64_t);
                 break;
             }
             case RUN_CONTAINER_TYPE: {
@@ -22236,7 +22246,7 @@ void roaring_bitmap_frozen_serialize(const roaring_bitmap_t *rb, char *buf) {
             }
             case ARRAY_CONTAINER_TYPE: {
                 const array_container_t *ac =
-                    const_CAST_array(ra->containers[i]);
+                        const_CAST_array(ra->containers[i]);
                 array_zone_size += ac->cardinality * sizeof(uint16_t);
                 break;
             }
@@ -22258,7 +22268,7 @@ void roaring_bitmap_frozen_serialize(const roaring_bitmap_t *rb, char *buf) {
         switch (ra->typecodes[i]) {
             case BITSET_CONTAINER_TYPE: {
                 const bitset_container_t *bc =
-                    const_CAST_bitset(ra->containers[i]);
+                        const_CAST_bitset(ra->containers[i]);
                 memcpy(bitset_zone, bc->words,
                        BITSET_CONTAINER_SIZE_IN_WORDS * sizeof(uint64_t));
                 bitset_zone += BITSET_CONTAINER_SIZE_IN_WORDS;
@@ -22266,8 +22276,8 @@ void roaring_bitmap_frozen_serialize(const roaring_bitmap_t *rb, char *buf) {
                     count = (uint16_t)(bc->cardinality - 1);
                 } else {
                     count =
-                        (uint16_t)(bitset_container_compute_cardinality(bc) -
-                                   1);
+                            (uint16_t)(bitset_container_compute_cardinality(bc) -
+                                       1);
                 }
                 break;
             }
@@ -22281,7 +22291,7 @@ void roaring_bitmap_frozen_serialize(const roaring_bitmap_t *rb, char *buf) {
             }
             case ARRAY_CONTAINER_TYPE: {
                 const array_container_t *ac =
-                    const_CAST_array(ra->containers[i]);
+                        const_CAST_array(ra->containers[i]);
                 size_t num_bytes = ac->cardinality * sizeof(uint16_t);
                 memcpy(array_zone, ac->array, num_bytes);
                 array_zone += ac->cardinality;
@@ -22336,7 +22346,7 @@ const roaring_bitmap_t *roaring_bitmap_frozen_view(const char *buf,
             case BITSET_CONTAINER_TYPE:
                 num_bitset_containers++;
                 bitset_zone_size +=
-                    BITSET_CONTAINER_SIZE_IN_WORDS * sizeof(uint64_t);
+                        BITSET_CONTAINER_SIZE_IN_WORDS * sizeof(uint64_t);
                 break;
             case RUN_CONTAINER_TYPE:
                 num_run_containers++;
@@ -22351,7 +22361,7 @@ const roaring_bitmap_t *roaring_bitmap_frozen_view(const char *buf,
         }
     }
     if (length != bitset_zone_size + run_zone_size + array_zone_size +
-                      5 * num_containers + 4) {
+                  5 * num_containers + 4) {
         return NULL;
     }
     uint64_t *bitset_zone = (uint64_t *)(buf);
@@ -22371,14 +22381,14 @@ const roaring_bitmap_t *roaring_bitmap_frozen_view(const char *buf,
     }
 
     roaring_bitmap_t *rb =
-        (roaring_bitmap_t *)arena_alloc(&arena, sizeof(roaring_bitmap_t));
+            (roaring_bitmap_t *)arena_alloc(&arena, sizeof(roaring_bitmap_t));
     rb->high_low_container.flags = ROARING_FLAG_FROZEN;
     rb->high_low_container.allocation_size = num_containers;
     rb->high_low_container.size = num_containers;
     rb->high_low_container.keys = (uint16_t *)keys;
     rb->high_low_container.typecodes = (uint8_t *)typecodes;
     rb->high_low_container.containers = (container_t **)arena_alloc(
-        &arena, sizeof(container_t *) * num_containers);
+            &arena, sizeof(container_t *) * num_containers);
     // Ensure offset of high_low_container.containers is known distance used in
     // C++ wrapper. sizeof(roaring_bitmap_t) is used as it is the size of the
     // only allocation that precedes high_low_container.containers. If this is
@@ -22391,7 +22401,7 @@ const roaring_bitmap_t *roaring_bitmap_frozen_view(const char *buf,
         switch (typecodes[i]) {
             case BITSET_CONTAINER_TYPE: {
                 bitset_container_t *bitset = (bitset_container_t *)arena_alloc(
-                    &arena, sizeof(bitset_container_t));
+                        &arena, sizeof(bitset_container_t));
                 bitset->words = bitset_zone;
                 bitset->cardinality = counts[i] + UINT32_C(1);
                 rb->high_low_container.containers[i] = bitset;
@@ -22400,7 +22410,7 @@ const roaring_bitmap_t *roaring_bitmap_frozen_view(const char *buf,
             }
             case RUN_CONTAINER_TYPE: {
                 run_container_t *run = (run_container_t *)arena_alloc(
-                    &arena, sizeof(run_container_t));
+                        &arena, sizeof(run_container_t));
                 run->capacity = counts[i];
                 run->n_runs = counts[i];
                 run->runs = run_zone;
@@ -22410,7 +22420,7 @@ const roaring_bitmap_t *roaring_bitmap_frozen_view(const char *buf,
             }
             case ARRAY_CONTAINER_TYPE: {
                 array_container_t *array = (array_container_t *)arena_alloc(
-                    &arena, sizeof(array_container_t));
+                        &arena, sizeof(array_container_t));
                 array->capacity = counts[i] + UINT32_C(1);
                 array->cardinality = counts[i] + UINT32_C(1);
                 array->array = array_zone;
@@ -22506,17 +22516,17 @@ roaring_bitmap_t *roaring_bitmap_portable_deserialize_frozen(const char *buf) {
     }
 
     roaring_bitmap_t *rb =
-        (roaring_bitmap_t *)arena_alloc(&arena, sizeof(roaring_bitmap_t));
+            (roaring_bitmap_t *)arena_alloc(&arena, sizeof(roaring_bitmap_t));
     rb->high_low_container.flags = ROARING_FLAG_FROZEN;
     rb->high_low_container.allocation_size = num_containers;
     rb->high_low_container.size = num_containers;
     rb->high_low_container.containers = (container_t **)arena_alloc(
-        &arena, sizeof(container_t *) * num_containers);
+            &arena, sizeof(container_t *) * num_containers);
 
     uint16_t *keys =
-        (uint16_t *)arena_alloc(&arena, num_containers * sizeof(uint16_t));
+            (uint16_t *)arena_alloc(&arena, num_containers * sizeof(uint16_t));
     uint8_t *typecodes =
-        (uint8_t *)arena_alloc(&arena, num_containers * sizeof(uint8_t));
+            (uint8_t *)arena_alloc(&arena, num_containers * sizeof(uint8_t));
 
     rb->high_low_container.keys = keys;
     rb->high_low_container.typecodes = typecodes;
@@ -22539,7 +22549,7 @@ roaring_bitmap_t *roaring_bitmap_portable_deserialize_frozen(const char *buf) {
         if (isbitmap) {
             typecodes[i] = BITSET_CONTAINER_TYPE;
             bitset_container_t *c = (bitset_container_t *)arena_alloc(
-                &arena, sizeof(bitset_container_t));
+                    &arena, sizeof(bitset_container_t));
             c->cardinality = cardinality;
             if (offset_headers != NULL) {
                 c->words = (uint64_t *)(start_of_buf + offset_headers[i]);
@@ -22551,7 +22561,7 @@ roaring_bitmap_t *roaring_bitmap_portable_deserialize_frozen(const char *buf) {
         } else if (isrun) {
             typecodes[i] = RUN_CONTAINER_TYPE;
             run_container_t *c =
-                (run_container_t *)arena_alloc(&arena, sizeof(run_container_t));
+                    (run_container_t *)arena_alloc(&arena, sizeof(run_container_t));
             c->capacity = cardinality;
             uint16_t n_runs;
             if (offset_headers != NULL) {
@@ -22571,7 +22581,7 @@ roaring_bitmap_t *roaring_bitmap_portable_deserialize_frozen(const char *buf) {
         } else {
             typecodes[i] = ARRAY_CONTAINER_TYPE;
             array_container_t *c = (array_container_t *)arena_alloc(
-                &arena, sizeof(array_container_t));
+                    &arena, sizeof(array_container_t));
             c->cardinality = cardinality;
             c->capacity = cardinality;
             if (offset_headers != NULL) {
@@ -22721,7 +22731,7 @@ static inline leaf_t *copy_leaf_container(const leaf_t *leaf) {
     result_leaf->typecode = leaf->typecode;
     // get_copy_of_container modifies the typecode passed in.
     result_leaf->container = get_copy_of_container(
-        leaf->container, &result_leaf->typecode, /*copy_on_write=*/false);
+            leaf->container, &result_leaf->typecode, /*copy_on_write=*/false);
     return result_leaf;
 }
 
@@ -22733,29 +22743,29 @@ static inline int compare_high48(art_key_chunk_t key1[],
 }
 
 static inline bool roaring64_iterator_init_at_leaf_first(
-    roaring64_iterator_t *it) {
+        roaring64_iterator_t *it) {
     it->high48 = combine_key(it->art_it.key, 0);
     leaf_t *leaf = (leaf_t *)it->art_it.value;
     uint16_t low16 = 0;
     it->container_it =
-        container_init_iterator(leaf->container, leaf->typecode, &low16);
+            container_init_iterator(leaf->container, leaf->typecode, &low16);
     it->value = it->high48 | low16;
     return (it->has_value = true);
 }
 
 static inline bool roaring64_iterator_init_at_leaf_last(
-    roaring64_iterator_t *it) {
+        roaring64_iterator_t *it) {
     it->high48 = combine_key(it->art_it.key, 0);
     leaf_t *leaf = (leaf_t *)it->art_it.value;
     uint16_t low16 = 0;
     it->container_it =
-        container_init_iterator_last(leaf->container, leaf->typecode, &low16);
+            container_init_iterator_last(leaf->container, leaf->typecode, &low16);
     it->value = it->high48 | low16;
     return (it->has_value = true);
 }
 
 static inline roaring64_iterator_t *roaring64_iterator_init_at(
-    const roaring64_bitmap_t *r, roaring64_iterator_t *it, bool first) {
+        const roaring64_bitmap_t *r, roaring64_iterator_t *it, bool first) {
     it->parent = r;
     it->art_it = art_init_iterator(&r->art, first);
     it->has_value = it->art_it.value != NULL;
@@ -22773,7 +22783,7 @@ static inline roaring64_iterator_t *roaring64_iterator_init_at(
 
 roaring64_bitmap_t *roaring64_bitmap_create(void) {
     roaring64_bitmap_t *r =
-        (roaring64_bitmap_t *)roaring_malloc(sizeof(roaring64_bitmap_t));
+            (roaring64_bitmap_t *)roaring_malloc(sizeof(roaring64_bitmap_t));
     r->art.root = NULL;
     r->flags = 0;
     return r;
@@ -22799,7 +22809,7 @@ roaring64_bitmap_t *roaring64_bitmap_copy(const roaring64_bitmap_t *r) {
         leaf_t *leaf = (leaf_t *)it.value;
         uint8_t result_typecode = leaf->typecode;
         container_t *result_container = get_copy_of_container(
-            leaf->container, &result_typecode, /*copy_on_write=*/false);
+                leaf->container, &result_typecode, /*copy_on_write=*/false);
         leaf_t *result_leaf = create_leaf(result_container, result_typecode);
         art_insert(&result->art, it.key, (art_val_t *)result_leaf);
         art_iterator_next(&it);
@@ -22830,7 +22840,7 @@ roaring64_bitmap_t *roaring64_bitmap_from_range(uint64_t min, uint64_t max,
 
         uint8_t typecode;
         container_t *container = container_from_range(
-            &typecode, container_min, container_max, (uint16_t)step);
+                &typecode, container_min, container_max, (uint16_t)step);
 
         uint8_t high48[ART_KEY_BYTES];
         split_key(min, high48);
@@ -22856,7 +22866,7 @@ roaring64_bitmap_t *roaring64_bitmap_of_ptr(size_t n_args,
 
 roaring64_bitmap_t *roaring64_bitmap_of(size_t n_args, ...) {
     roaring64_bitmap_t *r = roaring64_bitmap_create();
-    roaring64_bulk_context_t context = {0, 0, 0, 0, 0, 0, 0};
+    roaring64_bulk_context_t context = {0};
     va_list ap;
     va_start(ap, n_args);
     for (size_t i = 0; i < n_args; i++) {
@@ -22874,7 +22884,7 @@ static inline leaf_t *containerptr_roaring64_bitmap_add(roaring64_bitmap_t *r,
     if (leaf != NULL) {
         uint8_t typecode2;
         container_t *container2 =
-            container_add(leaf->container, low16, leaf->typecode, &typecode2);
+                container_add(leaf->container, low16, leaf->typecode, &typecode2);
         if (container2 != leaf->container) {
             container_free(leaf->container, leaf->typecode);
             leaf->container = container2;
@@ -22885,7 +22895,7 @@ static inline leaf_t *containerptr_roaring64_bitmap_add(roaring64_bitmap_t *r,
         array_container_t *ac = array_container_create();
         uint8_t typecode;
         container_t *container =
-            container_add(ac, low16, ARRAY_CONTAINER_TYPE, &typecode);
+                container_add(ac, low16, ARRAY_CONTAINER_TYPE, &typecode);
         assert(ac == container);
         leaf = create_leaf(container, typecode);
         art_insert(&r->art, high48, (art_val_t *)leaf);
@@ -22908,11 +22918,11 @@ bool roaring64_bitmap_add_checked(roaring64_bitmap_t *r, uint64_t val) {
     int old_cardinality = 0;
     if (leaf != NULL) {
         old_cardinality =
-            container_get_cardinality(leaf->container, leaf->typecode);
+                container_get_cardinality(leaf->container, leaf->typecode);
     }
     leaf = containerptr_roaring64_bitmap_add(r, high48, low16, leaf);
     int new_cardinality =
-        container_get_cardinality(leaf->container, leaf->typecode);
+            container_get_cardinality(leaf->container, leaf->typecode);
     return old_cardinality != new_cardinality;
 }
 
@@ -22926,8 +22936,8 @@ void roaring64_bitmap_add_bulk(roaring64_bitmap_t *r,
         // We're at a container with the correct high bits.
         uint8_t typecode2;
         container_t *container2 =
-            container_add(context->leaf->container, low16,
-                          context->leaf->typecode, &typecode2);
+                container_add(context->leaf->container, low16,
+                              context->leaf->typecode, &typecode2);
         if (container2 != context->leaf->container) {
             container_free(context->leaf->container, context->leaf->typecode);
             context->leaf->container = container2;
@@ -22938,7 +22948,7 @@ void roaring64_bitmap_add_bulk(roaring64_bitmap_t *r,
         // differ.
         leaf_t *leaf = (leaf_t *)art_find(&r->art, high48);
         context->leaf =
-            containerptr_roaring64_bitmap_add(r, high48, low16, leaf);
+                containerptr_roaring64_bitmap_add(r, high48, low16, leaf);
         memcpy(context->high_bytes, high48, ART_KEY_BYTES);
     }
 }
@@ -22949,7 +22959,7 @@ void roaring64_bitmap_add_many(roaring64_bitmap_t *r, size_t n_args,
         return;
     }
     const uint64_t *end = vals + n_args;
-    roaring64_bulk_context_t context = {0, 0, 0, 0, 0, 0, 0};
+    roaring64_bulk_context_t context = {0};
     for (const uint64_t *current_val = vals; current_val != end;
          current_val++) {
         roaring64_bitmap_add_bulk(r, &context, *current_val);
@@ -22962,7 +22972,7 @@ static inline void add_range_closed_at(art_t *art, uint8_t *high48,
     if (leaf != NULL) {
         uint8_t typecode2;
         container_t *container2 = container_add_range(
-            leaf->container, leaf->typecode, min, max, &typecode2);
+                leaf->container, leaf->typecode, min, max, &typecode2);
         if (container2 != leaf->container) {
             container_free(leaf->container, leaf->typecode);
             leaf->container = container2;
@@ -23088,8 +23098,7 @@ bool roaring64_bitmap_contains_bulk(const roaring64_bitmap_t *r,
     uint8_t high48[ART_KEY_BYTES];
     uint16_t low16 = split_key(val, high48);
 
-    if (context->leaf == NULL ||
-        art_compare_keys(context->high_bytes, high48) != 0) {
+    if (context->leaf == NULL || context->high_bytes != high48) {
         // We're not positioned anywhere yet or the high bits of the key
         // differ.
         leaf_t *leaf = (leaf_t *)art_find(&r->art, high48);
@@ -23110,7 +23119,7 @@ bool roaring64_bitmap_select(const roaring64_bitmap_t *r, uint64_t rank,
     while (it.value != NULL) {
         leaf_t *leaf = (leaf_t *)it.value;
         uint64_t cardinality =
-            container_get_cardinality(leaf->container, leaf->typecode);
+                container_get_cardinality(leaf->container, leaf->typecode);
         if (start_rank + cardinality > rank) {
             uint32_t uint32_start = 0;
             uint32_t uint32_rank = rank - start_rank;
@@ -23164,7 +23173,7 @@ bool roaring64_bitmap_get_index(const roaring64_bitmap_t *r, uint64_t val,
             index += container_get_cardinality(leaf->container, leaf->typecode);
         } else if (compare_result == 0) {
             int index16 =
-                container_get_index(leaf->container, leaf->typecode, low16);
+                    container_get_index(leaf->container, leaf->typecode, low16);
             if (index16 < 0) {
                 return false;
             }
@@ -23179,7 +23188,7 @@ bool roaring64_bitmap_get_index(const roaring64_bitmap_t *r, uint64_t val,
 }
 
 static inline leaf_t *containerptr_roaring64_bitmap_remove(
-    roaring64_bitmap_t *r, uint8_t *high48, uint16_t low16, leaf_t *leaf) {
+        roaring64_bitmap_t *r, uint8_t *high48, uint16_t low16, leaf_t *leaf) {
     if (leaf == NULL) {
         return NULL;
     }
@@ -23188,7 +23197,7 @@ static inline leaf_t *containerptr_roaring64_bitmap_remove(
     uint8_t typecode = leaf->typecode;
     uint8_t typecode2;
     container_t *container2 =
-        container_remove(container, low16, typecode, &typecode2);
+            container_remove(container, low16, typecode, &typecode2);
     if (container2 != container) {
         container_free(container, typecode);
         leaf->container = container2;
@@ -23224,13 +23233,13 @@ bool roaring64_bitmap_remove_checked(roaring64_bitmap_t *r, uint64_t val) {
         return false;
     }
     int old_cardinality =
-        container_get_cardinality(leaf->container, leaf->typecode);
+            container_get_cardinality(leaf->container, leaf->typecode);
     leaf = containerptr_roaring64_bitmap_remove(r, high48, low16, leaf);
     if (leaf == NULL) {
         return true;
     }
     int new_cardinality =
-        container_get_cardinality(leaf->container, leaf->typecode);
+            container_get_cardinality(leaf->container, leaf->typecode);
     return new_cardinality != old_cardinality;
 }
 
@@ -23245,8 +23254,8 @@ void roaring64_bitmap_remove_bulk(roaring64_bitmap_t *r,
         // We're at a container with the correct high bits.
         uint8_t typecode2;
         container_t *container2 =
-            container_remove(context->leaf->container, low16,
-                             context->leaf->typecode, &typecode2);
+                container_remove(context->leaf->container, low16,
+                                 context->leaf->typecode, &typecode2);
         if (container2 != context->leaf->container) {
             container_free(context->leaf->container, context->leaf->typecode);
             context->leaf->container = container2;
@@ -23262,7 +23271,7 @@ void roaring64_bitmap_remove_bulk(roaring64_bitmap_t *r,
         // differ.
         leaf_t *leaf = (leaf_t *)art_find(art, high48);
         context->leaf =
-            containerptr_roaring64_bitmap_remove(r, high48, low16, leaf);
+                containerptr_roaring64_bitmap_remove(r, high48, low16, leaf);
         memcpy(context->high_bytes, high48, ART_KEY_BYTES);
     }
 }
@@ -23273,7 +23282,7 @@ void roaring64_bitmap_remove_many(roaring64_bitmap_t *r, size_t n_args,
         return;
     }
     const uint64_t *end = vals + n_args;
-    roaring64_bulk_context_t context = {0, 0, 0, 0, 0, 0, 0};
+    roaring64_bulk_context_t context = {0};
     for (const uint64_t *current_val = vals; current_val != end;
          current_val++) {
         roaring64_bitmap_remove_bulk(r, &context, *current_val);
@@ -23288,7 +23297,7 @@ static inline void remove_range_closed_at(art_t *art, uint8_t *high48,
     }
     uint8_t typecode2;
     container_t *container2 = container_remove_range(
-        leaf->container, leaf->typecode, min, max, &typecode2);
+            leaf->container, leaf->typecode, min, max, &typecode2);
     if (container2 != leaf->container) {
         container_free(leaf->container, leaf->typecode);
         if (container2 != NULL) {
@@ -23345,7 +23354,7 @@ uint64_t roaring64_bitmap_get_cardinality(const roaring64_bitmap_t *r) {
     while (it.value != NULL) {
         leaf_t *leaf = (leaf_t *)it.value;
         cardinality +=
-            container_get_cardinality(leaf->container, leaf->typecode);
+                container_get_cardinality(leaf->container, leaf->typecode);
         art_iterator_next(&it);
     }
     return cardinality;
@@ -23377,18 +23386,18 @@ uint64_t roaring64_bitmap_range_cardinality(const roaring64_bitmap_t *r,
             // We're at the max high key, add only the range up to the low
             // 16 bits of max.
             cardinality +=
-                container_rank(leaf->container, leaf->typecode, max_low16);
+                    container_rank(leaf->container, leaf->typecode, max_low16);
         } else {
             // We're not yet at the max high key, add the full container
             // range.
             cardinality +=
-                container_get_cardinality(leaf->container, leaf->typecode);
+                    container_get_cardinality(leaf->container, leaf->typecode);
         }
         if (compare_high48(it.key, min_high48) == 0 && min_low16 > 0) {
             // We're at the min high key, remove the range up to the low 16
             // bits of min.
             cardinality -=
-                container_rank(leaf->container, leaf->typecode, min_low16 - 1);
+                    container_rank(leaf->container, leaf->typecode, min_low16 - 1);
         }
         art_iterator_next(&it);
     }
@@ -23434,50 +23443,6 @@ bool roaring64_bitmap_run_optimize(roaring64_bitmap_t *r) {
         art_iterator_next(&it);
     }
     return has_run_container;
-}
-
-/**
- *  (For advanced users.)
- * Collect statistics about the bitmap
- */
-void roaring64_bitmap_statistics(const roaring64_bitmap_t *r,
-                                 roaring64_statistics_t *stat) {
-    memset(stat, 0, sizeof(*stat));
-    stat->min_value = roaring64_bitmap_minimum(r);
-    stat->max_value = roaring64_bitmap_maximum(r);
-
-    art_iterator_t it = art_init_iterator(&r->art, true);
-    while (it.value != NULL) {
-        leaf_t *leaf = (leaf_t *)it.value;
-        stat->n_containers++;
-        uint8_t truetype = get_container_type(leaf->container, leaf->typecode);
-        uint32_t card =
-            container_get_cardinality(leaf->container, leaf->typecode);
-        uint32_t sbytes =
-            container_size_in_bytes(leaf->container, leaf->typecode);
-        stat->cardinality += card;
-        switch (truetype) {
-            case BITSET_CONTAINER_TYPE:
-                stat->n_bitset_containers++;
-                stat->n_values_bitset_containers += card;
-                stat->n_bytes_bitset_containers += sbytes;
-                break;
-            case ARRAY_CONTAINER_TYPE:
-                stat->n_array_containers++;
-                stat->n_values_array_containers += card;
-                stat->n_bytes_array_containers += sbytes;
-                break;
-            case RUN_CONTAINER_TYPE:
-                stat->n_run_containers++;
-                stat->n_values_run_containers += card;
-                stat->n_bytes_run_containers += sbytes;
-                break;
-            default:
-                assert(false);
-                roaring_unreachable;
-        }
-        art_iterator_next(&it);
-    }
 }
 
 static bool roaring64_leaf_internal_validate(const art_val_t *val,
@@ -23547,7 +23512,7 @@ bool roaring64_bitmap_is_subset(const roaring64_bitmap_t *r1,
 bool roaring64_bitmap_is_strict_subset(const roaring64_bitmap_t *r1,
                                        const roaring64_bitmap_t *r2) {
     return roaring64_bitmap_get_cardinality(r1) <
-               roaring64_bitmap_get_cardinality(r2) &&
+           roaring64_bitmap_get_cardinality(r2) &&
            roaring64_bitmap_is_subset(r1, r2);
 }
 
@@ -23570,8 +23535,8 @@ roaring64_bitmap_t *roaring64_bitmap_and(const roaring64_bitmap_t *r1,
             leaf_t *leaf1 = (leaf_t *)it1.value;
             leaf_t *leaf2 = (leaf_t *)it2.value;
             result_leaf->container = container_and(
-                leaf1->container, leaf1->typecode, leaf2->container,
-                leaf2->typecode, &result_leaf->typecode);
+                    leaf1->container, leaf1->typecode, leaf2->container,
+                    leaf2->typecode, &result_leaf->typecode);
 
             if (container_nonzero_cardinality(result_leaf->container,
                                               result_leaf->typecode)) {
@@ -23611,8 +23576,8 @@ uint64_t roaring64_bitmap_and_cardinality(const roaring64_bitmap_t *r1,
             leaf_t *leaf1 = (leaf_t *)it1.value;
             leaf_t *leaf2 = (leaf_t *)it2.value;
             result +=
-                container_and_cardinality(leaf1->container, leaf1->typecode,
-                                          leaf2->container, leaf2->typecode);
+                    container_and_cardinality(leaf1->container, leaf1->typecode,
+                                              leaf2->container, leaf2->typecode);
             art_iterator_next(&it1);
             art_iterator_next(&it2);
         } else if (compare_result < 0) {
@@ -23661,12 +23626,12 @@ void roaring64_bitmap_and_inplace(roaring64_bitmap_t *r1,
                 container_t *container2;
                 if (leaf1->typecode == SHARED_CONTAINER_TYPE) {
                     container2 = container_and(
-                        leaf1->container, leaf1->typecode, leaf2->container,
-                        leaf2->typecode, &typecode2);
+                            leaf1->container, leaf1->typecode, leaf2->container,
+                            leaf2->typecode, &typecode2);
                 } else {
                     container2 = container_iand(
-                        leaf1->container, leaf1->typecode, leaf2->container,
-                        leaf2->typecode, &typecode2);
+                            leaf1->container, leaf1->typecode, leaf2->container,
+                            leaf2->typecode, &typecode2);
                 }
 
                 if (container2 != leaf1->container) {
@@ -23780,8 +23745,8 @@ roaring64_bitmap_t *roaring64_bitmap_or(const roaring64_bitmap_t *r1,
                 leaf_t *leaf2 = (leaf_t *)it2.value;
                 leaf_t *result_leaf = (leaf_t *)roaring_malloc(sizeof(leaf_t));
                 result_leaf->container = container_or(
-                    leaf1->container, leaf1->typecode, leaf2->container,
-                    leaf2->typecode, &result_leaf->typecode);
+                        leaf1->container, leaf1->typecode, leaf2->container,
+                        leaf2->typecode, &result_leaf->typecode);
                 art_insert(&result->art, it1.key, (art_val_t *)result_leaf);
                 art_iterator_next(&it1);
                 art_iterator_next(&it2);
@@ -23844,8 +23809,8 @@ void roaring64_bitmap_or_inplace(roaring64_bitmap_t *r1,
                                               &typecode2);
                 } else {
                     container2 = container_ior(
-                        leaf1->container, leaf1->typecode, leaf2->container,
-                        leaf2->typecode, &typecode2);
+                            leaf1->container, leaf1->typecode, leaf2->container,
+                            leaf2->typecode, &typecode2);
                 }
                 if (container2 != leaf1->container) {
                     container_free(leaf1->container, leaf1->typecode);
@@ -23896,8 +23861,8 @@ roaring64_bitmap_t *roaring64_bitmap_xor(const roaring64_bitmap_t *r1,
                 leaf_t *leaf2 = (leaf_t *)it2.value;
                 leaf_t *result_leaf = (leaf_t *)roaring_malloc(sizeof(leaf_t));
                 result_leaf->container = container_xor(
-                    leaf1->container, leaf1->typecode, leaf2->container,
-                    leaf2->typecode, &result_leaf->typecode);
+                        leaf1->container, leaf1->typecode, leaf2->container,
+                        leaf2->typecode, &result_leaf->typecode);
                 if (container_nonzero_cardinality(result_leaf->container,
                                                   result_leaf->typecode)) {
                     art_insert(&result->art, it1.key, (art_val_t *)result_leaf);
@@ -23963,8 +23928,8 @@ void roaring64_bitmap_xor_inplace(roaring64_bitmap_t *r1,
                 container_t *container2;
                 if (leaf1->typecode == SHARED_CONTAINER_TYPE) {
                     container2 = container_xor(
-                        leaf1->container, leaf1->typecode, leaf2->container,
-                        leaf2->typecode, &typecode2);
+                            leaf1->container, leaf1->typecode, leaf2->container,
+                            leaf2->typecode, &typecode2);
                     if (container2 != container1) {
                         // We only free when doing container_xor, not
                         // container_ixor, as ixor frees the original
@@ -23973,8 +23938,8 @@ void roaring64_bitmap_xor_inplace(roaring64_bitmap_t *r1,
                     }
                 } else {
                     container2 = container_ixor(
-                        leaf1->container, leaf1->typecode, leaf2->container,
-                        leaf2->typecode, &typecode2);
+                            leaf1->container, leaf1->typecode, leaf2->container,
+                            leaf2->typecode, &typecode2);
                 }
                 leaf1->container = container2;
                 leaf1->typecode = typecode2;
@@ -24033,8 +23998,8 @@ roaring64_bitmap_t *roaring64_bitmap_andnot(const roaring64_bitmap_t *r1,
                 leaf_t *leaf1 = (leaf_t *)it1.value;
                 leaf_t *leaf2 = (leaf_t *)it2.value;
                 result_leaf->container = container_andnot(
-                    leaf1->container, leaf1->typecode, leaf2->container,
-                    leaf2->typecode, &result_leaf->typecode);
+                        leaf1->container, leaf1->typecode, leaf2->container,
+                        leaf2->typecode, &result_leaf->typecode);
 
                 if (container_nonzero_cardinality(result_leaf->container,
                                                   result_leaf->typecode)) {
@@ -24094,8 +24059,8 @@ void roaring64_bitmap_andnot_inplace(roaring64_bitmap_t *r1,
                 container_t *container2;
                 if (leaf1->typecode == SHARED_CONTAINER_TYPE) {
                     container2 = container_andnot(
-                        leaf1->container, leaf1->typecode, leaf2->container,
-                        leaf2->typecode, &typecode2);
+                            leaf1->container, leaf1->typecode, leaf2->container,
+                            leaf2->typecode, &typecode2);
                     if (container2 != container1) {
                         // We only free when doing container_andnot, not
                         // container_iandnot, as iandnot frees the original
@@ -24104,8 +24069,8 @@ void roaring64_bitmap_andnot_inplace(roaring64_bitmap_t *r1,
                     }
                 } else {
                     container2 = container_iandnot(
-                        leaf1->container, leaf1->typecode, leaf2->container,
-                        leaf2->typecode, &typecode2);
+                            leaf1->container, leaf1->typecode, leaf2->container,
+                            leaf2->typecode, &typecode2);
                 }
                 if (container2 != container1) {
                     leaf1->container = container2;
@@ -24151,7 +24116,7 @@ static leaf_t *roaring64_flip_leaf(const roaring64_bitmap_t *r,
     } else if (min == 0 && max > 0xFFFF) {
         // Flip whole container.
         container2 =
-            container_not(leaf1->container, leaf1->typecode, &typecode2);
+                container_not(leaf1->container, leaf1->typecode, &typecode2);
     } else {
         // Partially flip a container.
         container2 = container_not_range(leaf1->container, leaf1->typecode, min,
@@ -24185,7 +24150,7 @@ static void roaring64_flip_leaf_inplace(roaring64_bitmap_t *r, uint8_t high48[],
     if (min == 0 && max > 0xFFFF) {
         // Flip whole container.
         container2 =
-            container_inot(leaf->container, leaf->typecode, &typecode2);
+                container_inot(leaf->container, leaf->typecode, &typecode2);
     } else {
         // Partially flip a container.
         container2 = container_inot_range(leaf->container, leaf->typecode, min,
@@ -24230,7 +24195,7 @@ roaring64_bitmap_t *roaring64_bitmap_flip_closed(const roaring64_bitmap_t *r1,
         leaf_t *leaf1 = (leaf_t *)it.value;
         uint8_t typecode2 = leaf1->typecode;
         container_t *container2 = get_copy_of_container(
-            leaf1->container, &typecode2, /*copy_on_write=*/false);
+                leaf1->container, &typecode2, /*copy_on_write=*/false);
         art_insert(&r2->art, it.key,
                    (art_val_t *)create_leaf(container2, typecode2));
         art_iterator_next(&it);
@@ -24264,7 +24229,7 @@ roaring64_bitmap_t *roaring64_bitmap_flip_closed(const roaring64_bitmap_t *r1,
         leaf_t *leaf1 = (leaf_t *)it.value;
         uint8_t typecode2 = leaf1->typecode;
         container_t *container2 = get_copy_of_container(
-            leaf1->container, &typecode2, /*copy_on_write=*/false);
+                leaf1->container, &typecode2, /*copy_on_write=*/false);
         art_insert(&r2->art, it.key,
                    (art_val_t *)create_leaf(container2, typecode2));
         art_iterator_next(&it);
@@ -24315,7 +24280,7 @@ void roaring64_bitmap_flip_closed_inplace(roaring64_bitmap_t *r, uint64_t min,
 static inline uint64_t count_high32(const roaring64_bitmap_t *r) {
     art_iterator_t it = art_init_iterator(&r->art, /*first=*/true);
     uint64_t high32_count = 0;
-    uint32_t prev_high32 = 0;
+    uint32_t prev_high32;
     while (it.value != NULL) {
         uint32_t current_high32 = (uint32_t)(combine_key(it.key, 0) >> 32);
         if (high32_count == 0 || prev_high32 != current_high32) {
@@ -24343,7 +24308,7 @@ size_t roaring64_bitmap_portable_size_in_bytes(const roaring64_bitmap_t *r) {
     size += sizeof(high32_count);
 
     art_iterator_t it = art_init_iterator(&r->art, /*first=*/true);
-    uint32_t prev_high32 = 0;
+    uint32_t prev_high32;
     roaring_bitmap_t *bitmap32 = NULL;
 
     // Iterate through buckets ordered by increasing keys.
@@ -24364,12 +24329,12 @@ size_t roaring64_bitmap_portable_size_in_bytes(const roaring64_bitmap_t *r) {
             art_iterator_t it2 = it;
             uint32_t containers_with_high32 = 0;
             while (it2.value != NULL && (uint32_t)(combine_key(it2.key, 0) >>
-                                                   32) == current_high32) {
+                                                                           32) == current_high32) {
                 containers_with_high32++;
                 art_iterator_next(&it2);
             }
             bitmap32 =
-                roaring_bitmap_create_with_capacity(containers_with_high32);
+                    roaring_bitmap_create_with_capacity(containers_with_high32);
 
             prev_high32 = current_high32;
         }
@@ -24408,7 +24373,7 @@ size_t roaring64_bitmap_portable_serialize(const roaring64_bitmap_t *r,
     buf += sizeof(high32_count);
 
     art_iterator_t it = art_init_iterator(&r->art, /*first=*/true);
-    uint32_t prev_high32 = 0;
+    uint32_t prev_high32;
     roaring_bitmap_t *bitmap32 = NULL;
 
     // Iterate through buckets ordered by increasing keys.
@@ -24436,7 +24401,7 @@ size_t roaring64_bitmap_portable_serialize(const roaring64_bitmap_t *r,
                 art_iterator_next(&it2);
             }
             bitmap32 =
-                roaring_bitmap_create_with_capacity(containers_with_high32);
+                    roaring_bitmap_create_with_capacity(containers_with_high32);
 
             prev_high32 = current_high32;
         }
@@ -24497,7 +24462,7 @@ size_t roaring64_bitmap_portable_deserialize_size(const char *buf,
         // Read the 32-bit Roaring bitmaps representing the least significant
         // bits of a set of elements.
         size_t bitmap32_size = roaring_bitmap_portable_deserialize_size(
-            buf, maxbytes - read_bytes);
+                buf, maxbytes - read_bytes);
         if (bitmap32_size == 0) {
             return 0;
         }
@@ -24508,7 +24473,7 @@ size_t roaring64_bitmap_portable_deserialize_size(const char *buf,
 }
 
 roaring64_bitmap_t *roaring64_bitmap_portable_deserialize_safe(
-    const char *buf, size_t maxbytes) {
+        const char *buf, size_t maxbytes) {
     // https://github.com/RoaringBitmap/RoaringFormatSpec#extension-for-64-bit-implementations
     if (buf == NULL) {
         return NULL;
@@ -24546,14 +24511,14 @@ roaring64_bitmap_t *roaring64_bitmap_portable_deserialize_safe(
         // Read the 32-bit Roaring bitmaps representing the least significant
         // bits of a set of elements.
         size_t bitmap32_size = roaring_bitmap_portable_deserialize_size(
-            buf, maxbytes - read_bytes);
+                buf, maxbytes - read_bytes);
         if (bitmap32_size == 0) {
             roaring64_bitmap_free(r);
             return NULL;
         }
 
         roaring_bitmap_t *bitmap32 = roaring_bitmap_portable_deserialize_safe(
-            buf, maxbytes - read_bytes);
+                buf, maxbytes - read_bytes);
         if (bitmap32 == NULL) {
             roaring64_bitmap_free(r);
             return NULL;
@@ -24565,13 +24530,13 @@ roaring64_bitmap_t *roaring64_bitmap_portable_deserialize_safe(
         uint32_t r32_size = ra_get_size(&bitmap32->high_low_container);
         for (size_t i = 0; i < r32_size; ++i) {
             uint16_t key16 =
-                ra_get_key_at_index(&bitmap32->high_low_container, (uint16_t)i);
+                    ra_get_key_at_index(&bitmap32->high_low_container, (uint16_t)i);
             uint8_t typecode;
             container_t *container = ra_get_container_at_index(
-                &bitmap32->high_low_container, (uint16_t)i, &typecode);
+                    &bitmap32->high_low_container, (uint16_t)i, &typecode);
 
             uint64_t high48_bits =
-                (((uint64_t)high32) << 32) | (((uint64_t)key16) << 16);
+                    (((uint64_t)high32) << 32) | (((uint64_t)key16) << 16);
             uint8_t high48[ART_KEY_BYTES];
             split_key(high48_bits, high48);
             leaf_t *leaf = create_leaf(container, typecode);
@@ -24601,21 +24566,21 @@ bool roaring64_bitmap_iterate(const roaring64_bitmap_t *r,
 
 void roaring64_bitmap_to_uint64_array(const roaring64_bitmap_t *r,
                                       uint64_t *out) {
-    roaring64_iterator_t it;  // gets initialized in the next line
+    roaring64_iterator_t it = {0};
     roaring64_iterator_init_at(r, &it, /*first=*/true);
     roaring64_iterator_read(&it, out, UINT64_MAX);
 }
 
 roaring64_iterator_t *roaring64_iterator_create(const roaring64_bitmap_t *r) {
     roaring64_iterator_t *it =
-        (roaring64_iterator_t *)roaring_malloc(sizeof(roaring64_iterator_t));
+            (roaring64_iterator_t *)roaring_malloc(sizeof(roaring64_iterator_t));
     return roaring64_iterator_init_at(r, it, /*first=*/true);
 }
 
 roaring64_iterator_t *roaring64_iterator_create_last(
-    const roaring64_bitmap_t *r) {
+        const roaring64_bitmap_t *r) {
     roaring64_iterator_t *it =
-        (roaring64_iterator_t *)roaring_malloc(sizeof(roaring64_iterator_t));
+            (roaring64_iterator_t *)roaring_malloc(sizeof(roaring64_iterator_t));
     return roaring64_iterator_init_at(r, it, /*first=*/false);
 }
 
@@ -24631,7 +24596,7 @@ void roaring64_iterator_reinit_last(const roaring64_bitmap_t *r,
 
 roaring64_iterator_t *roaring64_iterator_copy(const roaring64_iterator_t *it) {
     roaring64_iterator_t *new_it =
-        (roaring64_iterator_t *)roaring_malloc(sizeof(roaring64_iterator_t));
+            (roaring64_iterator_t *)roaring_malloc(sizeof(roaring64_iterator_t));
     memcpy(new_it, it, sizeof(*it));
     return new_it;
 }
@@ -24743,8 +24708,8 @@ uint64_t roaring64_iterator_read(roaring64_iterator_t *it, uint64_t *buf,
             container_count = count - consumed;
         }
         bool has_value = container_iterator_read_into_uint64(
-            leaf->container, leaf->typecode, &it->container_it, it->high48, buf,
-            container_count, &container_consumed, &low16);
+                leaf->container, leaf->typecode, &it->container_it, it->high48, buf,
+                container_count, &container_consumed, &low16);
         consumed += container_consumed;
         buf += container_consumed;
         if (has_value) {
@@ -24820,8 +24785,8 @@ static bool realloc_array(roaring_array_t *ra, int32_t new_capacity) {
         return true;
     }
     const size_t memoryneeded =
-        new_capacity *
-        (sizeof(uint16_t) + sizeof(container_t *) + sizeof(uint8_t));
+            new_capacity *
+            (sizeof(uint16_t) + sizeof(container_t *) + sizeof(uint8_t));
     void *bigalloc = roaring_malloc(memoryneeded);
     if (!bigalloc) return false;
     void *oldbigalloc = ra->containers;
@@ -24855,7 +24820,7 @@ bool ra_init_with_capacity(roaring_array_t *new_ra, uint32_t cap) {
 
     if (cap > 0) {
         void *bigalloc = roaring_malloc(
-            cap * (sizeof(uint16_t) + sizeof(container_t *) + sizeof(uint8_t)));
+                cap * (sizeof(uint16_t) + sizeof(container_t *) + sizeof(uint8_t)));
         if (bigalloc == NULL) return false;
         new_ra->containers = (container_t **)bigalloc;
         new_ra->keys = (uint16_t *)(new_ra->containers + cap);
@@ -24907,7 +24872,7 @@ bool ra_overwrite(const roaring_array_t *source, roaring_array_t *dest,
     if (copy_on_write) {
         for (int32_t i = 0; i < dest->size; ++i) {
             source->containers[i] = get_copy_of_container(
-                source->containers[i], &source->typecodes[i], copy_on_write);
+                    source->containers[i], &source->typecodes[i], copy_on_write);
         }
         // we do a shallow copy to the other bitmap
         memcpy(dest->containers, source->containers,
@@ -24919,7 +24884,7 @@ bool ra_overwrite(const roaring_array_t *source, roaring_array_t *dest,
                dest->size * sizeof(uint8_t));
         for (int32_t i = 0; i < dest->size; i++) {
             dest->containers[i] =
-                container_clone(source->containers[i], source->typecodes[i]);
+                    container_clone(source->containers[i], source->typecodes[i]);
             if (dest->containers[i] == NULL) {
                 for (int32_t j = 0; j < i; j++) {
                     container_free(dest->containers[j], dest->typecodes[j]);
@@ -24946,7 +24911,7 @@ void ra_reset(roaring_array_t *ra) {
 
 void ra_clear_without_containers(roaring_array_t *ra) {
     roaring_free(
-        ra->containers);  // keys and typecodes are allocated with containers
+            ra->containers);  // keys and typecodes are allocated with containers
     ra->size = 0;
     ra->allocation_size = 0;
     ra->containers = NULL;
@@ -24965,7 +24930,7 @@ bool extend_array(roaring_array_t *ra, int32_t k) {
     assert(desired_size <= max_containers);
     if (desired_size > ra->allocation_size) {
         int32_t new_capacity =
-            (ra->size < 1024) ? 2 * desired_size : 5 * desired_size / 4;
+                (ra->size < 1024) ? 2 * desired_size : 5 * desired_size / 4;
         if (new_capacity > max_containers) {
             new_capacity = max_containers;
         }
@@ -24996,12 +24961,12 @@ void ra_append_copy(roaring_array_t *ra, const roaring_array_t *sa,
     // the shared container will be in two bitmaps
     if (copy_on_write) {
         sa->containers[index] = get_copy_of_container(
-            sa->containers[index], &sa->typecodes[index], copy_on_write);
+                sa->containers[index], &sa->typecodes[index], copy_on_write);
         ra->containers[pos] = sa->containers[index];
         ra->typecodes[pos] = sa->typecodes[index];
     } else {
         ra->containers[pos] =
-            container_clone(sa->containers[index], sa->typecodes[index]);
+                container_clone(sa->containers[index], sa->typecodes[index]);
         ra->typecodes[pos] = sa->typecodes[index];
     }
     ra->size++;
@@ -25024,12 +24989,12 @@ void ra_append_copy_range(roaring_array_t *ra, const roaring_array_t *sa,
         ra->keys[pos] = sa->keys[i];
         if (copy_on_write) {
             sa->containers[i] = get_copy_of_container(
-                sa->containers[i], &sa->typecodes[i], copy_on_write);
+                    sa->containers[i], &sa->typecodes[i], copy_on_write);
             ra->containers[pos] = sa->containers[i];
             ra->typecodes[pos] = sa->typecodes[i];
         } else {
             ra->containers[pos] =
-                container_clone(sa->containers[i], sa->typecodes[i]);
+                    container_clone(sa->containers[i], sa->typecodes[i]);
             ra->typecodes[pos] = sa->typecodes[i];
         }
         ra->size++;
@@ -25070,12 +25035,12 @@ void ra_append_range(roaring_array_t *ra, roaring_array_t *sa,
         ra->keys[pos] = sa->keys[i];
         if (copy_on_write) {
             sa->containers[i] = get_copy_of_container(
-                sa->containers[i], &sa->typecodes[i], copy_on_write);
+                    sa->containers[i], &sa->typecodes[i], copy_on_write);
             ra->containers[pos] = sa->containers[i];
             ra->typecodes[pos] = sa->typecodes[i];
         } else {
             ra->containers[pos] =
-                container_clone(sa->containers[i], sa->typecodes[i]);
+                    container_clone(sa->containers[i], sa->typecodes[i]);
             ra->typecodes[pos] = sa->typecodes[i];
         }
         ra->size++;
@@ -25193,8 +25158,8 @@ void ra_to_uint32_array(const roaring_array_t *ra, uint32_t *ans) {
     size_t ctr = 0;
     for (int32_t i = 0; i < ra->size; ++i) {
         int num_added = container_to_uint32_array(
-            ans + ctr, ra->containers[i], ra->typecodes[i],
-            ((uint32_t)ra->keys[i]) << 16);
+                ans + ctr, ra->containers[i], ra->typecodes[i],
+                ((uint32_t)ra->keys[i]) << 16);
         ctr += num_added;
     }
 }
@@ -25214,7 +25179,7 @@ bool ra_range_uint32_array(const roaring_array_t *ra, size_t offset,
 
     for (int i = 0; i < ra->size; ++i) {
         const container_t *c =
-            container_unwrap_shared(ra->containers[i], &ra->typecodes[i]);
+                container_unwrap_shared(ra->containers[i], &ra->typecodes[i]);
         switch (ra->typecodes[i]) {
             case BITSET_CONTAINER_TYPE:
                 t_limit = (const_CAST_bitset(c))->cardinality;
@@ -25241,7 +25206,7 @@ bool ra_range_uint32_array(const roaring_array_t *ra, size_t offset,
             }
             if (dtr + t_limit > cur_len) {
                 uint32_t *append_ans = (uint32_t *)roaring_malloc(
-                    sizeof(*append_ans) * (cur_len + t_limit));
+                        sizeof(*append_ans) * (cur_len + t_limit));
                 if (append_ans == NULL) {
                     if (t_ans != NULL) roaring_free(t_ans);
                     return false;
@@ -25366,8 +25331,8 @@ size_t ra_portable_serialize(const roaring_array_t *ra, char *buf) {
             memcpy(buf, &startOffset, sizeof(startOffset));
             buf += sizeof(startOffset);
             startOffset =
-                startOffset +
-                container_size_in_bytes(ra->containers[k], ra->typecodes[k]);
+                    startOffset +
+                    container_size_in_bytes(ra->containers[k], ra->typecodes[k]);
         }
     }
     for (int32_t k = 0; k < ra->size; ++k) {
@@ -25440,7 +25405,7 @@ size_t ra_portable_deserialize_size(const char *buf, const size_t maxbytes) {
         }
         if (isbitmap) {
             size_t containersize =
-                BITSET_CONTAINER_SIZE_IN_WORDS * sizeof(uint64_t);
+                    BITSET_CONTAINER_SIZE_IN_WORDS * sizeof(uint64_t);
             bytestotal += containersize;
             if (bytestotal > maxbytes) return 0;
             buf += containersize;
@@ -25544,7 +25509,7 @@ bool ra_portable_deserialize(roaring_array_t *answer, const char *buf,
         if (*readbytes > maxbytes) {  // data is corrupted?
             // Ran out of bytes while reading offsets.
             ra_clear(answer);  // we need to clear the containers already
-                               // allocated, and the roaring array
+            // allocated, and the roaring array
             return false;
         }
 
@@ -25567,12 +25532,12 @@ bool ra_portable_deserialize(roaring_array_t *answer, const char *buf,
         if (isbitmap) {
             // we check that the read is allowed
             size_t containersize =
-                BITSET_CONTAINER_SIZE_IN_WORDS * sizeof(uint64_t);
+                    BITSET_CONTAINER_SIZE_IN_WORDS * sizeof(uint64_t);
             *readbytes += containersize;
             if (*readbytes > maxbytes) {
                 // Running out of bytes while reading a bitset container.
                 ra_clear(answer);  // we need to clear the containers already
-                                   // allocated, and the roaring array
+                // allocated, and the roaring array
                 return false;
             }
             // it is now safe to read
@@ -25580,7 +25545,7 @@ bool ra_portable_deserialize(roaring_array_t *answer, const char *buf,
             if (c == NULL) {  // memory allocation failure
                 // Failed to allocate memory for a bitset container.
                 ra_clear(answer);  // we need to clear the containers already
-                                   // allocated, and the roaring array
+                // allocated, and the roaring array
                 return false;
             }
             answer->size++;
@@ -25593,7 +25558,7 @@ bool ra_portable_deserialize(roaring_array_t *answer, const char *buf,
             if (*readbytes > maxbytes) {
                 // Running out of bytes while reading a run container (header).
                 ra_clear(answer);  // we need to clear the containers already
-                                   // allocated, and the roaring array
+                // allocated, and the roaring array
                 return false;
             }
             uint16_t n_runs;
@@ -25603,7 +25568,7 @@ bool ra_portable_deserialize(roaring_array_t *answer, const char *buf,
             if (*readbytes > maxbytes) {  // data is corrupted?
                 // Running out of bytes while reading a run container.
                 ra_clear(answer);  // we need to clear the containers already
-                                   // allocated, and the roaring array
+                // allocated, and the roaring array
                 return false;
             }
             // it is now safe to read
@@ -25612,7 +25577,7 @@ bool ra_portable_deserialize(roaring_array_t *answer, const char *buf,
             if (c == NULL) {  // memory allocation failure
                 // Failed to allocate memory for a run container.
                 ra_clear(answer);  // we need to clear the containers already
-                                   // allocated, and the roaring array
+                // allocated, and the roaring array
                 return false;
             }
             answer->size++;
@@ -25626,16 +25591,16 @@ bool ra_portable_deserialize(roaring_array_t *answer, const char *buf,
             if (*readbytes > maxbytes) {  // data is corrupted?
                 // Running out of bytes while reading an array container.
                 ra_clear(answer);  // we need to clear the containers already
-                                   // allocated, and the roaring array
+                // allocated, and the roaring array
                 return false;
             }
             // it is now safe to read
             array_container_t *c =
-                array_container_create_given_capacity(thiscard);
+                    array_container_create_given_capacity(thiscard);
             if (c == NULL) {  // memory allocation failure
                 // Failed to allocate memory for an array container.
                 ra_clear(answer);  // we need to clear the containers already
-                                   // allocated, and the roaring array
+                // allocated, and the roaring array
                 return false;
             }
             answer->size++;
@@ -25722,7 +25687,7 @@ static void percolate_down(roaring_pq_t *pq, uint32_t i) {
 
 static roaring_pq_t *create_pq(const roaring_bitmap_t **arr, uint32_t length) {
     size_t alloc_size =
-        sizeof(roaring_pq_t) + sizeof(roaring_pq_element_t) * length;
+            sizeof(roaring_pq_t) + sizeof(roaring_pq_element_t) * length;
     roaring_pq_t *answer = (roaring_pq_t *)roaring_malloc(alloc_size);
     answer->elements = (roaring_pq_element_t *)(answer + 1);
     answer->size = length;
@@ -25730,7 +25695,7 @@ static roaring_pq_t *create_pq(const roaring_bitmap_t **arr, uint32_t length) {
         answer->elements[i].bitmap = (roaring_bitmap_t *)arr[i];
         answer->elements[i].is_temporary = false;
         answer->elements[i].size =
-            roaring_bitmap_portable_size_in_bytes(arr[i]);
+                roaring_bitmap_portable_size_in_bytes(arr[i]);
     }
     for (int32_t i = (length >> 1); i >= 0; i--) {
         percolate_down(answer, i);
@@ -25754,7 +25719,7 @@ static roaring_bitmap_t *lazy_or_from_lazy_inputs(roaring_bitmap_t *x1,
                                                   roaring_bitmap_t *x2) {
     uint8_t result_type = 0;
     const int length1 = ra_get_size(&x1->high_low_container),
-              length2 = ra_get_size(&x2->high_low_container);
+            length2 = ra_get_size(&x2->high_low_container);
     if (0 == length1) {
         roaring_bitmap_free(x1);
         return x2;
@@ -25866,13 +25831,13 @@ roaring_bitmap_t *roaring_bitmap_or_many_heap(uint32_t number,
 
         if (x1.is_temporary && x2.is_temporary) {
             roaring_bitmap_t *newb =
-                lazy_or_from_lazy_inputs(x1.bitmap, x2.bitmap);
+                    lazy_or_from_lazy_inputs(x1.bitmap, x2.bitmap);
             // should normally return a fresh new bitmap *except* that
             // it can return x1.bitmap or x2.bitmap in degenerate cases
             bool temporary = !((newb == x1.bitmap) && (newb == x2.bitmap));
             uint64_t bsize = roaring_bitmap_portable_size_in_bytes(newb);
             roaring_pq_element_t newelement = {
-                .size = bsize, .is_temporary = temporary, .bitmap = newb};
+                    .size = bsize, .is_temporary = temporary, .bitmap = newb};
             pq_add(pq, &newelement);
         } else if (x2.is_temporary) {
             roaring_bitmap_lazy_or_inplace(x2.bitmap, x1.bitmap, false);
@@ -25885,10 +25850,10 @@ roaring_bitmap_t *roaring_bitmap_or_many_heap(uint32_t number,
             pq_add(pq, &x1);
         } else {
             roaring_bitmap_t *newb =
-                roaring_bitmap_lazy_or(x1.bitmap, x2.bitmap, false);
+                    roaring_bitmap_lazy_or(x1.bitmap, x2.bitmap, false);
             uint64_t bsize = roaring_bitmap_portable_size_in_bytes(newb);
             roaring_pq_element_t newelement = {
-                .size = bsize, .is_temporary = true, .bitmap = newb};
+                    .size = bsize, .is_temporary = true, .bitmap = newb};
 
             pq_add(pq, &newelement);
         }

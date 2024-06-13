@@ -80,3 +80,32 @@ message SimpleStruct {
   int32 y = 25;
   int32 z = 26;
 }
+
+message SimpleStringStruct {
+  string a = 1;
+  string b = 2;
+  string c = 3;
+  string d = 4;
+  string e = 5;
+  string f = 6;
+  string g = 7;
+  string h = 8;
+  string i = 9;
+  string j = 10;
+  string k = 11;
+  string l = 12;
+  string m = 13;
+  string n = 14;
+  string o = 15;
+  string p = 16;
+  string q = 17;
+  string r = 18;
+  string s = 19;
+  string t = 20;
+  string u = 21;
+  string v = 22;
+  string w = 23;
+  string x = 24;
+  string y = 25;
+  string z = 26;
+}

@@ -110,7 +110,7 @@ local function test_get_set()
 end
 
 local function test_benchmark_lua_simple()
-    print("start test_benchmark_lua_re2cnt")
+    print("start test_benchmark_lua_simple")
     local all_simple_player = {}
     for player_id = 1000000, 1050000 do
         all_simple_player[player_id] = {
@@ -144,7 +144,7 @@ local function test_benchmark_lua_map()
         params = { },
     }
     for i = 1, 10000000 do
-        player.params[math.random(10000000,100000000)] = i
+        player.params[math.random(10000000, 100000000)] = i
     end
     gc()
     print("lua memory " .. collectgarbage("count") / 1024 .. "MB")
@@ -157,7 +157,7 @@ local function test_benchmark_cpp_map()
         params = { },
     }
     for i = 1, 10000000 do
-        player.params[math.random(10000000,100000000)] = i
+        player.params[math.random(10000000, 100000000)] = i
     end
     player = _G.cpp_table_sink("Player", player)
     gc()
@@ -194,6 +194,34 @@ local function test_benchmark_cpp_array()
     pause()
 end
 
+local function test_benchmark_lua_simple_string()
+    print("start test_benchmark_lua_simple_string")
+    local all_simple_player = {}
+    for player_id = 1000000, 1050000 do
+        all_simple_player[player_id] = {
+            a = player_id .. "a", b = player_id .. "b", c = player_id .. "c", d = player_id .. "d", e = player_id .. "e", f = player_id .. "f", g = player_id .. "g", h = player_id .. "h", i = player_id .. "i", j = player_id .. "j", k = player_id .. "k", l = player_id .. "l", m = player_id .. "m", n = player_id .. "n", o = player_id .. "o", p = player_id .. "p", q = player_id .. "q", r = player_id .. "r", s = player_id .. "s", t = player_id .. "t", u = player_id .. "u", v = player_id .. "v", w = player_id .. "w", x = player_id .. "x", y = player_id .. "y", z = player_id .. "z",
+        }
+    end
+    gc()
+    print("lua memory " .. collectgarbage("count") / 1024 .. "MB")
+    pause()
+end
+
+local function test_benchmark_cpp_simple_string()
+    print("start test_benchmark_cpp_simple_string")
+    local all_simple_player = {}
+    for player_id = 1000000, 1050000 do
+        local player_info = {
+            a = player_id .. "a", b = player_id .. "b", c = player_id .. "c", d = player_id .. "d", e = player_id .. "e", f = player_id .. "f", g = player_id .. "g", h = player_id .. "h", i = player_id .. "i", j = player_id .. "j", k = player_id .. "k", l = player_id .. "l", m = player_id .. "m", n = player_id .. "n", o = player_id .. "o", p = player_id .. "p", q = player_id .. "q", r = player_id .. "r", s = player_id .. "s", t = player_id .. "t", u = player_id .. "u", v = player_id .. "v", w = player_id .. "w", x = player_id .. "x", y = player_id .. "y", z = player_id .. "z",
+        }
+        all_simple_player[player_id] = _G.cpp_table_sink("SimpleStringStruct", player_info)
+    end
+
+    gc()
+    print("cpp memory " .. collectgarbage("count") / 1024 .. "MB")
+    pause()
+end
+
 _G.cpp_table_load_proto(_G.CPP_TABLE_PROTO)
 
 print("Please input test type: ")
@@ -223,6 +251,10 @@ while true do
         test_benchmark_lua_array()
     elseif type == "7" then
         test_benchmark_cpp_array()
+    elseif type == "8" then
+        test_benchmark_lua_simple_string()
+    elseif type == "9" then
+        test_benchmark_cpp_simple_string()
     else
         print("Invalid test type")
         break
