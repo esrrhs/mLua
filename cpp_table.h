@@ -168,25 +168,33 @@ static size_t StringHash(const char *str, size_t len) {
 // a simple string class, use to store string data
 class String : public RefCntObj {
 public:
-    String(const char *str, size_t len, size_t hash) : RefCntObj(rot_string), m_str(str, len), m_hash(hash) {}
+    String(const char *str, size_t len) : RefCntObj(rot_string) {
+        m_str = new char[len];
+        m_len = len;
+        memcpy(m_str, str, len);
+    }
 
-    String(const std::string &str) : RefCntObj(rot_string), m_str(str), m_hash(StringHash(str.c_str(), str.size())) {}
+    String(const std::string &str) : RefCntObj(rot_string) {
+        m_str = new char[str.size()];
+        m_len = str.size();
+        memcpy(m_str, str.c_str(), str.size());
+    }
 
     ~String();
 
-    const char *c_str() const { return m_str.c_str(); }
+    const char *c_str() const { return m_str; }
 
-    const char *data() const { return m_str.c_str(); }
+    const char *data() const { return m_str; }
 
-    size_t size() const { return m_str.size(); }
+    size_t size() const { return m_len; }
 
-    bool empty() const { return m_str.empty(); }
+    bool empty() const { return m_len == 0; }
 
-    size_t hash() const { return m_hash; }
+    size_t hash() const { return StringHash(m_str, m_len); }
 
 private:
-    std::string m_str;
-    size_t m_hash;
+    char *m_str = 0;
+    int m_len = 0;
 };
 
 typedef SharedPtr<String> StringPtr;
@@ -207,16 +215,14 @@ struct StringPtrEqual {
 // a simple string view class, std::string_view is not available in c++11
 class StringView {
 public:
-    StringView() : m_str(0), m_len(0), m_hash(0) {}
+    StringView() : m_str(0), m_len(0) {}
 
-    StringView(const char *str, size_t len, size_t hash) : m_str(str), m_len(len), m_hash(hash) {}
 
-    StringView(const char *str, size_t len) : m_str(str), m_len(len), m_hash(StringHash(str, len)) {}
+    StringView(const char *str, size_t len) : m_str(str), m_len(len) {}
 
-    StringView(const std::string &str) : m_str(str.c_str()), m_len(str.size()),
-                                         m_hash(StringHash(str.c_str(), str.size())) {}
+    StringView(const std::string &str) : m_str(str.c_str()), m_len(str.size()) {}
 
-    StringView(const StringPtr &str) : m_str(str->c_str()), m_len(str->size()), m_hash(str->hash()) {}
+    StringView(const StringPtr &str) : m_str(str->c_str()), m_len(str->size()) {}
 
     const char *data() const { return m_str; }
 
@@ -225,7 +231,7 @@ public:
     bool empty() const { return m_len == 0; }
 
     bool operator==(const StringView &rhs) const {
-        if (m_hash != rhs.m_hash || m_len != rhs.m_len) {
+        if (m_len != rhs.m_len) {
             return false;
         }
         return memcmp(m_str, rhs.m_str, m_len) == 0;
@@ -235,12 +241,11 @@ public:
         return !(*this == rhs);
     }
 
-    size_t hash() const { return m_hash; }
+    size_t hash() const { return StringHash(m_str, m_len); }
 
 protected:
-    const char *m_str;
-    size_t m_len;
-    size_t m_hash;
+    const char *m_str = 0;
+    int m_len = 0;
 };
 
 struct StringViewHash {
@@ -267,7 +272,7 @@ public:
         if (it != m_string_map.end()) {
             return it->second.lock();
         }
-        auto value = MakeShared<String>(str.data(), str.size(), str.hash());
+        auto value = MakeShared<String>(str.data(), str.size());
         auto key = StringView(value);
         m_string_map[key] = value;
         return value;

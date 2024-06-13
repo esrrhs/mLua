@@ -232,6 +232,8 @@ print("  4: test_benchmark_lua_map")
 print("  5: test_benchmark_cpp_map")
 print("  6: test_benchmark_lua_array")
 print("  7: test_benchmark_cpp_array")
+print("  8: test_benchmark_lua_simple_string")
+print("  9: test_benchmark_cpp_simple_string")
 
 local type = io.read()
 while true do
