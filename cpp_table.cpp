@@ -41,7 +41,10 @@ void RefCntObj::Delete() {
 }
 
 String::~String() {
-    gStringHeap.Remove(StringView(m_str, m_len));
+    if (m_str) {
+        gStringHeap.Remove(StringView(m_str, m_len));
+        delete[] m_str;
+    }
 }
 
 Container::Container(LayoutPtr layout) : RefCntObj(rot_container) {

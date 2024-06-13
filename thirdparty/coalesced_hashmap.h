@@ -165,6 +165,9 @@ public:
 
     bool Find(const Key &key, Value &value) {
         auto mp = MainPosition(key);
+        if (!Valid(mp)) {
+            return false;
+        }
         while (mp != -1) {
             if (m_nodes[mp].key == key) {
                 value = m_nodes[mp].value;
@@ -177,6 +180,9 @@ public:
 
     bool Erase(const Key &key) {
         auto mp = MainPosition(key);
+        if (!Valid(mp)) {
+            return false;
+        }
         auto cur = mp;
         while (cur != -1) {
             if (Equal()(m_nodes[cur].key, key)) {

@@ -268,25 +268,26 @@ public:
     ~StringHeap() {}
 
     StringPtr Add(StringView str) {
-        auto it = m_string_map.find(str);
-        if (it != m_string_map.end()) {
-            return it->second.lock();
+        WeakStringPtr wv;
+        if (m_string_map.Find(str, wv)) {
+            return wv.lock();
         }
         auto value = MakeShared<String>(str.data(), str.size());
         auto key = StringView(value);
-        m_string_map[key] = value;
+        m_string_map.Insert(key, value);
         return value;
     }
 
     void Remove(StringView str) {
         LLOG("StringHeap remove string %s", str.data());
-        m_string_map.erase(str);
+        m_string_map.Erase(str);
     }
 
     std::vector<StringPtr> Dump() {
         std::vector<StringPtr> ret;
-        for (auto &it: m_string_map) {
-            auto ptr = it.second.lock();
+        for (auto it = m_string_map.Begin(); it != m_string_map.End(); ++it) {
+            auto value = it.GetValue();
+            auto ptr = value.lock();
             if (ptr) {
                 ret.push_back(ptr);
             }
@@ -295,7 +296,7 @@ public:
     }
 
 private:
-    std::unordered_map<StringView, WeakStringPtr, StringViewHash, StringViewEqual> m_string_map;
+    coalesced_hashmap::CoalescedHashMap<StringView, WeakStringPtr, StringViewHash, StringViewEqual> m_string_map;
 };
 
 enum MessageIdType {
