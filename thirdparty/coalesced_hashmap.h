@@ -76,17 +76,17 @@ static const int primes[] = {2, 5, 7, 11, 17, 23, 37, 53, 79, 113, 167, 251, 373
                              159901019, 239851529, 359777293, 539665939, 809498909, 1214247359,
                              1821371039};
 
-template<typename Key, typename Value, typename Hash = std::hash<Key>, typename Equal = std::equal_to<Key>>
-class CoalescedHashMap {
+template<typename Key, typename Hash = std::hash<Key>, typename Equal = std::equal_to<Key>>
+class CoalescedHashSet {
 public:
-    CoalescedHashMap(int size = 1) {
+    CoalescedHashSet(int size = 1) {
         m_nodes = new Node[size];
         m_size = size;
         InitFreeList();
         m_bitmap = new BitMap(size);
     }
 
-    ~CoalescedHashMap() {
+    ~CoalescedHashSet() {
         delete m_bitmap;
         delete[] m_nodes;
     }
@@ -98,14 +98,14 @@ public:
     ** put new key in its main position; otherwise (colliding node is in its main
     ** position), new key goes to an empty position.
     */
-    void Insert(const Key &key, const Value &value) {
+    void Insert(const Key &key) {
         auto mp = MainPosition(key);
         if (Valid(mp)) { /* main position is taken? */
             // try to find key first
             auto cur = mp;
             while (cur != -1) {
                 if (Equal()(m_nodes[cur].key, key)) {
-                    m_nodes[cur].value = value;
+                    m_nodes[cur].key = key;
                     return;
                 }
                 cur = m_nodes[cur].next;
@@ -117,7 +117,7 @@ public:
                 if (b < 0) {
                     return;  /* grow failed */
                 }
-                return Insert(key, value);  /* insert key into grown table */
+                return Insert(key);  /* insert key into grown table */
             }
             auto othern = MainPosition(m_nodes[mp].key); /* other node's main position */
             if (othern != mp) {  /* is colliding node out of its main position? */
@@ -159,18 +159,18 @@ public:
             m_nodes[mp].Clear();
         }
         m_nodes[mp].key = key;
-        m_nodes[mp].value = value;
         m_bitmap->Set(mp);
     }
 
-    bool Find(const Key &key, Value &value) {
-        auto mp = MainPosition(key);
+    template<typename OtherKey>
+    bool Find(OtherKey other_key, Key &key) {
+        auto mp = MainPosition(other_key);
         if (!Valid(mp)) {
             return false;
         }
         while (mp != -1) {
-            if (m_nodes[mp].key == key) {
-                value = m_nodes[mp].value;
+            if (Equal()(m_nodes[mp].key, other_key)) {
+                key = m_nodes[mp].key;
                 return true;
             }
             mp = m_nodes[mp].next;
@@ -178,14 +178,29 @@ public:
         return false;
     }
 
-    bool Erase(const Key &key) {
+    bool Contains(const Key &key) {
         auto mp = MainPosition(key);
+        if (!Valid(mp)) {
+            return false;
+        }
+        while (mp != -1) {
+            if (Equal()(m_nodes[mp].key, key)) {
+                return true;
+            }
+            mp = m_nodes[mp].next;
+        }
+        return false;
+    }
+
+    template<typename OtherKey>
+    bool Erase(const OtherKey &other_key) {
+        auto mp = MainPosition(other_key);
         if (!Valid(mp)) {
             return false;
         }
         auto cur = mp;
         while (cur != -1) {
-            if (Equal()(m_nodes[cur].key, key)) {
+            if (Equal()(m_nodes[cur].key, other_key)) {
                 auto clear_pos = cur;
 
                 // remove node from chain
@@ -268,35 +283,19 @@ public:
         return ret;
     }
 
-    std::string Dump() {
-        std::stringstream ss;
-        for (int i = 0; i < m_size; i++) {
-            if (Valid(i)) {
-                ss << "i:" << i << " key:" << m_nodes[i].key << " value:" << m_nodes[i].value << " pre:"
-                   << m_nodes[i].pre << " next:" << m_nodes[i].next << " mp:" << bool(MainPosition(m_nodes[i].key) == i)
-                   << std::endl;
-            }
-        }
-        return ss.str();
-    }
-
     class Iterator {
     public:
-        Iterator(CoalescedHashMap *map) : m_map(map) {
+        Iterator(CoalescedHashSet *map) : m_map(map) {
             m_index = 0;
             while (m_index < m_map->m_size && !m_map->Valid(m_index)) {
                 m_index++;
             }
         }
 
-        Iterator(CoalescedHashMap *map, int index) : m_map(map), m_index(index) {}
+        Iterator(CoalescedHashSet *map, int index) : m_map(map), m_index(index) {}
 
         const Key &GetKey() const {
             return m_map->m_nodes[m_index].key;
-        }
-
-        Value &GetValue() const {
-            return m_map->m_nodes[m_index].value;
         }
 
         Iterator &operator++() {
@@ -312,7 +311,7 @@ public:
         }
 
     private:
-        CoalescedHashMap *m_map;
+        CoalescedHashSet *m_map;
         int m_index;
     };
 
@@ -327,20 +326,19 @@ public:
 private:
     struct Node {
         Key key;
-        Value value;
         int pre = -1;
         int next = -1;
 
         void Clear() {
             key = Key();
-            value = Value();
             pre = -1;
             next = -1;
         }
     };
 
-    int MainPosition(const Key &key) const {
-        return Hash()(key) % m_size;
+    template<typename OtherKey>
+    int MainPosition(const OtherKey &other_key) const {
+        return Hash()(other_key) % m_size;
     }
 
     bool Valid(int index) const {
@@ -401,7 +399,7 @@ private:
         InitFreeList();
         m_bitmap = new BitMap(size);
         for (int i = 0; i < oldsize; i++) {
-            Insert(oldnodes[i].key, oldnodes[i].value);
+            Insert(oldnodes[i].key);
         }
         delete oldbitmap;
         delete[] oldnodes;
@@ -413,6 +411,112 @@ private:
     int m_size = 0;
     Node *m_nodes;
     BitMap *m_bitmap;
+};
+
+template<typename Key, typename Value, typename Hash = std::hash<Key>, typename Equal = std::equal_to<Key>>
+class CoalescedHashMap {
+private:
+    struct KeyValue {
+        Key key;
+        Value value;
+    };
+
+    struct KeyValueHash {
+        size_t operator()(const KeyValue &kv) const {
+            return Hash()(kv.key);
+        }
+
+        size_t operator()(const Key &k) const {
+            return Hash()(k);
+        }
+    };
+
+    struct KeyValueEqual {
+        bool operator()(const KeyValue &lhs, const KeyValue &rhs) const {
+            return Equal()(lhs.key, rhs.key);
+        }
+
+        bool operator()(const KeyValue &lhs, const Key &rhs) const {
+            return Equal()(lhs.key, rhs);
+        }
+    };
+
+    typedef CoalescedHashSet<KeyValue, KeyValueHash, KeyValueEqual> CoalescedHashSetType;
+    CoalescedHashSetType m_set;
+
+public:
+    CoalescedHashMap(int size = 1) : m_set(size) {
+    }
+
+    ~CoalescedHashMap() {
+    }
+
+    void Insert(const Key &key, const Value &value) {
+        m_set.Insert({key, value});
+    }
+
+    bool Find(const Key &key, Value &value) {
+        KeyValue kv;
+        if (m_set.Find(key, kv)) {
+            value = kv.value;
+            return true;
+        }
+        return false;
+    }
+
+    bool Erase(const Key &key) {
+        return m_set.Erase(key);
+    }
+
+    int Capacity() const {
+        return m_set.Capacity();
+    }
+
+    int Size() const {
+        return m_set.Size();
+    }
+
+    int MainPositionSize() const {
+        return m_set.MainPositionSize();
+    }
+
+    std::map<int, int> ChainStatus() const {
+        return m_set.ChainStatus();
+    }
+
+    class Iterator {
+    public:
+        Iterator(typename CoalescedHashSetType::Iterator it) : m_set_iter(it) {}
+
+        const Key &GetKey() const {
+            return m_set_iter.GetKey().key;
+        }
+
+        const Value &GetValue() const {
+            return m_set_iter.GetKey().value;
+        }
+
+        Iterator &operator++() {
+            ++m_set_iter;
+            return *this;
+        }
+
+        bool operator!=(const Iterator &other) {
+            return m_set_iter != other.m_set_iter;
+        }
+
+    private:
+        typename CoalescedHashSetType::Iterator m_set_iter;
+    };
+
+    Iterator Begin() {
+        return Iterator(m_set.Begin());
+    }
+
+    Iterator End() {
+        return Iterator(m_set.End());
+    }
+
 };
 
 }

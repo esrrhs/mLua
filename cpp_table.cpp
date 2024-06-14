@@ -9,28 +9,28 @@ LayoutMgr gLayoutMgr;
 void RefCntObj::Delete() {
     switch (m_type) {
         case rot_container: {
-            delete (Container *) this;
+            ((Container *) this)->~Container();
             break;
         }
         case rot_array: {
-            delete (Array *) this;
+            ((Array *) this)->~Array();
             break;
         }
         case rot_map: {
-            delete (Map *) this;
+            ((Map *) this)->~Map();
             break;
         }
         case rot_string: {
-            delete (String *) this;
+            ((String *) this)->~String();
             break;
         }
 
         case rot_layout : {
-            delete (Layout *) this;
+            ((Layout *) this)->~Layout();
             break;
         }
         case rot_layout_member: {
-            delete (Layout::Member *) this;
+            ((Layout::Member *) this)->~Member();
             break;
         }
         default: {
@@ -38,12 +38,12 @@ void RefCntObj::Delete() {
             break;
         }
     }
+    free(this);
 }
 
 String::~String() {
-    if (m_str) {
+    if (m_len) {
         gStringHeap.Remove(StringView(m_str, m_len));
-        delete[] m_str;
     }
 }
 

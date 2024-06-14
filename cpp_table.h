@@ -95,7 +95,16 @@ private:
 // make a shared pointer
 template<typename T, typename... Args>
 SharedPtr<T> MakeShared(Args &&... args) {
-    return SharedPtr<T>(new T(std::forward<Args>(args)...));
+    auto p = (T *) malloc(sizeof(T));
+    new(p) T(std::forward<Args>(args)...);
+    return SharedPtr<T>(p);
+}
+
+template<typename T, typename... Args>
+SharedPtr<T> MakeSharedBySize(size_t sz, Args &&... args) {
+    auto p = (T *) malloc(sz);
+    new(p) T(std::forward<Args>(args)...);
+    return SharedPtr<T>(p);
 }
 
 // T must be a class derived from RefCntObj, use to manage the life cycle of T
@@ -138,6 +147,10 @@ public:
         return m_ptr != rhs.m_ptr;
     }
 
+    T *get() const {
+        return m_ptr;
+    }
+
 private:
     T *m_ptr;
 };
@@ -169,15 +182,15 @@ static size_t StringHash(const char *str, size_t len) {
 class String : public RefCntObj {
 public:
     String(const char *str, size_t len) : RefCntObj(rot_string) {
-        m_str = new char[len];
         m_len = len;
         memcpy(m_str, str, len);
+        m_str[len] = 0;
     }
 
     String(const std::string &str) : RefCntObj(rot_string) {
-        m_str = new char[str.size()];
         m_len = str.size();
         memcpy(m_str, str.c_str(), str.size());
+        m_str[str.size()] = 0;
     }
 
     ~String();
@@ -192,10 +205,23 @@ public:
 
     size_t hash() const { return StringHash(m_str, m_len); }
 
+    bool operator==(const String &rhs) const {
+        if (m_len != rhs.m_len) {
+            return false;
+        }
+        return memcmp(m_str, rhs.m_str, m_len) == 0;
+    }
+
+    bool operator!=(const String &rhs) const {
+        return !(*this == rhs);
+    }
+
 private:
-    char *m_str = 0;
     int m_len = 0;
+    char m_str[0];
 };
+
+static_assert(sizeof(String) == 8, "String size must be 8");
 
 typedef SharedPtr<String> StringPtr;
 typedef WeakPtr<String> WeakStringPtr;
@@ -248,18 +274,6 @@ protected:
     int m_len = 0;
 };
 
-struct StringViewHash {
-    size_t operator()(const StringView &str) const {
-        return str.hash();
-    }
-};
-
-struct StringViewEqual {
-    bool operator()(const StringView &str1, const StringView &str2) const {
-        return str1 == str2;
-    }
-};
-
 // a simple string heap class, use to store unique string data
 class StringHeap {
 public:
@@ -269,25 +283,24 @@ public:
 
     StringPtr Add(StringView str) {
         WeakStringPtr wv;
-        if (m_string_map.Find(str, wv)) {
+        if (m_string_set.Find(str, wv)) {
             return wv.lock();
         }
-        auto value = MakeShared<String>(str.data(), str.size());
-        auto key = StringView(value);
-        m_string_map.Insert(key, value);
+        auto value = MakeSharedBySize<String>(sizeof(String) + str.size() + 1, str.data(), str.size());
+        m_string_set.Insert(value);
         return value;
     }
 
     void Remove(StringView str) {
         LLOG("StringHeap remove string %s", str.data());
-        m_string_map.Erase(str);
+        m_string_set.Erase(str);
     }
 
     std::vector<StringPtr> Dump() {
         std::vector<StringPtr> ret;
-        for (auto it = m_string_map.Begin(); it != m_string_map.End(); ++it) {
-            auto value = it.GetValue();
-            auto ptr = value.lock();
+        for (auto it = m_string_set.Begin(); it != m_string_set.End(); ++it) {
+            auto str = it.GetKey();
+            auto ptr = str.lock();
             if (ptr) {
                 ret.push_back(ptr);
             }
@@ -296,7 +309,27 @@ public:
     }
 
 private:
-    coalesced_hashmap::CoalescedHashMap<StringView, WeakStringPtr, StringViewHash, StringViewEqual> m_string_map;
+    struct WeakStringHash {
+        size_t operator()(const WeakStringPtr &str) const {
+            return str.get()->hash();
+        }
+
+        size_t operator()(const StringView &str) const {
+            return str.hash();
+        }
+    };
+
+    struct WeakStringEqual {
+        bool operator()(const WeakStringPtr &str1, const WeakStringPtr &str2) const {
+            return *str1.get() == *str2.get();
+        }
+
+        bool operator()(const WeakStringPtr &str1, const StringView &str2) const {
+            return StringView(str1.get()->data(), str1.get()->size()) == str2;
+        }
+    };
+
+    coalesced_hashmap::CoalescedHashSet <WeakStringPtr, WeakStringHash, WeakStringEqual> m_string_set;
 };
 
 enum MessageIdType {
@@ -689,6 +722,8 @@ public:
     }
 
     union MapValue32 {
+        MapValue32() : m_32(0) {}
+
         int32_t m_32;
         uint32_t m_u32;
         float m_float;
@@ -696,6 +731,8 @@ public:
     };
 
     union MapValue64 {
+        MapValue64() : m_64(0) {}
+
         int64_t m_64;
         uint64_t m_u64;
         double m_double;
@@ -709,18 +746,18 @@ public:
     union MapPointer {
         void *m_void;
 
-        typedef coalesced_hashmap::CoalescedHashMap<int32_t, MapValue32> Map32by32;
-        typedef coalesced_hashmap::CoalescedHashMap<int32_t, MapValue64> Map64by32;
+        typedef coalesced_hashmap::CoalescedHashMap <int32_t, MapValue32> Map32by32;
+        typedef coalesced_hashmap::CoalescedHashMap <int32_t, MapValue64> Map64by32;
         Map32by32 *m_32_32;
         Map64by32 *m_32_64;
 
-        typedef coalesced_hashmap::CoalescedHashMap<int64_t, MapValue32> Map32by64;
-        typedef coalesced_hashmap::CoalescedHashMap<int64_t, MapValue64> Map64by64;
+        typedef coalesced_hashmap::CoalescedHashMap <int64_t, MapValue32> Map32by64;
+        typedef coalesced_hashmap::CoalescedHashMap <int64_t, MapValue64> Map64by64;
         Map32by64 *m_64_32;
         Map64by64 *m_64_64;
 
-        typedef coalesced_hashmap::CoalescedHashMap<StringPtr, MapValue32, StringPtrHash, StringPtrEqual> Map32byString;
-        typedef coalesced_hashmap::CoalescedHashMap<StringPtr, MapValue64, StringPtrHash, StringPtrEqual> Map64byString;
+        typedef coalesced_hashmap::CoalescedHashMap <StringPtr, MapValue32, StringPtrHash, StringPtrEqual> Map32byString;
+        typedef coalesced_hashmap::CoalescedHashMap <StringPtr, MapValue64, StringPtrHash, StringPtrEqual> Map64byString;
         Map32byString *m_string_32;
         Map64byString *m_string_64;
     };
