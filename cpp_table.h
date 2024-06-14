@@ -187,12 +187,6 @@ public:
         m_str[len] = 0;
     }
 
-    String(const std::string &str) : RefCntObj(rot_string) {
-        m_len = str.size();
-        memcpy(m_str, str.c_str(), str.size());
-        m_str[str.size()] = 0;
-    }
-
     ~String();
 
     const char *c_str() const { return m_str; }
