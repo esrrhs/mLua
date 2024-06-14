@@ -249,6 +249,72 @@ local function test_benchmark_cpp_array_string()
     pause()
 end
 
+local function test_benchmark_lua_time()
+    local player = {
+        name = "jack",
+        score = 100,
+        is_vip = true,
+        experience = 100.2,
+    }
+    local begin = os.clock()
+    for i = 1, 10000000 do
+        local a = player.name
+    end
+    print("lua string get time " .. os.clock() - begin)
+
+    begin = os.clock()
+    for i = 1, 10000000 do
+        player.name = "tom"
+    end
+    print("lua string set time " .. os.clock() - begin)
+
+    begin = os.clock()
+    for i = 1, 10000000 do
+        local a = player.score
+    end
+    print("lua number get time " .. os.clock() - begin)
+
+    begin = os.clock()
+    for i = 1, 10000000 do
+        player.score = 200
+    end
+    print("lua number set time " .. os.clock() - begin)
+
+end
+
+local function test_benchmark_cpp_time()
+    local player = {
+        name = "jack",
+        score = 100,
+        is_vip = true,
+        experience = 100.2,
+    }
+    player = _G.cpp_table_sink("Player", player)
+    local begin = os.clock()
+    for i = 1, 10000000 do
+        local a = player.name
+    end
+    print("cpp string get time " .. os.clock() - begin)
+
+    begin = os.clock()
+    for i = 1, 10000000 do
+        player.name = "tom"
+    end
+    print("cpp string set time " .. os.clock() - begin)
+
+    begin = os.clock()
+    for i = 1, 10000000 do
+        local a = player.score
+    end
+    print("cpp number get time " .. os.clock() - begin)
+
+    begin = os.clock()
+    for i = 1, 10000000 do
+        player.score = 200
+    end
+    print("cpp number set time " .. os.clock() - begin)
+end
+
 _G.cpp_table_load_proto(_G.CPP_TABLE_PROTO)
 
 print("Please input test type: ")
@@ -263,6 +329,8 @@ print("  8: test_benchmark_lua_simple_string")
 print("  9: test_benchmark_cpp_simple_string")
 print(" 10: test_benchmark_lua_array_string")
 print(" 11: test_benchmark_cpp_array_string")
+print(" 12: test_benchmark_lua_time")
+print(" 13: test_benchmark_cpp_time")
 
 local type = io.read()
 while true do
@@ -290,6 +358,10 @@ while true do
         test_benchmark_lua_array_string()
     elseif type == "11" then
         test_benchmark_cpp_array_string()
+    elseif type == "12" then
+        test_benchmark_lua_time()
+    elseif type == "13" then
+        test_benchmark_cpp_time()
     else
         print("Invalid test type")
         break
