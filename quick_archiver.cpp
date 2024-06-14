@@ -2,7 +2,13 @@
 
 namespace quick_archiver {
 
-static QuickArchiver gQuickArchiver;
+static QuickArchiver *gQuickArchiver;
+
+static void CheckQuickArchiver() {
+    if (!gQuickArchiver) {
+        gQuickArchiver = new QuickArchiver();
+    }
+}
 
 QuickArchiver::QuickArchiver() {
     m_buffer_size = 16 * 1024 * 1024;
@@ -415,28 +421,33 @@ bool QuickArchiver::SaveValue(lua_State *L, int idx, int64_t &int_value) {
 }
 
 static int quick_archiver_save(lua_State *L) {
-    return gQuickArchiver.Save(L);
+    CheckQuickArchiver();
+    return gQuickArchiver->Save(L);
 }
 
 static int quick_archiver_load(lua_State *L) {
-    return gQuickArchiver.Load(L);
+    CheckQuickArchiver();
+    return gQuickArchiver->Load(L);
 }
 
 static int quick_archiver_set_lz_threshold(lua_State *L) {
+    CheckQuickArchiver();
     size_t size = lua_tointeger(L, 1);
-    gQuickArchiver.SetLzThreshold(size);
+    gQuickArchiver->SetLzThreshold(size);
     return 0;
 }
 
 static int quick_archiver_set_max_buffer_size(lua_State *L) {
+    CheckQuickArchiver();
     size_t size = lua_tointeger(L, 1);
-    gQuickArchiver.SetMaxBufferSize(size);
+    gQuickArchiver->SetMaxBufferSize(size);
     return 0;
 }
 
 static int quick_archiver_set_lz_acceleration(lua_State *L) {
+    CheckQuickArchiver();
     int acceleration = lua_tointeger(L, 1);
-    gQuickArchiver.SetLzAcceleration(acceleration);
+    gQuickArchiver->SetLzAcceleration(acceleration);
     return 0;
 }
 
