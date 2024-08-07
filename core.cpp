@@ -47,6 +47,6 @@ extern "C" int luaopen_libmluacore(lua_State *L) {
     l.push_back({nullptr, nullptr});
     lua_createtable(L, 0, l.size() - 1);
     luaL_setfuncs(L, l.data(), 0);
-    LLOG("luaopen_libmluacore success function count %d", l.size() - 1);
+    LLOG("luaopen_libmluacore success function count %d", (int) l.size() - 1);
     return 1;
 }
