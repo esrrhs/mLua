@@ -1,3 +1,5 @@
+#pragma once
+
 #include "core.h"
 #include "coalesced_hashmap.h"
 
