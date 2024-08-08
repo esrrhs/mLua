@@ -174,6 +174,7 @@ func is_shared_obj(field protoreflect.FieldDescriptor) int {
 }
 
 func main() {
+	input_dir := flag.String("d", "./", "input dir")
 	input := flag.String("i", "input.proto", "input file")
 	output := flag.String("o", "output.lua", "output file")
 
@@ -182,7 +183,7 @@ func main() {
 	input_file := *input
 	output_file := *output
 
-	err := registerProtoFile("./", input_file)
+	err := registerProtoFile(*input_dir, input_file)
 	if err != nil {
 		panic(errors.Wrapf(err, input_file))
 	}
