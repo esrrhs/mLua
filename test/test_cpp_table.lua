@@ -104,6 +104,13 @@ local function test_get_set()
     cpptable.params[101] = 101
     print("params101 " .. cpptable.params[101])
 
+    for k, v in pairs(cpptable) do
+        print(k, "=", v)
+    end
+    for k, v in ipairs(cpptable.labels) do
+        print(k, "=", v)
+    end
+
     ------------------------------------------
     cpptable = nil
     gc()

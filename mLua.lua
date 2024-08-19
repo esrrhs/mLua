@@ -159,6 +159,7 @@ function lua_to_cpp.create_layout_array_meta_func(layout_member)
 
     local index_func
     local newindex_func
+    local ipair_func
 
     if key == "int32" then
         index_func = function(t, pos)
@@ -167,12 +168,30 @@ function lua_to_cpp.create_layout_array_meta_func(layout_member)
         newindex_func = function(t, pos, value)
             core_cpp_table_array_container_set_int32(t, pos, value)
         end
+        ipair_func = function(t, pos)
+            return function(t, pos)
+                pos = pos + 1
+                local value = core_cpp_table_array_container_get_int32(t, pos)
+                if value then
+                    return pos, value
+                end
+            end, t, 0
+        end
     elseif key == "uint32" then
         index_func = function(t, pos)
             return core_cpp_table_array_container_get_uint32(t, pos)
         end
         newindex_func = function(t, pos, value)
             core_cpp_table_array_container_set_uint32(t, pos, value)
+        end
+        ipair_func = function(t, pos)
+            return function(t, pos)
+                pos = pos + 1
+                local value = core_cpp_table_array_container_get_uint32(t, pos)
+                if value then
+                    return pos, value
+                end
+            end, t, 0
         end
     elseif key == "int64" then
         index_func = function(t, pos)
@@ -181,12 +200,30 @@ function lua_to_cpp.create_layout_array_meta_func(layout_member)
         newindex_func = function(t, pos, value)
             core_cpp_table_array_container_set_int64(t, pos, value)
         end
+        ipair_func = function(t, pos)
+            return function(t, pos)
+                pos = pos + 1
+                local value = core_cpp_table_array_container_get_int64(t, pos)
+                if value then
+                    return pos, value
+                end
+            end, t, 0
+        end
     elseif key == "uint64" then
         index_func = function(t, pos)
             return core_cpp_table_array_container_get_uint64(t, pos)
         end
         newindex_func = function(t, pos, value)
             core_cpp_table_array_container_set_uint64(t, pos, value)
+        end
+        ipair_func = function(t, pos)
+            return function(t, pos)
+                pos = pos + 1
+                local value = core_cpp_table_array_container_get_uint64(t, pos)
+                if value then
+                    return pos, value
+                end
+            end, t, 0
         end
     elseif key == "float" then
         newindex_func = function(t, pos, value)
@@ -195,12 +232,30 @@ function lua_to_cpp.create_layout_array_meta_func(layout_member)
         newindex_func = function(t, pos, value)
             core_cpp_table_array_container_set_float(t, pos, value)
         end
+        ipair_func = function(t, pos)
+            return function(t, pos)
+                pos = pos + 1
+                local value = core_cpp_table_array_container_get_float(t, pos)
+                if value then
+                    return pos, value
+                end
+            end, t, 0
+        end
     elseif key == "double" then
         index_func = function(t, pos)
             return core_cpp_table_array_container_get_double(t, pos)
         end
         newindex_func = function(t, pos, value)
             core_cpp_table_array_container_set_double(t, pos, value)
+        end
+        ipair_func = function(t, pos)
+            return function(t, pos)
+                pos = pos + 1
+                local value = core_cpp_table_array_container_get_double(t, pos)
+                if value then
+                    return pos, value
+                end
+            end, t, 0
         end
     elseif key == "bool" then
         index_func = function(t, pos)
@@ -209,12 +264,30 @@ function lua_to_cpp.create_layout_array_meta_func(layout_member)
         newindex_func = function(t, pos, value)
             core_cpp_table_array_container_set_bool(t, pos, value)
         end
+        ipair_func = function(t, pos)
+            return function(t, pos)
+                pos = pos + 1
+                local value = core_cpp_table_array_container_get_bool(t, pos)
+                if value then
+                    return pos, value
+                end
+            end, t, 0
+        end
     elseif key == "string" then
         index_func = function(t, pos)
             return core_cpp_table_array_container_get_string(t, pos)
         end
         newindex_func = function(t, pos, value)
             core_cpp_table_array_container_set_string(t, pos, value)
+        end
+        ipair_func = function(t, pos)
+            return function(t, pos)
+                pos = pos + 1
+                local value = core_cpp_table_array_container_get_string(t, pos)
+                if value then
+                    return pos, value
+                end
+            end, t, 0
         end
     else
         index_func = function(t, pos)
@@ -226,16 +299,31 @@ function lua_to_cpp.create_layout_array_meta_func(layout_member)
             end
             core_cpp_table_array_container_set_obj(t, pos, value, message_id)
         end
+        ipair_func = function(t, pos)
+            return function(t, pos)
+                pos = pos + 1
+                local value = core_cpp_table_array_container_get_obj(t, pos)
+                if value then
+                    return pos, value
+                end
+            end, t, 0
+        end
     end
 
     local gc_func = function(t)
         core_cpp_table_delete_array_container(t)
     end
 
+    local pair_func = function(t, k)
+        error("pair error, " .. key .. " not support pair")
+    end
+
     local metatable = {
         __index = index_func,
         __newindex = newindex_func,
         __gc = gc_func,
+        __ipairs = ipair_func,
+        __pairs = pair_func,
     }
 
     _G.CPP_TABLE_LAYOUT_ARRAY_META_TABLE[key] = metatable
@@ -552,10 +640,26 @@ function lua_to_cpp.create_metatable(message_name)
         core_cpp_table_delete_container(t)
     end
 
+    local ipair_func = function(t, k)
+        error("ipair error, " .. message_name .. " not support ipair")
+    end
+
+    local pair_func = function(t, k)
+        return function(t, k)
+            local members = layout.members
+            local key, layout_v = next(members, k)
+            if key then
+                return key, layout_v.index_func(t)
+            end
+        end, t, nil
+    end
+
     local metatable = {
         __index = index_func,
         __newindex = newindex_func,
         __gc = gc_func,
+        __ipairs = ipair_func,
+        __pairs = pair_func,
     }
 
     _G.CPP_TABLE_LAYOUT_META_TABLE[message_name] = metatable
