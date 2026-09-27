@@ -8,6 +8,11 @@ static int get_cur_time_ms(lua_State *L) {
 }
 
 int main(int argc, char *argv[]) {
+    if (argc < 2) {
+        printf("usage: %s <lua_script>\n", argv[0]);
+        return 1;
+    }
+
     auto L = luaL_newstate();
     luaL_openlibs(L);
 

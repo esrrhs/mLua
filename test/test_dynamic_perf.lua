@@ -1,4 +1,4 @@
-package.cpath = "../?.so;" .. package.cpath
+package.cpath = "../?.so;../build/bin/?.so;../build/bin/?.dylib;" .. package.cpath
 package.path = "../?.lua;" .. package.path
 
 require "mLua"

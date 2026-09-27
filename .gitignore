@@ -19,6 +19,8 @@
 # Fortran module files
 *.mod
 *.smod
+!go.mod
+!**/go.mod
 
 # Compiled Static libraries
 *.lai
@@ -30,3 +32,39 @@
 *.exe
 *.out
 *.app
+test_bin
+
+# CMake build directories & generated files
+build/
+CMakeCache.txt
+CMakeFiles/
+Makefile
+cmake_install.cmake
+*.cmake
+!CMakeLists.txt
+
+# Profiling / generated artifacts
+*.log
+*.pro
+*.prof
+*.dot
+*.fl
+*.svg
+*.png
+!test/static_mem.png
+!test/dynamic_mem.png
+
+# Tools build artifacts / downloaded helpers (same as pLua)
+tools/flamegraph.pl
+tools/pprof
+tools/plua
+tools/proto
+tools/png
+
+# IDE & Editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
